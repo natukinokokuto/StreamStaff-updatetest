@@ -28,6 +28,7 @@
     .nav button.active,.btn.primary{background:linear-gradient(135deg,#e8f8ff,#fff);color:#05070a;border-color:#fff}
     .btn.danger{background:#3a1014;border-color:#7f2028}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
     .card{background:linear-gradient(180deg,#141822,#0f1118);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 20px 60px #0008;overflow:hidden}
     .card .inner{padding:16px}
@@ -235,6 +236,7 @@ function fitBrushText(text){
       .grid,.chinchiro-wrap{grid-template-columns:1fr}
       .grid3{grid-template-columns:1fr 1fr 1fr}
       .game-tabs{grid-template-columns:repeat(4,1fr);gap:5px}
+      .grid2{grid-template-columns:1fr}
       .game-tabs button{font-size:12px;padding:10px 4px}
       .ch-stage{min-height:430px}
       .rule-panel{display:block}
@@ -2568,7 +2570,35 @@ function fitBrushText(text){
     
 
 
-<section id="serifGame" class="screen"><div class="card"><div class="inner"><h2>🎭 セリフステージ</h2><p class="muted">配信向けセリフ大量追加済み。下ネタON相当はBAN回避の匂わせ表現で調整。</p><div class="big-output" id="serifPreview">「そのタピオカ…エモの極みだろ…」</div><div class="row"><button class="btn primary" onclick="rollStageGame('line','serifPreview')">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
+<section id="serifGame" class="screen">
+  <div class="card"><div class="inner">
+    <h2>🎭 セリフステージ</h2>
+    <p class="muted">ジャンル・対象・BAN回避レベルを選んで回せる配信特化セリフ。下ネタON相当でも直球は禁止、匂わせと伏せ字で安全寄せ。</p>
+    <div class="grid2">
+      <label>ジャンル<select id="serifGenre">
+        <option value="all">全部混ぜ</option><option value="ikemen">イケボ</option><option value="kimo">キモおもろ</option><option value="chuni">中二病</option><option value="gal">ギャル</option><option value="host">ホスト</option><option value="shonan">湘南ノリ</option><option value="streamer">配信者</option><option value="meme">ネットミーム</option><option value="wasei">和製英語地獄</option><option value="ossan">おっさん</option>
+      </select></label>
+      <label>セリフ対象<select id="serifTarget">
+        <option value="common">共通</option><option value="male">男向け</option><option value="female">女向け</option><option value="random">ランダム</option>
+      </select></label>
+      <label>BAN回避レベル<select id="serifLevel">
+        <option value="1">Lv1 安全</option><option value="2">Lv2 ちょい攻め</option><option value="3" selected>Lv3 深夜ノリ</option><option value="4">Lv4 ギリ匂わせ</option>
+      </select></label>
+      <label>抽選範囲<select id="serifIncludeLower">
+        <option value="yes" selected>選択Lv以下も含める</option><option value="no">選択Lvのみ</option>
+      </select></label>
+      <label>声色<select id="serifVoice">
+        <option value="random">ランダム</option><option value="normal">指定なし</option><option value="whisper">囁き</option><option value="ikemen">イケボ</option><option value="yankee">ヤンキー</option><option value="anime">アニメ主人公</option><option value="old">老人</option><option value="robot">ロボ</option>
+      </select></label>
+      <label>BANガード<select id="serifGuard">
+        <option value="normal" selected>標準：匂わせで止める</option><option value="strong">強：さらに薄める</option>
+      </select></label>
+    </div>
+    <div class="big-output" id="serifPreview">「その距離感、Wi-Fiなら強すぎる」</div>
+    <p class="muted" id="serifMeta">Lv3 / 共通 / 全部混ぜ</p>
+    <div class="row"><button class="btn primary" onclick="rollSerifGame()">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div>
+  </div></div>
+</section>
 <section id="reloGame" class="screen"><div class="card"><div class="inner"><h2>🍻 レロレロ酒場</h2><p class="muted">和製英語・横文字を重点追加。噛まずに言えるか勝負。</p><div class="big-output" id="reloPreview">アジェンダ</div><div class="row"><button class="btn primary" onclick="rollStageGame('relo','reloPreview')">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
 <section id="animalGame" class="screen"><div class="card"><div class="inner"><h2>🐼 動物ガチャ</h2><p class="muted">珍獣・深海・キモかわ系を大量追加。</p><div class="big-output" id="animalPreview">クアッカワラビー</div><div class="row"><button class="btn primary" onclick="rollStageGame('animal','animalPreview')">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
 <section id="itsudareGame" class="screen"><div class="card"><div class="inner"><h2>😂 いつ誰ゲーム</h2><p class="muted">いつ・誰が・どこで・何をしたを大量追加。</p><div class="big-output" id="itsuPreview">深夜3時に校長先生がコンビニで踊ってた</div><div class="row"><button class="btn primary" onclick="rollStageGame('itsu','itsuPreview')">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
@@ -3543,6 +3573,81 @@ state.listeners.forEach(l=>{
 let selectedListener=0;
 let selectedGame="animal";
 
+
+const serifFixedLines = [
+  {text:"「その距離感、Wi-Fiなら強すぎる」",level:2,genre:["kimo","meme"],target:"common"},
+  {text:"「大丈夫、これは下ネタじゃない。概念だ」",level:3,genre:["streamer","kimo"],target:"common"},
+  {text:"「危ない単語は全部ピー音に就職しました」",level:3,genre:["streamer","meme"],target:"common"},
+  {text:"「その“別に？”の言い方、絶対わかっててやってるだろｗ」",level:3,genre:["gal","kimo"],target:"female"},
+  {text:"「そのバイクの降り方、青春のサムネすぎるべ」",level:2,genre:["shonan","ikemen"],target:"male"},
+  {text:"「貴様の既読、我が封印を一つ解いたぞ」",level:2,genre:["chuni","meme"],target:"common"},
+  {text:"「お姫様、その沈黙まで指名料に入ってます」",level:3,genre:["host","ikemen"],target:"female"},
+  {text:"「兄貴、そのドヤ顔はコメント欄に刺さりすぎる」",level:2,genre:["streamer","ossan"],target:"male"},
+  {text:"「今のはBANじゃない。大人の休憩時間だ」",level:4,genre:["streamer","kimo"],target:"common"},
+  {text:"「その空気感、レギュレーション確認した方がいい」",level:3,genre:["wasei","streamer"],target:"common"},
+  {text:"「え待って、その余裕、普通に沼なんだけど」",level:2,genre:["gal","ikemen"],target:"female"},
+  {text:"「俺の右腕が疼く前に、その笑顔しまっとけ」",level:2,genre:["chuni","kimo"],target:"male"},
+  {text:"「今夜の潮風、ちょっとお前に味方しすぎじゃん？」",level:2,genre:["shonan","ikemen"],target:"common"},
+  {text:"「その発言、コンプライアンスが裸足で逃げたぞ」",level:4,genre:["streamer","meme"],target:"common"},
+  {text:"「フィーリングだけで近づくな、こっちは情緒がノーガードだ」",level:3,genre:["wasei","kimo"],target:"common"}
+];
+const serifParts = {
+  all:{heads:["いや待って","お前さぁ","その感じ","深夜にそれは","今の空気"],mids:["距離感","声のトーン","目の動き","LINEの返し","余裕"],tails:["情緒バグるって","反則だろｗ","コメント欄止まるぞｗ","脳が追いつかん","配信の温度上がるって"]},
+  ikemen:{heads:["今夜だけは","その視線","黙って聞けよ","悪いけど","こっち見んなよ"],mids:["優しさ","沈黙","横顔","声","タイミング"],tails:["心持ってかれる","反則ですよ","深夜に効く","エモすぎる","ずるいだろ"]},
+  kimo:{heads:["ごめん、今の","それ以上は","その一言","お前のその","今のリアクション"],mids:["距離感","圧","香りの概念","空気","湿度"],tails:["ちょっと保存したい","脳内でリピートしてる","BANの手前で踊ってる","気まずさが熟成してる","笑うしかない"]},
+  chuni:{heads:["我が右目が","貴様","封印されし","月が満ちる夜に","禁忌に触れたな"],mids:["魂","深淵","漆黒の衝動","因果","理性"],tails:["目覚める","世界が歪む","契約完了だ","闇に飲まれる","コメント欄を支配する"]},
+  gal:{heads:["え待ってｗ","ガチで？","それさぁ〜","いや普通に","てか今の"],mids:["メンタル","ノリ","LINE","空気","ビジュ"],tails:["エグいてｗ","しんどｗ","優勝なんだけど","無理なんだがｗ","普通に沼"]},
+  host:{heads:["お姫様","今夜だけは","その視線","指名ありがとうございます","シャンパンより先に"],mids:["沈黙","駆け引き","愛情","沼","余裕"],tails:["酔わせないで","反則ですよ","心持ってかれる","延長入りました","会計は情緒で"]},
+  shonan:{heads:["いやそれ","海沿いで","江ノ島テンションで","潮風浴びながら","そのノリ"],mids:["夏","バイク","夕焼け","青春","地元感"],tails:["エモいじゃん？","情緒くるべ？","だべそれｗ","青春すぎんだろ","波より刺さる"]},
+  streamer:{heads:["コメント欄","今の発言","切り抜き班","初見さん","この空気"],mids:["リアクション","間","ノリ","圧","事故感"],tails:["今のは聞かなかったことにして","クリップ禁止です","配信的にはセーフ寄り","高評価だけ置いてって","企画の呼吸だ"]},
+  meme:{heads:["それもう","完全に","ワンチャン","脳内で","今日のMVP"],mids:["ログボ","バグ","伏線","通知音","世界線"],tails:["回収されたわ","草なんよ","概念になった","優勝です","それはそう"]},
+  wasei:{heads:["そのアプローチ","今のフィーリング","コンプラ的に","メンタルのバッファ","そのスキーム"],mids:["エビデンス","アジェンダ","コンセンサス","フィックス","リスケ"],tails:["取れてないです","一旦ペンディングで","強すぎます","ノーガードです","オーソライズ不可です"]},
+  ossan:{heads:["おいおい","ちょっと待て","昔だったら","その顔","今の若い子は"],mids:["ノリ","勢い","空気","距離感","言い方"],tails:["酒が進むやつだな","昭和なら拍手だぞ","だいぶ危ない橋だぞ","嫌いじゃないぞ","茶でも飲め"]}
+};
+const serifTargetWords = {
+  common:["その人","お前","君","今の空気","コメント欄"],
+  male:["兄貴","お前","男前ムーブ","そのドヤ顔","その謎の余裕"],
+  female:["お姫様","そのあざとさ","その“別に？”","ネイル見せる角度","その余裕"],
+};
+const serifVoices = {normal:"",whisper:"【囁きで】",ikemen:"【イケボで】",yankee:"【ヤンキー風で】",anime:"【アニメ主人公で】",old:"【老人風で】",robot:"【ロボ口調で】"};
+function serifPick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function getSerifSettings(){
+  const genre=(document.getElementById("serifGenre")||{}).value || "all";
+  let target=(document.getElementById("serifTarget")||{}).value || "common";
+  if(target==="random") target=serifPick(["common","male","female"]);
+  const level=Number((document.getElementById("serifLevel")||{}).value || 3);
+  const includeLower=((document.getElementById("serifIncludeLower")||{}).value || "yes")==="yes";
+  let voice=(document.getElementById("serifVoice")||{}).value || "random";
+  if(voice==="random") voice=serifPick(["normal","whisper","ikemen","yankee","anime","old","robot"]);
+  const guard=((document.getElementById("serifGuard")||{}).value || "normal");
+  return {genre,target,level,includeLower,voice,guard};
+}
+function serifLevelOk(itemLv, set){ return set.includeLower ? itemLv <= set.level : itemLv === set.level; }
+function generateSerifLine(set){
+  const genres = set.genre==="all" ? Object.keys(serifParts) : [set.genre];
+  const g = serifPick(genres.filter(x=>serifParts[x]) || ["all"]);
+  const p = serifParts[g] || serifParts.all;
+  const targetWord = serifPick(serifTargetWords[set.target] || serifTargetWords.common);
+  let line = `${serifPick(p.heads)}、${targetWord}の${serifPick(p.mids)}、${serifPick(p.tails)}`;
+  if(set.level>=3 && Math.random()<0.45) line += serifPick(["。これは匂わせで止めとく。","。詳しく言うとBANの気配する。","。続きは心の中で処理して。","。配信ではここまで。"]);
+  if(set.level>=4 && Math.random()<0.55) line += serifPick([" ピー音、準備しとけ。"," カーテン閉めた？"," 大人の階段、手すり持って降りよう。"]);
+  if(set.guard==="strong") line = line.replace(/BANの気配する/g,"配信の温度上がる").replace(/ピー音、準備しとけ。/g,"一旦、深呼吸しとけ。").replace(/カーテン閉めた？/g,"照明ちょっと落とす？");
+  return `「${line}」`;
+}
+function rollSerifGame(){
+  const set=getSerifSettings();
+  const fixed=serifFixedLines.filter(x=>serifLevelOk(x.level,set) && (set.genre==="all" || x.genre.includes(set.genre)) && (x.target==="common" || x.target===set.target));
+  let text = (fixed.length && Math.random()<0.35) ? serifPick(fixed).text : generateSerifLine(set);
+  const prefix = serifVoices[set.voice] || "";
+  const out = prefix ? `${prefix}\n${text}` : text;
+  const prev=document.getElementById("serifPreview");
+  if(prev) prev.textContent=out;
+  const meta=document.getElementById("serifMeta");
+  const genreLabel={all:"全部混ぜ",ikemen:"イケボ",kimo:"キモおもろ",chuni:"中二病",gal:"ギャル",host:"ホスト",shonan:"湘南ノリ",streamer:"配信者",meme:"ネットミーム",wasei:"和製英語地獄",ossan:"おっさん"}[set.genre]||set.genre;
+  const targetLabel={common:"共通",male:"男向け",female:"女向け",random:"ランダム"}[set.target]||set.target;
+  if(meta) meta.textContent=`Lv${set.level}${set.includeLower?"以下":"のみ"} / ${targetLabel} / ${genreLabel} / BANガード:${set.guard==="strong"?"強":"標準"}`;
+}
+
 const gameData={
   animal:{label:"動物",roll:()=>`🐾 ${pick(state.customGames.animalAnimals)} × 「${pick(state.customGames.animalTopics)}」といえば？`},
   ogiri:{label:"大喜利",roll:()=>`🧠 大喜利：${pick(state.customGames.ogiri)}`},
@@ -3552,6 +3657,7 @@ const gameData={
   relo:{label:"酒場",roll:()=>`🍻 レロレロ酒場：${pick(state.customGames.relo)} を噛まずに言える？`}
 };
 function rollStageGame(key, targetId){
+  if(key==='line' && targetId==='serifPreview'){ rollSerifGame(); return; }
   const el=document.getElementById(targetId);
   if(!el || !gameData[key]) return;
   el.textContent = gameData[key].roll();
