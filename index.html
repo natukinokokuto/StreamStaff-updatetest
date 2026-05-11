@@ -2979,6 +2979,23 @@ function fitBrushText(text){
     </section>
 
     <section id="memo" class="screen">
+      <div class="card"><div class="inner">
+        <div class="row" style="justify-content:space-between;align-items:flex-end;gap:10px">
+          <div>
+            <h2 style="margin:0">常連メモ</h2>
+            <p class="muted">普段は名前・話題の種・近い予定だけ表示。開くで詳細を展開。</p>
+          </div>
+          <div class="row">
+            <input id="memoSearch" placeholder="常連検索">
+            <select id="memoSort">
+              <option value="kana">50音順</option>
+              <option value="recent">最近追加順</option>
+              <option value="birthday">誕生日が近い順</option>
+              <option value="updated">メモ更新順</option>
+            </select>
+          </div>
+        </div>
+      </div></div>
       <div class="grid" id="memoGrid"></div>
     </section>
 
@@ -4973,64 +4990,129 @@ if(window.saveListenerDetail) saveListenerDetail.onclick=()=>{
   alert("保存した！");
 };
 
+
+function memoTodayStart(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
+function memoDateValue(dateStr){
+  if(!dateStr) return null;
+  const d=new Date(dateStr+"T00:00:00");
+  return isNaN(d.getTime()) ? null : d;
+}
+function memoUpcomingEvents(l){
+  const today=memoTodayStart();
+  const name=l.name;
+  const events=[];
+  (state.calendarEvents||[]).forEach(ev=>{
+    if(ev.listener!==name || !ev.date) return;
+    const d=memoDateValue(ev.date);
+    if(d && d>=today) events.push({date:d, text:`${ev.date} ${ev.type||"予定"}${ev.item?"："+ev.item:""}`});
+  });
+  if(l.birthday){
+    const parts=splitBirthday(l.birthday); const m=Number(parts.month), day=Number(parts.day);
+    if(m && day){
+      const y=today.getFullYear();
+      let d=new Date(y, m-1, day); d.setHours(0,0,0,0);
+      if(isLeapBirthday(l.birthday) && !isLeapYear(y)) d=new Date(y,1,28);
+      if(d<today){
+        const ny=y+1;
+        d=new Date(ny, m-1, day); d.setHours(0,0,0,0);
+        if(isLeapBirthday(l.birthday) && !isLeapYear(ny)) d=new Date(ny,1,28);
+      }
+      events.push({date:d, text:`${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")} 誕生日`});
+    }
+  }
+  events.sort((a,b)=>a.date-b.date);
+  return events.slice(0,3);
+}
+function memoPrimarySeed(l){
+  const seeds=(l.topicSeeds && l.topicSeeds.length) ? l.topicSeeds : generateTopicSeeds(l);
+  return seeds[0] || "まだ話題の種なし";
+}
+function memoBirthdayDistance(l){
+  const up=memoUpcomingEvents(l).find(e=>e.text.includes("誕生日"));
+  return up ? up.date.getTime() : Infinity;
+}
+function memoSortedListeners(){
+  const q=(document.getElementById("memoSearch")?.value||"").trim().toLowerCase();
+  const sort=document.getElementById("memoSort")?.value || "kana";
+  let arr=state.listeners.map((l,i)=>({l,i}));
+  if(q){
+    arr=arr.filter(({l})=>{
+      const f=l.favorites||{};
+      return [l.name,l.nickname,l.memo,...Object.values(f),...(l.topicSeeds||[])].join(" ").toLowerCase().includes(q);
+    });
+  }
+  arr.sort((a,b)=>{
+    if(sort==="recent") return String(b.l.registeredDate||"").localeCompare(String(a.l.registeredDate||"")) || b.i-a.i;
+    if(sort==="birthday") return memoBirthdayDistance(a.l)-memoBirthdayDistance(b.l);
+    if(sort==="updated") return String(b.l.updatedAt||b.l.registeredDate||"").localeCompare(String(a.l.updatedAt||a.l.registeredDate||"")) || b.i-a.i;
+    return String(a.l.name||"").localeCompare(String(b.l.name||""), "ja");
+  });
+  return arr;
+}
 function renderMemo(){
-  memoGrid.innerHTML=state.listeners.map((l,i)=>`
-    <div class="card"><div class="inner">
-      <div class="row" style="justify-content:space-between">
-        <h2 style="margin:0">${escapeHtml(l.name)}</h2>
+  const rows=memoSortedListeners();
+  memoGrid.innerHTML=rows.map(({l,i})=>{
+    const seeds=(l.topicSeeds && l.topicSeeds.length) ? l.topicSeeds : generateTopicSeeds(l);
+    const upcoming=memoUpcomingEvents(l);
+    return `
+    <div class="card memo-compact-card"><div class="inner">
+      <div class="row" style="justify-content:space-between;align-items:flex-start;gap:10px">
+        <div style="min-width:0;flex:1">
+          <h2 style="margin:0">${escapeHtml(l.name)}</h2>
+          <p class="muted" style="margin:4px 0 0">${l.nickname ? "@" + escapeHtml(l.nickname) + " / " : ""}話題の種：${escapeHtml(memoPrimarySeed(l))}</p>
+          <p class="muted" style="margin:4px 0 0">📅 ${upcoming.length ? upcoming.map(e=>escapeHtml(e.text)).join(" / ") : "近い予定なし"}</p>
+        </div>
         <div class="row">
+          <button class="btn mini-btn" data-toggle-memo-detail="${i}">開く</button>
           <button class="btn mini-btn" data-open-detail="${i}">詳細設定</button>
           <button class="btn danger" data-delete-memo-listener="${i}" style="min-height:36px;padding:6px 10px">削除</button>
         </div>
       </div>
-      <p class="muted">${l.nickname ? "@" + escapeHtml(l.nickname) + " / " : ""}ログボ ${currentLogboCount(l)}日 / ${state.logboMonth}</p>
-      ${l.birthday ? `<p class="muted">🎂 誕生日 ${escapeHtml(l.birthday)}</p>` : ""}
-      ${isLeapBirthday(l.birthday) ? `<div class="leap-note">🎂 うるう日生まれ：平年は2/28扱いで表示します。</div>` : ""}
-      <p class="muted">年齢 ${displayAge(l)} / 初来枠から ${dateDiffText(l.firstVisitDate || l.registeredDate)}</p>
-      ${renderSeedList(l,i)}
-      <div class="penalty-box">
-        <div class="row" style="justify-content:space-between">
-          <div>
-            <div class="muted">ペナルティー</div>
-            <div class="penalty-count">${l.penalty || 0}</div>
+      <div class="memo-detail" data-memo-detail-box="${i}" style="display:none;margin-top:12px">
+        <p class="muted">ログボ ${currentLogboCount(l)}日 / ${state.logboMonth}</p>
+        ${l.birthday ? `<p class="muted">🎂 誕生日 ${escapeHtml(l.birthday)}</p>` : ""}
+        ${isLeapBirthday(l.birthday) ? `<div class="leap-note">🎂 うるう日生まれ：平年は2/28扱いで表示します。</div>` : ""}
+        <p class="muted">年齢 ${displayAge(l)} / 初来枠から ${dateDiffText(l.firstVisitDate || l.registeredDate)}</p>
+        <div class="seed-box">
+          <div class="row" style="justify-content:space-between">
+            <b>🧠 話題の種</b>
+            <button class="btn mini-btn" data-refresh-seeds="${i}">話題更新</button>
           </div>
-          <div class="row">
-            <button class="btn danger mini-btn" data-penalty-minus="${i}">−</button>
-            <button class="btn danger mini-btn" data-penalty-plus="${i}">＋</button>
-            <button class="btn mini-btn" data-penalty-reset="${i}">リセット</button>
-            <button class="btn mini-btn" data-penalty-detail="${i}">内容を開く</button>
+          <div class="seed-list">${seeds.slice(0,8).map(s=>`<div class="seed-item">${escapeHtml(s)}</div>`).join("")}</div>
+        </div>
+        <div class="penalty-box">
+          <div class="row" style="justify-content:space-between">
+            <div><div class="muted">ペナルティー</div><div class="penalty-count">${l.penalty || 0}</div></div>
+            <div class="row">
+              <button class="btn danger mini-btn" data-penalty-minus="${i}">−</button>
+              <button class="btn danger mini-btn" data-penalty-plus="${i}">＋</button>
+              <button class="btn mini-btn" data-penalty-reset="${i}">リセット</button>
+              <button class="btn mini-btn" data-penalty-detail="${i}">内容を開く</button>
+            </div>
           </div>
+          <div class="penalty-details" data-penalty-detail-box="${i}">${penaltyDetailList(l.name)}</div>
         </div>
-        <div class="penalty-details" data-penalty-detail-box="${i}">
-          ${penaltyDetailList(l.name)}
-        </div>
+        <h3>達成依頼 / 達成品</h3>${achievedList(l)}
+        <h3>カレンダー同期メモ</h3>${calendarMemoList(l.name)}
+        <label>常連メモ</label><textarea data-memo="${i}">${escapeHtml(l.memo||"")}</textarea>
       </div>
-      <h3>達成依頼 / 達成品</h3>
-      ${achievedList(l)}
-      <h3>カレンダー同期メモ</h3>
-      ${calendarMemoList(l.name)}
-      <label>常連メモ</label>
-      <textarea data-memo="${i}">${escapeHtml(l.memo||"")}</textarea>
-    </div></div>`).join("");
-  memoGrid.querySelectorAll("textarea").forEach(t=>t.onchange=()=>{state.listeners[Number(t.dataset.memo)].memo=t.value;save()});
-  memoGrid.querySelectorAll("[data-birthday]").forEach(inp=>inp.onchange=()=>{
-    state.listeners[Number(inp.dataset.birthday)].birthday=inp.value;
-    save();renderMemo();renderCalendar();
-  });
-  memoGrid.querySelectorAll("[data-registered-date]").forEach(inp=>inp.onchange=()=>{
-    const l=state.listeners[Number(inp.dataset.registeredDate)];
-    l.registeredDate=inp.value;
-    if(inp.value){
-      const exists=(state.calendarEvents||[]).some(ev=>ev.listener===l.name && ev.type==="登録日" && ev.date===inp.value);
-      if(!exists) state.calendarEvents.push({id:uid("cal"),date:inp.value,listener:l.name,type:"登録日",item:"常連登録"});
-    }
-    save();renderMemo();renderCalendar();
-  });
+    </div></div>`;
+  }).join("") || `<div class="card"><div class="inner muted">該当する常連がいないよ</div></div>`;
+  memoGrid.querySelectorAll("textarea").forEach(t=>t.onchange=()=>{const l=state.listeners[Number(t.dataset.memo)]; if(l){l.memo=t.value;l.updatedAt=ymd(new Date());save();}});
   memoGrid.querySelectorAll("[data-refresh-seeds]").forEach(btn=>btn.onclick=()=>refreshTopicSeeds(Number(btn.dataset.refreshSeeds)));
   memoGrid.querySelectorAll("[data-open-detail]").forEach(btn=>btn.onclick=()=>openListenerDetail(Number(btn.dataset.openDetail)));
   memoGrid.querySelectorAll("[data-delete-memo-listener]").forEach(btn=>btn.onclick=()=>deleteListener(Number(btn.dataset.deleteMemoListener)));
+  memoGrid.querySelectorAll("[data-toggle-memo-detail]").forEach(btn=>btn.onclick=()=>{
+    const box=memoGrid.querySelector(`[data-memo-detail-box="${btn.dataset.toggleMemoDetail}"]`);
+    if(!box) return;
+    const open=box.style.display!=="none";
+    box.style.display=open?"none":"block";
+    btn.textContent=open?"開く":"閉じる";
+  });
   bindPenaltyButtons(memoGrid);
 }
+if(window.memoSearch) memoSearch.oninput=()=>renderMemo();
+if(window.memoSort) memoSort.onchange=()=>renderMemo();
 
 
 function fitBrushText(text){
@@ -6859,7 +6941,7 @@ const firebaseConfig = { ... }
       const guests = state.roulette.guestBetters || [];
       guestList.innerHTML = guests.length
         ? guests.map(function(name){
-            return '<div class="roulette-bet-row"><span>ゲスト：<b>' + esc(name) + '</b></span><button class="btn danger mini-btn" data-del-roulette-guest="' + esc(name) + '" type="button">削除</button></div>';
+            return '<div class="roulette-bet-row"><span>ゲスト：<b>' + esc(name) + '</b></span><span class="muted">削除は常連メモから</span></div>';
           }).join("")
         : '<div class="muted">ゲスト追加なし</div>';
     }
@@ -7288,16 +7370,6 @@ const firebaseConfig = { ... }
       return;
     }
 
-    if(t.dataset && t.dataset.delRouletteGuest !== undefined){
-      ensureRouletteState();
-      const name = t.dataset.delRouletteGuest;
-      if(!confirm(name + " をゲスト/常連メモから削除する？")) return;
-      removeRouletteGuestEverywhere(name);
-      safeSave();
-      if(typeof renderMemo === "function") renderMemo();
-      window.renderRoulette();
-      return;
-    }
 
     const betTarget = t.closest ? t.closest("[data-bet]") : null;
     if(betTarget && betTarget.dataset && betTarget.dataset.bet !== undefined){
@@ -7831,7 +7903,7 @@ const firebaseConfig = { ... }
   document.addEventListener("click", function(e){
     const t = e.target;
     if(!t) return;
-    const target = t.closest ? t.closest("button,[data-bet],[data-del-bet],[data-del-roulette],[data-del-roulette-guest]") : t;
+    const target = t.closest ? t.closest("button,[data-bet],[data-del-bet],[data-del-roulette]") : t;
     if(!target) return;
 
     const isRouletteControl =
@@ -7839,8 +7911,7 @@ const firebaseConfig = { ... }
       (target.dataset && (
         target.dataset.bet !== undefined ||
         target.dataset.delBet !== undefined ||
-        target.dataset.delRoulette !== undefined ||
-        target.dataset.delRouletteGuest !== undefined
+        target.dataset.delRoulette !== undefined
       ));
 
     if(isRouletteControl){
