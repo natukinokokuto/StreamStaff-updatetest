@@ -2568,12 +2568,12 @@ function fitBrushText(text){
     
 
 
-<section id="serifGame" class="screen"><div class="card"><div class="inner"><h2>🎭 セリフステージ</h2><p class="muted">今後カテゴリ・演技モード追加予定</p><select class="input"><option>キモおもろ</option><option>イケボ</option><option>中二病</option><option>湘南ノリ</option></select><div class="big-output" id="serifPreview">「そのタピオカ…エモの極みだろ…」</div><div class="row"><button class="btn primary" onclick="document.getElementById('serifPreview').textContent=['『今日ビジュ良すぎん？』','『その既読、心に来たわ…』','『ワンチャン宇宙救える』'][Math.floor(Math.random()*3)]">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
-<section id="reloGame" class="screen"><div class="card"><div class="inner"><h2>🍻 レロレロ酒場</h2><p class="muted">和製英語・横文字特化モード</p><div class="big-output" id="reloPreview">アジェンダ</div><div class="row"><button class="btn primary" onclick="document.getElementById('reloPreview').textContent=['エビデンス','ペンディング','アサイン','フィックス'][Math.floor(Math.random()*4)]">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
-<section id="animalGame" class="screen"><div class="card"><div class="inner"><h2>🐼 動物ガチャ</h2><div class="big-output" id="animalPreview">クアッカワラビー</div><div class="row"><button class="btn primary" onclick="document.getElementById('animalPreview').textContent=['ハダカデバネズミ','マヌルネコ','ヤブイヌ','オカピ'][Math.floor(Math.random()*4)]">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
-<section id="itsudareGame" class="screen"><div class="card"><div class="inner"><h2>😂 いつ誰ゲーム</h2><div class="big-output" id="itsuPreview">深夜3時に校長先生がコンビニで踊ってた</div><div class="row"><button class="btn primary" onclick="document.getElementById('itsuPreview').textContent=['雨の日にヤンキーが猫と会議してた','元カレが山で筋トレしてた','配信者が電車で熱唱してた'][Math.floor(Math.random()*3)]">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
-<section id="ogiriGame" class="screen"><div class="card"><div class="inner"><h2>🧠 大喜利アリーナ</h2><div class="big-output" id="ogiriPreview">絶対流行らないスマホ機能とは？</div><div class="row"><button class="btn primary" onclick="document.getElementById('ogiriPreview').textContent=['コンビニで一番怖い瞬間とは？','絶対に弱い必殺技名とは？','配信者しか言わないセリフとは？'][Math.floor(Math.random()*3)]">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
-<section id="bobuGame" class="screen"><div class="card"><div class="inner"><h2>📘 ボブジテン</h2><div class="big-output" id="bobuPreview">Wi‑Fiをカタカナ禁止で説明せよ</div><div class="row"><button class="btn primary" onclick="document.getElementById('bobuPreview').textContent=['YouTubeを日本語だけで説明せよ','エレベーターを擬音禁止で説明せよ','スマホを赤ちゃんに説明せよ'][Math.floor(Math.random()*3)]">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
+<section id="serifGame" class="screen"><div class="card"><div class="inner"><h2>🎭 セリフステージ</h2><p class="muted">配信向けセリフ大量追加済み。下ネタON相当はBAN回避の匂わせ表現で調整。</p><div class="big-output" id="serifPreview">「そのタピオカ…エモの極みだろ…」</div><div class="row"><button class="btn primary" onclick="rollStageGame('line','serifPreview')">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
+<section id="reloGame" class="screen"><div class="card"><div class="inner"><h2>🍻 レロレロ酒場</h2><p class="muted">和製英語・横文字を重点追加。噛まずに言えるか勝負。</p><div class="big-output" id="reloPreview">アジェンダ</div><div class="row"><button class="btn primary" onclick="rollStageGame('relo','reloPreview')">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
+<section id="animalGame" class="screen"><div class="card"><div class="inner"><h2>🐼 動物ガチャ</h2><p class="muted">珍獣・深海・キモかわ系を大量追加。</p><div class="big-output" id="animalPreview">クアッカワラビー</div><div class="row"><button class="btn primary" onclick="rollStageGame('animal','animalPreview')">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
+<section id="itsudareGame" class="screen"><div class="card"><div class="inner"><h2>😂 いつ誰ゲーム</h2><p class="muted">いつ・誰が・どこで・何をしたを大量追加。</p><div class="big-output" id="itsuPreview">深夜3時に校長先生がコンビニで踊ってた</div><div class="row"><button class="btn primary" onclick="rollStageGame('itsu','itsuPreview')">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
+<section id="ogiriGame" class="screen"><div class="card"><div class="inner"><h2>🧠 大喜利アリーナ</h2><p class="muted">コメント参加しやすい配信向けお題を追加。</p><div class="big-output" id="ogiriPreview">絶対流行らないスマホ機能とは？</div><div class="row"><button class="btn primary" onclick="rollStageGame('ogiri','ogiriPreview')">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
+<section id="bobuGame" class="screen"><div class="card"><div class="inner"><h2>📘 ボブジテン</h2><p class="muted">カタカナ禁止説明向け単語を増量。</p><div class="big-output" id="bobuPreview">Wi‑Fiをカタカナ禁止で説明せよ</div><div class="row"><button class="btn primary" onclick="rollStageGame('bob','bobuPreview')">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
 
 <section id="roulette" class="screen">
   <div class="roulette-fullscreen">
@@ -3474,16 +3474,16 @@ const defaultState={
     ]
   },
   customGames:{
-    animalAnimals:["猫","犬","ゾウ","牛","キツネ","ハト","ゴリラ","サル","馬","深夜のコンビニ店員"],
-    animalTopics:["簡単にできる料理","昔流行ったもの","身につけるもの","虫の名前","冬に使うもの","配信で起きがちなこと"],
-    ogiri:["身につけるものっぽく一番くだらないことを言って","深夜のコンビニ店員が急に言いそうな一言","猫が配信者だった時の初見挨拶","絶対に盛り上がらないイベント名"],
-    line:["分からない……何も思い出せない……。何で炊けた米が部屋中に塗りたくられてるんだ……！？","それはもう、ほぼ事件じゃん。","ちょっと待って、話の枝が折れた。","いま誰がこの空気の責任取るの？"],
-    when:["昨日","今日","朝","明日","おととい","去年","昼に","夕方に","夜に","誕生日に"],
-    who:["お母さんが","酔っ払いが","猫が","常連が","初見さんが","師匠が"],
-    where:["コンビニで","配信画面の裏で","公園で","居酒屋で","ダーツバーで","風呂場で"],
-    what:["急に歌い出した","米を炊きすぎた","名言っぽいことを言った","謎のルールを作った","コメント欄を凍らせた"],
-    bob:["アクセル","エンジン","オイル","オートマチック","ガソリン","ガソリンスタンド","カバー","ガレージ","アプローチ","ジュース","ランプ"],
-    relo:["マーボー豆腐","チャンジャ","鮭とば","たこわさ","だし巻きたまご","枝豆","焼きナス","冷やしトマト","もつ鍋","軟骨のから揚げ"]
+    animalAnimals:["猫", "犬", "ゾウ", "牛", "キツネ", "ハト", "ゴリラ", "サル", "馬", "深夜のコンビニ店員", "クアッカワラビー", "マヌルネコ", "ハダカデバネズミ", "オカピ", "ヤブイヌ", "アイアイ", "カピバラ", "ウォンバット", "コビトカバ", "ビントロング", "フェネック", "スナネコ", "カラカル", "サーバル", "ラーテル", "ミーアキャット", "アルマジロ", "センザンコウ", "バク", "ナマケモノ", "アリクイ", "カモノハシ", "ハリモグラ", "タスマニアデビル", "キーウィ", "ハシビロコウ", "ヘビクイワシ", "ライチョウ", "エミュー", "カカポ", "アホウドリ", "シロイルカ", "イッカク", "ジュゴン", "マナティー", "ラッコ", "アザラシ", "ウミウシ", "メンダコ", "ダイオウグソクムシ", "チンアナゴ", "リュウグウノツカイ", "クリオネ", "カブトガニ", "オオサンショウウオ", "ウーパールーパー", "ベルツノガエル", "フトアゴヒゲトカゲ", "ゲッコー", "カメレオン", "カマキリ", "タランチュラ", "サソリ", "モモンガ", "プレーリードッグ", "レッサーパンダ", "シマエナガ", "アカクラゲ", "デンキウナギ", "ピラルク"],
+    animalTopics:["簡単にできる料理", "昔流行ったもの", "身につけるもの", "虫の名前", "冬に使うもの", "配信で起きがちなこと", "初見挨拶", "一番似合う職業", "配信タイトル", "決め台詞", "コンビニで買いそうな物", "好きそうなラーメン", "カラオケ十八番", "絶対言わなそうな一言", "配信で炎上しない謝罪文", "LINEの返信速度", "恋愛相談された時の答え", "遅刻した時の言い訳", "スマホの待ち受け", "旅行先で最初にすること", "居酒屋で頼む一品目", "ダーツの投げ方", "筋トレの掛け声", "寝起きの第一声", "謎のこだわり", "弱点っぽいもの", "実は得意そうなこと", "絶対苦手そうなこと", "視聴者へのお願い", "誕生日プレゼント", "一日店長した時の売り文句", "バンド名", "必殺技名", "負け惜しみ", "勝った時のドヤ顔コメント", "深夜テンションの発言", "プロフィール欄", "推し活の仕方", "学校でのあだ名", "地元での立ち位置", "仕事でやらかしそうなこと", "雨の日の過ごし方", "夏祭りで買うもの", "冬に欲しがるもの", "一番似合うBGM", "サムネに書かれる煽り文", "握手会で言いそうなこと", "寝る前のルーティン", "配信の締め方", "コメント欄への圧", "謝り方", "褒められた時の返し", "謎に強そうな能力", "課金したくなるポイント", "メンタルが折れる瞬間", "一番似合う絵文字"],
+    ogiri:["身につけるものっぽく一番くだらないことを言って", "深夜のコンビニ店員が急に言いそうな一言", "猫が配信者だった時の初見挨拶", "絶対に盛り上がらないイベント名", "絶対に登録者が増えない配信タイトルとは？", "初見さんが3秒で逃げた理由とは？", "コンビニ店員が急にラスボス感を出した一言とは？", "世界一どうでもいい重大発表とは？", "絶対に弱い必殺技名とは？", "配信者が寝落ち直前に言った名言とは？", "お母さんが急にVTuberデビュー。最初の挨拶は？", "このラーメン屋、配信者向けすぎる。なぜ？", "ダーツバーで一番言っちゃダメな一言とは？", "ギター初心者が言いがちなプロっぽい一言とは？", "「これは案件じゃないです」の後に続いた怪しい一言とは？", "世界一テンションが低いコール＆レスポンスとは？", "視聴者全員が「え？」となった罰ゲームとは？", "AIが考えた最悪のデートプランとは？", "朝礼で言ったら会社がざわつく一言とは？", "絶対に流行らないSNSの新機能とは？", "美容室で言われたら不安になる一言とは？", "一番ダサい魔王の弱点とは？", "ガチで要らないスマホ通知とは？", "「今日の配信は安全です」なぜ信用できない？", "カラオケで一瞬で空気が変わった選曲とは？", "絶対にモテない自己紹介とは？", "居酒屋の新メニュー「枠主セット」中身は？", "地元のヤンキーが急に丁寧語になった理由とは？", "誰も得しないランキング第1位とは？", "「それ褒めてる？」と思った一言とは？", "ゲームのラスボスが配信慣れしていた時の一言とは？", "視聴者にしか伝わらない謎ルールとは？", "「この人、常連だな」と分かる行動とは？", "寝坊した配信者の新しい言い訳とは？", "絶対に泣けない感動シーンとは？", "強そうで弱いチーム名とは？", "配信画面に一瞬映ってはいけないものとは？", "一番雑な謝罪会見の第一声とは？", "世界一浅い人生相談の答えとは？", "絶対にバズらないハッシュタグとは？", "先生が配信者だった時の宿題とは？", "未来の自分から来たのに言うことがショボい。何て言った？", "「BAN回避しました」と言いながら危ない理由とは？", "誰も覚えられない新ルールとは？", "コメント欄が一斉に黙った一言とは？", "一番信用できない占い結果とは？", "駅員さんが急に詩人になった一言とは？", "絶対に負けたくないしょうもない勝負とは？", "配信者専用の四字熟語とは？", "一番嫌なサプライズとは？", "パスワードのヒントが怖すぎる。何？", "桃太郎が現代の配信者だったら最初に何をする？", "世界一小さい炎上理由とは？", "コメントで来たら困る質問とは？"],
+    line:["分からない……何も思い出せない……。何で炊けた米が部屋中に塗りたくられてるんだ……！？", "それはもう、ほぼ事件じゃん。", "ちょっと待って、話の枝が折れた。", "いま誰がこの空気の責任取るの？", "「今日の俺、ちょっとだけ伝説寄りじゃない？」", "「待って、今の沈黙にも著作権ある？」", "「その一言、俺のメンタルにクリティカル入ってる」", "「俺の中の小さい審査員が全員札を上げてる」", "「今のは恋じゃない。通信エラーだ」", "「安心して。まだギリギリ人間側にいる」", "「そのノリ、深夜二時なら国宝だよ」", "「ちょっと待て、ツッコミが渋滞してる」", "「この空気、誰か領収書切ってくれ」", "「俺のビジュ、今日だけログインボーナス付いてる」", "「やめろ、その優しさは効く」", "「今のコメント、心のスクショ撮った」", "「俺が悪いんじゃない。テンションが先に走った」", "「それ以上言うと、俺の中のPTAが動く」", "「大丈夫、これは下ネタじゃない。概念だ」", "「ちょっと大人の階段、手すり持って降りようか」", "「その話はカーテン閉めてからにしよう」", "「今の発言、配信的には薄目で見よう」", "「それは匂わせじゃなくて、香りの暴走」", "「危ない単語は全部ピー音に就職しました」", "「俺の理性、いま有給取ってる」", "「その距離感、Wi-Fiなら強すぎる」", "「言い方だけイケボにしたら全部許されると思うなよ」", "「ベイベェ、今日の水道水、やけにエモいな」", "「この胸騒ぎ、たぶん通知音のせい」", "「君の既読、俺の心拍数より正確だね」", "「今の俺、だいぶ主人公の友達ポジ」", "「その角度から褒める人、初めて見た」", "「待って、今の俺ちょっと名言っぽくなかった？」", "「俺の辞書に不可能はない。説明書はある」", "「この場を借りて言います。借りた場は返します」", "「好きって言ってない。高評価って言った」", "「その誘惑、サムネなら釣られてた」", "「俺たちの関係？コメント欄と固定コメントくらいかな」", "「やばい、今の流れにBGMが追いついてない」", "「俺の中のホストが水を頼めって言ってる」", "「その笑い方、課金ボイスにしよう」", "「今だけ俺をラスボス前の村人だと思って聞いて」", "「その発想、冷蔵庫の奥から出てきた？」", "「今日の俺は優しいぞ。昨日の俺に怒られたからな」", "「そこまで言うなら、俺も小声で乗る」", "「今のセリフ、家族の前では再放送禁止ね」", "「安心して、BANの手前でちゃんと土下座してる」", "「これは事故じゃない。企画の呼吸だ」", "「コメント欄、今のは聞かなかったことにして」", "「俺の青春、だいたい充電切れだった」", "「その顔、絶対コンビニでプリン選んでる時の顔じゃん」", "「今日の俺、たぶん3割くらい湘南の風」", "「世界が俺に追いついてない。主に洗濯物が」", "「その質問、答えた瞬間に人生のログが残るやつ」"],
+    when:["昨日", "今日", "朝", "明日", "おととい", "去年", "昼に", "夕方に", "夜に", "誕生日に", "配信開始3秒後に", "深夜2時22分に", "給料日前日に", "月曜日の朝に", "雨で靴下が終わった日に", "誕生日の0時ちょうどに", "美容室のシャンプー中に", "コンビニのレジ前で", "ダーツで負けた直後に", "カラオケのサビ前に", "寝落ち寸前に", "アラーム5個目で起きた瞬間に", "初見さんが来た瞬間に", "コメントが止まった時に", "風呂上がり3分後に", "ご飯炊き忘れに気づいた時に", "スマホ残り1％で", "推しの通知が来た瞬間に", "職場で休憩に入った瞬間に", "夜中に冷蔵庫を開けた時に", "Wi-Fiが切れた瞬間に", "洗濯機が終わった音の直後に", "花火大会の帰り道で", "雪の日の朝に", "免許更新の写真撮影前に", "ライブ前の楽屋で", "配信を切ったと思った直後に", "親が部屋に入ってきた瞬間に", "宅配便が来た瞬間に", "寝癖が限界の日に"],
+    who:["お母さんが", "酔っ払いが", "猫が", "常連が", "初見さんが", "師匠が", "枠主が", "古参リスナーが", "ROM専が", "妹が", "近所のおじさんが", "コンビニ店員が", "職場の先輩が", "地元の友達が", "ギターの神様が", "ダーツのライバルが", "AIアシスタントが", "ハシビロコウが", "未来の自分が", "過去の自分が", "ラスボスが", "校長先生が", "美容師さんが", "宅配のお兄さんが", "居酒屋の店長が", "駅員さんが", "謎のイケボが", "自称プロデューサーが", "寝起きの自分が", "コメント欄の総意が", "常連メンバーが", "通りすがりの犬が", "宇宙人が"],
+    where:["コンビニで", "配信画面の裏で", "公園で", "居酒屋で", "ダーツバーで", "風呂場で", "駅のホームで", "美容室で", "布団の中で", "車の中で", "職場の休憩所で", "スーパーの惣菜前で", "カラオケで", "ライブハウスで", "公園のベンチで", "ファミレスで", "ラーメン屋で", "海沿いで", "湘南の風を浴びながら", "エレベーターの中で", "信号待ちで", "楽器部屋で", "ゲームセンターで", "病院の待合室で", "市役所で", "友達の家で", "夢の中で", "コメント欄で", "サムネの中で", "謎の会議室で", "月面で"],
+    what:["急に歌い出した", "米を炊きすぎた", "名言っぽいことを言った", "謎のルールを作った", "コメント欄を凍らせた", "急に名言っぽいことを言った", "謎の謝罪会見を始めた", "初見挨拶を噛んだ", "高評価をお願いしながら自分で照れた", "水を飲むだけで拍手された", "自分の名前を忘れた", "コメント欄に説教された", "ギターソロのつもりで鼻歌を始めた", "ダーツのフォームを語り出した", "謎のランキングを発表した", "一番いらない能力を手に入れた", "いきなり小声で勝利宣言した", "レシートを見て人生を悟った", "スマホに向かって土下座した", "しょうもない嘘をすぐ認めた", "配信タイトルを3回変えた", "謎の横文字で乗り切ろうとした", "語尾だけイケボになった", "BAN回避のために急に敬語になった", "突然カーテンに話しかけた", "冷蔵庫のプリンと和解した", "初恋みたいな顔で唐揚げを見た", "世界平和より晩ご飯を優先した", "サムネ詐欺を自白した", "謎の手拍子を求めた", "一人でコール＆レスポンスした", "負けたのに勝者インタビューを受けた", "靴下に人生相談した", "「これは企画です」と言い張った"],
+    bob:["アクセル", "エンジン", "オイル", "オートマチック", "ガソリン", "ガソリンスタンド", "カバー", "ガレージ", "アプローチ", "ジュース", "ランプ", "サブスク", "スマホ", "アプリ", "コメント", "フォロー", "チャンネル", "ログイン", "パスワード", "スクショ", "サムネ", "アイコン", "プロフィール", "ダウンロード", "アップデート", "バグ", "バックアップ", "クラウド", "リモコン", "エアコン", "イヤホン", "マイク", "ギター", "アンプ", "コード", "ライブ", "スタジオ", "ドラム", "ベース", "エフェクター", "カラオケ", "コンビニ", "スーパー", "レシート", "ポイントカード", "ラーメン", "チャーハン", "ハンバーグ", "プリン", "アイス", "コーヒー", "カレンダー", "アラーム", "タイマー", "ランキング", "ルーレット", "チンチロ", "ダーツ", "ブル", "トリプル", "ゼロワン", "ファッション", "パーカー", "スニーカー", "ジーンズ", "ベルト", "ヘアワックス", "シャンプー", "ドライヤー", "エレベーター"],
+    relo:["マーボー豆腐", "チャンジャ", "鮭とば", "たこわさ", "だし巻きたまご", "枝豆", "焼きナス", "冷やしトマト", "もつ鍋", "軟骨のから揚げ", "サラリーマン", "オーダーメイド", "ガソリンスタンド", "コンセント", "ノートパソコン", "キーホルダー", "ベビーカー", "ペットボトル", "フライドポテト", "シュークリーム", "ホットケーキ", "アイスコーヒー", "モーニングコール", "クレーム", "リフォーム", "リサイクルショップ", "バイキング", "コインランドリー", "パワハラ", "セクハラ", "ノンアル", "テイクアウト", "テーブルチャージ", "フリーダイヤル", "ワンピース", "スキンシップ", "マイブーム", "リベンジ", "レベルアップ", "スキルアップ", "サインペン", "シャープペン", "ビニール袋", "ダンボール", "ホームセンター", "ゲームセンター", "ライブハウス", "タレント", "アイドル", "グラビア", "テンション", "ハイテンション", "ローテンション", "ナイーブ", "ドンマイ", "ファイト", "サービスエリア", "バックミラー", "ウインカー", "フロントガラス", "ハンドルキーパー", "キッチンペーパー", "サランラップ", "電子レンジ", "オーブントースター", "フリーサイズ", "オーバーオール", "マンツーマン", "キャッチコピー", "イメージチェンジ", "スキンヘッド", "モーニングセット", "カンニング", "アルバイト", "パート", "サラダバー", "ドリンクバー", "ソフトクリーム", "タッチパネル", "セルフレジ", "ガードマン", "ベテラン", "デッドボール", "ナイター", "ゲームオーバー"]
   }
 };
 let state=load();
@@ -3508,7 +3508,12 @@ while(state.chin.diceNames.length<6) state.chin.diceNames.push(`サイコロ${st
 while(state.chin.customDice.length<6) state.chin.customDice.push(structuredClone(defaultState.chin.customDice[state.chin.customDice.length] || defaultState.chin.customDice[0]));
 state.chin.localMap = state.chin.localMap || {};
 state.customGames = state.customGames || structuredClone(defaultState.customGames);
-for (const k in defaultState.customGames) state.customGames[k] = state.customGames[k] || structuredClone(defaultState.customGames[k]);
+for (const k in defaultState.customGames) {
+  state.customGames[k] = state.customGames[k] || structuredClone(defaultState.customGames[k]);
+  defaultState.customGames[k].forEach(item=>{
+    if(!state.customGames[k].includes(item)) state.customGames[k].push(item);
+  });
+}
 state.listeners = state.listeners || [];
 state.calendarEvents = state.calendarEvents || [];
 state.monthlyEvents = state.monthlyEvents || [];
@@ -3539,13 +3544,19 @@ let selectedListener=0;
 let selectedGame="animal";
 
 const gameData={
-  animal:{label:"動物",roll:()=>`🐾 ${pick(["猫","犬","ゾウ","牛","キツネ","ハト","ゴリラ","サル","馬","深夜のコンビニ店員"])} × 「${pick(["簡単にできる料理","昔流行ったもの","身につけるもの","虫の名前","冬に使うもの","配信で起きがちなこと"])}」といえば？`},
-  ogiri:{label:"大喜利",roll:()=>`🧠 大喜利：${pick(["身につけるものっぽく一番くだらないことを言って","深夜のコンビニ店員が急に言いそうな一言","猫が配信者だった時の初見挨拶","絶対に盛り上がらないイベント名"] )}`},
-  line:{label:"セリフ",roll:()=>`🎭 セリフ：${pick(["分からない……何も思い出せない……。何で炊けた米が部屋中に塗りたくられてるんだ……！？","それはもう、ほぼ事件じゃん。","ちょっと待って、話の枝が折れた。","いま誰がこの空気の責任取るの？"])}`},
-  itsu:{label:"いつ誰",roll:()=>`🧩 ${pick(["昨日","今日","朝","明日","おととい","去年","昼に","夕方に","夜に","誕生日に"])} ${pick(["お母さんが","酔っ払いが","猫が","常連が","初見さんが","師匠が"])} ${pick(["コンビニで","配信画面の裏で","公園で","居酒屋で","ダーツバーで","風呂場で"])} ${pick(["急に歌い出した","米を炊きすぎた","名言っぽいことを言った","謎のルールを作った","コメント欄を凍らせた"])}`},
-  bob:{label:"ボブ",roll:()=>`📘 ボブジテン：${pick(["アクセル","エンジン","オイル","オートマチック","ガソリン","ガソリンスタンド","カバー","ガレージ","アプローチ","ジュース","ランプ"])} ※カタカナ禁止で説明`},
-  relo:{label:"酒場",roll:()=>`🍻 レロレロ酒場：${pick(["マーボー豆腐","チャンジャ","鮭とば","たこわさ","だし巻きたまご","枝豆","焼きナス","冷やしトマト","もつ鍋","軟骨のから揚げ"])} を噛まずに言える？`}
+  animal:{label:"動物",roll:()=>`🐾 ${pick(state.customGames.animalAnimals)} × 「${pick(state.customGames.animalTopics)}」といえば？`},
+  ogiri:{label:"大喜利",roll:()=>`🧠 大喜利：${pick(state.customGames.ogiri)}`},
+  line:{label:"セリフ",roll:()=>`🎭 セリフ：${pick(state.customGames.line)}`},
+  itsu:{label:"いつ誰",roll:()=>`🧩 ${pick(state.customGames.when)} ${pick(state.customGames.who)} ${pick(state.customGames.where)} ${pick(state.customGames.what)}`},
+  bob:{label:"ボブ",roll:()=>`📘 ボブジテン：${pick(state.customGames.bob)} ※カタカナ禁止で説明`},
+  relo:{label:"酒場",roll:()=>`🍻 レロレロ酒場：${pick(state.customGames.relo)} を噛まずに言える？`}
 };
+function rollStageGame(key, targetId){
+  const el=document.getElementById(targetId);
+  if(!el || !gameData[key]) return;
+  el.textContent = gameData[key].roll();
+}
+
 const trunks=[
   "最近あった地味にムカついた話",
   "昔はダサいと思ってたけど今はアリなもの",
