@@ -2440,6 +2440,10 @@ function fitBrushText(text){
   padding:12px;
 }
 
+
+.animal-panel{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;align-items:stretch;margin-top:12px}.animal-card{border:1px solid var(--line);border-radius:18px;padding:14px;background:rgba(255,255,255,.04)}.animal-visual{min-height:180px;display:flex;align-items:center;justify-content:center;border-radius:18px;background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.02));font-size:72px;margin-bottom:10px;overflow:hidden}.animal-visual.silhouette{filter:brightness(.05);text-shadow:0 0 0 #111}.animal-name{font-size:26px;font-weight:900;margin:4px 0}.animal-tags{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.animal-tags span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;background:rgba(255,255,255,.05)}.animal-question{font-size:22px;font-weight:800;line-height:1.45;padding:14px;border-radius:16px;background:rgba(255,255,255,.05);margin:10px 0}.animal-rulebox{line-height:1.7}.animal-search-row{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}.animal-results{max-height:190px;overflow:auto;margin-top:8px;border-radius:14px;border:1px solid var(--line);padding:8px;background:rgba(0,0,0,.12)}.animal-result{display:flex;justify-content:space-between;gap:8px;padding:8px;border-bottom:1px solid rgba(255,255,255,.08);cursor:pointer}.animal-result:last-child{border-bottom:0}.animal-result:hover{background:rgba(255,255,255,.06)}.animal-small{font-size:12px;color:var(--muted)}
+@media(max-width:800px){.animal-panel{grid-template-columns:1fr}.animal-visual{min-height:130px;font-size:58px}}
+
 </style>
 
 <link rel="icon" type="image/png" href="icon_streamstaff_final.png">
@@ -2600,7 +2604,53 @@ function fitBrushText(text){
   </div></div>
 </section>
 <section id="reloGame" class="screen"><div class="card"><div class="inner"><h2>🍻 レロレロ酒場</h2><p class="muted">和製英語・横文字を重点追加。噛まずに言えるか勝負。</p><div class="big-output" id="reloPreview">アジェンダ</div><div class="row"><button class="btn primary" onclick="rollStageGame('relo','reloPreview')">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
-<section id="animalGame" class="screen"><div class="card"><div class="inner"><h2>🐼 動物ガチャ</h2><p class="muted">珍獣・深海・キモかわ系を大量追加。</p><div class="big-output" id="animalPreview">クアッカワラビー</div><div class="row"><button class="btn primary" onclick="rollStageGame('animal','animalPreview')">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
+<section id="animalGame" class="screen"><div class="card"><div class="inner">
+  <h2>🐾 動物なりきり大喜利</h2>
+  <p class="muted">出た動物になりきって質問に答えるゲーム。苦手な人は語尾だけでもOK！ 自分のことを動物化して答えてもOK。</p>
+  <div class="grid two">
+    <label>難易度<select id="animalDifficulty">
+      <option value="easy">かんたん：有名動物中心</option>
+      <option value="normal" selected>ふつう：ちょい珍しめまで</option>
+      <option value="hard">高難易度：何この動物ｗ</option>
+      <option value="chaos">カオス：全部混ぜ</option>
+    </select></label>
+    <label>遊び方<select id="animalPlayMode">
+      <option value="simple">語尾だけでもOK</option>
+      <option value="role" selected>なりきり</option>
+      <option value="gachi">ガチなりきり</option>
+      <option value="nohint">名前だけで想像</option>
+    </select></label>
+    <label>画像表示<select id="animalImageMode">
+      <option value="emoji" selected>絵文字/簡易画像あり</option>
+      <option value="silhouette">シルエット</option>
+      <option value="name">名前のみ</option>
+    </select></label>
+    <label>質問カテゴリ<select id="animalQuestionCategory">
+      <option value="random" selected>ランダム</option><option value="self">自分のこと</option><option value="stream">配信</option><option value="love">恋愛</option><option value="daily">日常</option><option value="chaos">カオス</option>
+    </select></label>
+  </div>
+  <div class="animal-panel">
+    <div class="animal-card">
+      <div class="animal-visual" id="animalVisual">🐱</div>
+      <div class="animal-name" id="animalName">猫</div>
+      <div class="animal-tags" id="animalTags"><span>かんたん</span><span>語尾：にゃ</span></div>
+      <p class="muted" id="animalHint">ヒント：自由気まま。人の作業を邪魔しがち。</p>
+      <div class="animal-question" id="animalQuestion">最近ハマってることは？</div>
+      <p class="muted" id="animalGuide">例：テレビゲームにゃ〜 / 暖かい場所で寝ることにゃ</p>
+    </div>
+    <div class="animal-card animal-rulebox">
+      <b>ルール</b><br>
+      ① 出た動物になったつもりで質問に答える<br>
+      ② ガチで知らなくても想像でOK<br>
+      ③ 苦手なら語尾だけでOK：「〜にゃ」「〜ワン」「〜コン」<br>
+      ④ 自分のことを動物っぽく答えてもOK<br>
+      ⑤ 画像/ヒントを隠すと高難易度になるｗ
+      <div class="animal-search-row"><input id="animalSearch" placeholder="動物名・語尾・特徴で検索 例：にゃ / コン / かわいい"><button class="btn" onclick="searchAnimalData()">検索</button></div>
+      <div class="animal-results" id="animalSearchResults"><div class="animal-small">検索すると語尾候補や特徴を確認できる。</div></div>
+    </div>
+  </div>
+  <div class="row"><button class="btn primary" onclick="rollAnimalGame()">動物を出す</button><button class="btn" onclick="searchAnimalData(true)">語尾一覧</button><button class="btn" onclick="showScreen('games')">戻る</button></div>
+</div></div></section>
 <section id="itsudareGame" class="screen"><div class="card"><div class="inner"><h2>😂 いつ誰ゲーム</h2><p class="muted">いつ・誰が・どこで・何をしたを大量追加。</p><div class="big-output" id="itsuPreview">深夜3時に校長先生がコンビニで踊ってた</div><div class="row"><button class="btn primary" onclick="rollStageGame('itsu','itsuPreview')">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
 <section id="ogiriGame" class="screen"><div class="card"><div class="inner"><h2>🧠 大喜利アリーナ</h2><p class="muted">コメント参加しやすい配信向けお題を追加。</p><div class="big-output" id="ogiriPreview">絶対流行らないスマホ機能とは？</div><div class="row"><button class="btn primary" onclick="rollStageGame('ogiri','ogiriPreview')">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
 <section id="bobuGame" class="screen"><div class="card"><div class="inner"><h2>📘 ボブジテン</h2><p class="muted">カタカナ禁止説明向け単語を増量。</p><div class="big-output" id="bobuPreview">Wi‑Fiをカタカナ禁止で説明せよ</div><div class="row"><button class="btn primary" onclick="rollStageGame('bob','bobuPreview')">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
@@ -4134,8 +4184,118 @@ function rollSerifGame(){
   updateSerifDynamicLabels();
 })();
 
+
+const animalData = [
+  {name:"猫",emoji:"🐱",diff:"easy",suffix:"にゃ",hint:"自由気まま。人の作業を邪魔しがち。",tags:["かわいい","気まぐれ","身近"]},
+  {name:"犬",emoji:"🐶",diff:"easy",suffix:"ワン",hint:"忠実で元気。散歩という言葉に弱い。",tags:["元気","忠犬","身近"]},
+  {name:"キツネ",emoji:"🦊",diff:"easy",suffix:"コン",hint:"賢くて少しあざとい。油揚げイメージ。",tags:["ずる賢い","あざとい"]},
+  {name:"うさぎ",emoji:"🐰",diff:"easy",suffix:"ぴょん",hint:"寂しがりっぽく見える。跳ねてごまかせる。",tags:["かわいい","寂しがり"]},
+  {name:"パンダ",emoji:"🐼",diff:"easy",suffix:"パン",hint:"笹と寝転び。かわいいの暴力。",tags:["のんびり","笹"]},
+  {name:"ゴリラ",emoji:"🦍",diff:"easy",suffix:"ウホ",hint:"強い・優しい・胸を叩く。",tags:["筋肉","兄貴","圧"]},
+  {name:"ペンギン",emoji:"🐧",diff:"easy",suffix:"ペン",hint:"よちよち歩き。集団行動が得意。",tags:["かわいい","寒い"]},
+  {name:"ライオン",emoji:"🦁",diff:"easy",suffix:"ガオ",hint:"王者感。寝てる時間も長い。",tags:["王者","威厳"]},
+  {name:"牛",emoji:"🐮",diff:"easy",suffix:"モ〜",hint:"のんびり。牧場とミルク。",tags:["のんびり","牧場"]},
+  {name:"鳥",emoji:"🐤",diff:"easy",suffix:"ピヨ",hint:"軽いノリで飛べる。歌もいける。",tags:["自由","歌"]},
+  {name:"カエル",emoji:"🐸",diff:"easy",suffix:"ケロ",hint:"雨の日とジャンプ。湿度に強い。",tags:["雨","ジャンプ"]},
+  {name:"ブタ",emoji:"🐷",diff:"easy",suffix:"ブー",hint:"食べる・寝る・正直。",tags:["食いしん坊","正直"]},
+  {name:"サル",emoji:"🐵",diff:"easy",suffix:"ウキ",hint:"いたずら好き。テンション高め。",tags:["いたずら","陽キャ"]},
+  {name:"馬",emoji:"🐴",diff:"easy",suffix:"ヒヒン",hint:"走るのが得意。爽やかに逃げられる。",tags:["速い","爽やか"]},
+  {name:"ハムスター",emoji:"🐹",diff:"easy",suffix:"チュ",hint:"ほっぺに溜める。回し車で忙しい。",tags:["小さい","かわいい"]},
+  {name:"オオカミ",emoji:"🐺",diff:"normal",suffix:"ガル",hint:"群れと孤高の両方でいける。夜が似合う。",tags:["クール","夜"]},
+  {name:"カピバラ",emoji:"🦫",diff:"normal",suffix:"バラ",hint:"温泉とのんびり。怒らなそう。",tags:["温泉","平和"]},
+  {name:"レッサーパンダ",emoji:"🐾",diff:"normal",suffix:"パンダ",hint:"立つと強い。見た目で勝てる。",tags:["かわいい","威嚇"]},
+  {name:"シマエナガ",emoji:"🐦",diff:"normal",suffix:"チュン",hint:"雪の妖精っぽい丸い鳥。",tags:["かわいい","白い"]},
+  {name:"フェネック",emoji:"🦊",diff:"normal",suffix:"フェネ",hint:"大きな耳が特徴。砂漠のかわいい枠。",tags:["耳","かわいい"]},
+  {name:"スナネコ",emoji:"🐱",diff:"normal",suffix:"にゃ",hint:"砂漠の天使。小さくて強気。",tags:["砂漠","かわいい"]},
+  {name:"ラッコ",emoji:"🦦",diff:"normal",suffix:"ラコ",hint:"貝を割る。手をつないで寝る。",tags:["海","かわいい"]},
+  {name:"ナマケモノ",emoji:"🦥",diff:"normal",suffix:"のん",hint:"とにかくゆっくり。急かされるのが苦手。",tags:["遅い","省エネ"]},
+  {name:"ハシビロコウ",emoji:"🦤",diff:"normal",suffix:"ビロ",hint:"動かない鳥。目力がすごい。",tags:["無言","圧"]},
+  {name:"マヌルネコ",emoji:"🐱",diff:"normal",suffix:"マヌ",hint:"もふもふで表情が渋い。",tags:["もふもふ","渋い"]},
+  {name:"ウォンバット",emoji:"🐻",diff:"normal",suffix:"バット",hint:"ずんぐり。お尻が硬いことで有名。",tags:["丸い","防御"]},
+  {name:"ミーアキャット",emoji:"🐾",diff:"normal",suffix:"ミャ",hint:"立って見張る。家族感が強い。",tags:["見張り","集団"]},
+  {name:"アライグマ",emoji:"🦝",diff:"normal",suffix:"ラス",hint:"手先が器用。洗ってるイメージ。",tags:["器用","いたずら"]},
+  {name:"カワウソ",emoji:"🦦",diff:"normal",suffix:"うそ",hint:"遊び好き。手を使うのがかわいい。",tags:["水辺","遊び"]},
+  {name:"シャチ",emoji:"🐋",diff:"normal",suffix:"シャチ",hint:"海のギャング。賢くて強い。",tags:["強い","海"]},
+  {name:"オカピ",emoji:"🦓",diff:"hard",suffix:"オカ",hint:"シマウマっぽい脚だけどキリンの仲間。",tags:["珍獣","しましま"]},
+  {name:"クアッカワラビー",emoji:"🦘",diff:"hard",suffix:"ッカ",hint:"笑ってるように見える幸せそうな動物。",tags:["笑顔","珍獣"]},
+  {name:"ハダカデバネズミ",emoji:"🐭",diff:"hard",suffix:"デバ",hint:"裸っぽい見た目の地中生活者。クセが強い。",tags:["地中","クセ強"]},
+  {name:"アイアイ",emoji:"🐒",diff:"hard",suffix:"アイ",hint:"細長い指で木を探る夜行性の霊長類。",tags:["夜行性","指"]},
+  {name:"ヤブイヌ",emoji:"🐕",diff:"hard",suffix:"ヤブ",hint:"ずんぐりした野生の犬。群れで動く。",tags:["群れ","野生"]},
+  {name:"ビントロング",emoji:"🐾",diff:"hard",suffix:"ビン",hint:"ポップコーンみたいな匂いと言われる動物。",tags:["匂い","珍獣"]},
+  {name:"コビトカバ",emoji:"🦛",diff:"hard",suffix:"カバ",hint:"小さいカバ。かわいいけどカバ。",tags:["小型","水辺"]},
+  {name:"センザンコウ",emoji:"🐾",diff:"hard",suffix:"ザン",hint:"うろこで丸まる。防御力高め。",tags:["うろこ","防御"]},
+  {name:"カモノハシ",emoji:"🦆",diff:"hard",suffix:"カモ",hint:"くちばし・卵・毒爪。属性盛りすぎ。",tags:["謎","水辺"]},
+  {name:"ハリモグラ",emoji:"🦔",diff:"hard",suffix:"チク",hint:"針がある卵を産む哺乳類。",tags:["針","珍獣"]},
+  {name:"タスマニアデビル",emoji:"😈",diff:"hard",suffix:"デビ",hint:"名前が強い。鳴き声も迫力。",tags:["名前強い","野生"]},
+  {name:"カカポ",emoji:"🦜",diff:"hard",suffix:"カポ",hint:"飛べないオウム。丸くてかわいい。",tags:["鳥","飛べない"]},
+  {name:"メンダコ",emoji:"🐙",diff:"hard",suffix:"メン",hint:"深海のゆるいタコ。見た目が癒し。",tags:["深海","ゆるい"]},
+  {name:"ダイオウグソクムシ",emoji:"🪲",diff:"hard",suffix:"グソ",hint:"深海の巨大ダンゴムシみたいなやつ。",tags:["深海","装甲"]},
+  {name:"チンアナゴ",emoji:"🐍",diff:"hard",suffix:"チン",hint:"砂からにょきっと出る海の人気者。",tags:["水族館","にょき"]},
+  {name:"クリオネ",emoji:"🪽",diff:"hard",suffix:"クリ",hint:"流氷の天使。食事シーンは別物。",tags:["透明","天使"]},
+  {name:"ウーパールーパー",emoji:"🦎",diff:"hard",suffix:"パー",hint:"ゆるい顔の両生類。再生能力の印象。",tags:["ゆる顔","水槽"]},
+  {name:"ラーテル",emoji:"🦡",diff:"hard",suffix:"テル",hint:"怖いもの知らずでめちゃくちゃ強気。",tags:["強気","無敵感"]},
+  {name:"テンレック",emoji:"🦔",diff:"hard",suffix:"チク",hint:"ハリネズミっぽいけど別の謎かわ生物。",tags:["謎","夜行性"]},
+  {name:"ピラルク",emoji:"🐟",diff:"hard",suffix:"ルク",hint:"巨大な淡水魚。古代魚っぽい迫力。",tags:["巨大","魚"]},
+  {name:"深夜のコンビニ店員",emoji:"🏪",diff:"chaos",suffix:"です",hint:"動物ではない。だが配信では動物扱いでよい。",tags:["人類","カオス"]}
+];
+const animalQuestions = {
+  self:["最近ハマってることは？","休日は何してる？","朝起きて最初にすることは？","好きな食べ物は？","苦手なことは？","テンションが上がる瞬間は？","今一番ほしいものは？","自分のチャームポイントは？","最近ちょっとムカついたことは？","寝る前のルーティンは？"],
+  stream:["初見さんに一言どうぞ","コメントが止まった時どうする？","配信で滑った時どうする？","高評価をお願いしてください","今日の配信タイトルをつけるなら？","常連さんに甘えてください","BAN回避しながら謝ってください","枠を締める一言をどうぞ","リスナーにお願いするとしたら？","急にスパチャが来た時の反応は？"],
+  love:["好きなタイプは？","告白するなら何て言う？","デートに誘うなら？","嫉妬した時どうする？","好きな人から返信が来ない時どうする？","キュンとする瞬間は？","フラれた時の一言は？","好きバレした時どうごまかす？","初デートで行きたい場所は？","相手を褒めるなら？"],
+  daily:["寝坊した時どうする？","コンビニでつい買うものは？","雨の日の過ごし方は？","お腹が空いた時の第一声は？","怒られた時どうする？","宝くじが当たったら？","カラオケで歌うなら？","仕事でミスした時の言い訳は？","旅行先で最初にすることは？","一番落ち着く場所は？"],
+  chaos:["世界征服するなら最初に何する？","魔王に会ったら何て言う？","急に人間になったら何する？","自分の必殺技名は？","ラスボス前に一言どうぞ","コメント欄をざわつかせる一言は？","謎の会見を開いてください","人生最大の秘密を匂わせてください","宇宙人に自己紹介してください","この世で一番許せないものは？"]
+};
+const animalExamples = {
+  simple:["自分のことを答えて語尾だけ足せばOK。例：テレビゲームにゃ〜","困ったら短く答えるだけでOK。例：寝ることワン！"],
+  role:["動物っぽい理由を少し混ぜる。例：暖かい場所で寝ることにゃ","性格を乗せると強い。例：散歩って聞いたら全部忘れるワン"],
+  gachi:["習性や見た目まで寄せる。例：人間の作業場に乗って邪魔するにゃ","知らなければ想像で押し切る。例：たぶん夜にこっそり動くチク…"],
+  nohint:["ヒントなし。名前の響きだけで想像して答える地獄モードｗ"]
+};
+function animalDiffRank(d){return {easy:1,normal:2,hard:3,chaos:4}[d]||2;}
+function getAnimalPool(){
+  const d=document.getElementById('animalDifficulty')?.value||'normal';
+  if(d==='easy') return animalData.filter(a=>a.diff==='easy');
+  if(d==='normal') return animalData.filter(a=>animalDiffRank(a.diff)<=2);
+  if(d==='hard') return animalData.filter(a=>a.diff==='hard');
+  return animalData;
+}
+function getAnimalQuestion(){
+  const cat=document.getElementById('animalQuestionCategory')?.value||'random';
+  const keys=Object.keys(animalQuestions);
+  const k=cat==='random'?pick(keys):cat;
+  return pick(animalQuestions[k]||animalQuestions.self);
+}
+function renderAnimalCard(a,q){
+  const mode=document.getElementById('animalImageMode')?.value||'emoji';
+  const play=document.getElementById('animalPlayMode')?.value||'role';
+  const v=document.getElementById('animalVisual');
+  if(v){v.classList.toggle('silhouette',mode==='silhouette'); v.textContent=mode==='name'?'？':(a.emoji||'🐾');}
+  const n=document.getElementById('animalName'); if(n) n.textContent=a.name;
+  const tags=document.getElementById('animalTags'); if(tags) tags.innerHTML=[a.diff,`語尾：${a.suffix}`,...(a.tags||[])].map(x=>`<span>${x}</span>`).join('');
+  const hint=document.getElementById('animalHint'); if(hint) hint.textContent=(play==='nohint'||mode==='name')?'ヒント：非表示。名前だけで想像して答えろｗ':`ヒント：${a.hint}`;
+  const ques=document.getElementById('animalQuestion'); if(ques) ques.textContent=q;
+  const guide=document.getElementById('animalGuide'); if(guide) guide.textContent=pick(animalExamples[play]||animalExamples.role)+` / 推奨語尾：${a.suffix}`;
+}
+function rollAnimalGame(){
+  const pool=getAnimalPool();
+  const a=pick(pool.length?pool:animalData);
+  renderAnimalCard(a,getAnimalQuestion());
+}
+function searchAnimalData(showAll=false){
+  const box=document.getElementById('animalSearch');
+  const out=document.getElementById('animalSearchResults');
+  if(!out) return;
+  const q=(box?.value||'').trim().toLowerCase();
+  let arr=animalData;
+  if(!showAll && q){
+    arr=animalData.filter(a=>[a.name,a.suffix,a.hint,...(a.tags||[])].join(' ').toLowerCase().includes(q));
+  }
+  if(!showAll && !q){out.innerHTML='<div class="animal-small">動物名・語尾・特徴で検索してね。例：にゃ / コン / かわいい / 深海</div>';return;}
+  out.innerHTML=arr.slice(0,80).map((a,i)=>`<div class="animal-result" onclick="renderAnimalCard(animalData.find(x=>x.name==='${a.name}')||animalData[0], getAnimalQuestion())"><div><b>${a.emoji} ${a.name}</b><div class="animal-small">${a.hint}</div></div><div class="animal-small">${a.suffix}</div></div>`).join('') || '<div class="animal-small">見つからなかった。別の語尾や特徴で検索してみてｗ</div>';
+}
+
 const gameData={
-  animal:{label:"動物",roll:()=>`🐾 ${pick(state.customGames.animalAnimals)} × 「${pick(state.customGames.animalTopics)}」といえば？`},
+  animal:{label:"動物",roll:()=>{ rollAnimalGame(); return `🐾 動物なりきり大喜利を表示したよ`; }},
   ogiri:{label:"大喜利",roll:()=>`🧠 大喜利：${pick(state.customGames.ogiri)}`},
   line:{label:"セリフ",roll:()=>`🎭 セリフ：${pick(state.customGames.line)}`},
   itsu:{label:"いつ誰",roll:()=>`🧩 ${pick(state.customGames.when)} ${pick(state.customGames.who)} ${pick(state.customGames.where)} ${pick(state.customGames.what)}`},
