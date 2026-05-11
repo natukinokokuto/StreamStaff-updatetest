@@ -2542,7 +2542,16 @@ function fitBrushText(text){
   </div>
 </div>
 
-          <div class="game-tabs" id="gameTabs"></div>
+          
+<div class="grid" style="margin-top:14px">
+  <div class="tool-item"><div class="tool-title">🎭 セリフ</div><button class="btn" onclick="showScreen('serifGame')">開く</button></div>
+  <div class="tool-item"><div class="tool-title">🍻 レロレロ酒場</div><button class="btn" onclick="showScreen('reloGame')">開く</button></div>
+  <div class="tool-item"><div class="tool-title">🐼 動物</div><button class="btn" onclick="showScreen('animalGame')">開く</button></div>
+  <div class="tool-item"><div class="tool-title">😂 いつ誰</div><button class="btn" onclick="showScreen('itsudareGame')">開く</button></div>
+  <div class="tool-item"><div class="tool-title">🧠 大喜利</div><button class="btn" onclick="showScreen('ogiriGame')">開く</button></div>
+  <div class="tool-item"><div class="tool-title">📘 ボブジテン</div><button class="btn" onclick="showScreen('bobuGame')">開く</button></div>
+</div>
+<div class="game-tabs" id="gameTabs"></div>
           <div class="big-output game-result" id="gameResult">🎲 種類を選んで「回す」</div>
           <div class="row">
             <button class="btn primary" id="rollGame">回す</button>
@@ -2557,6 +2566,14 @@ function fitBrushText(text){
     </section>
 
     
+
+
+<section id="serifGame" class="screen"><div class="card"><div class="inner"><h2>🎭 セリフステージ</h2><p class="muted">今後カテゴリ・演技モード追加予定</p><select class="input"><option>キモおもろ</option><option>イケボ</option><option>中二病</option><option>湘南ノリ</option></select><div class="big-output" id="serifPreview">「そのタピオカ…エモの極みだろ…」</div><div class="row"><button class="btn primary" onclick="document.getElementById('serifPreview').textContent=['『今日ビジュ良すぎん？』','『その既読、心に来たわ…』','『ワンチャン宇宙救える』'][Math.floor(Math.random()*3)]">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
+<section id="reloGame" class="screen"><div class="card"><div class="inner"><h2>🍻 レロレロ酒場</h2><p class="muted">和製英語・横文字特化モード</p><div class="big-output" id="reloPreview">アジェンダ</div><div class="row"><button class="btn primary" onclick="document.getElementById('reloPreview').textContent=['エビデンス','ペンディング','アサイン','フィックス'][Math.floor(Math.random()*4)]">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
+<section id="animalGame" class="screen"><div class="card"><div class="inner"><h2>🐼 動物ガチャ</h2><div class="big-output" id="animalPreview">クアッカワラビー</div><div class="row"><button class="btn primary" onclick="document.getElementById('animalPreview').textContent=['ハダカデバネズミ','マヌルネコ','ヤブイヌ','オカピ'][Math.floor(Math.random()*4)]">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
+<section id="itsudareGame" class="screen"><div class="card"><div class="inner"><h2>😂 いつ誰ゲーム</h2><div class="big-output" id="itsuPreview">深夜3時に校長先生がコンビニで踊ってた</div><div class="row"><button class="btn primary" onclick="document.getElementById('itsuPreview').textContent=['雨の日にヤンキーが猫と会議してた','元カレが山で筋トレしてた','配信者が電車で熱唱してた'][Math.floor(Math.random()*3)]">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
+<section id="ogiriGame" class="screen"><div class="card"><div class="inner"><h2>🧠 大喜利アリーナ</h2><div class="big-output" id="ogiriPreview">絶対流行らないスマホ機能とは？</div><div class="row"><button class="btn primary" onclick="document.getElementById('ogiriPreview').textContent=['コンビニで一番怖い瞬間とは？','絶対に弱い必殺技名とは？','配信者しか言わないセリフとは？'][Math.floor(Math.random()*3)]">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
+<section id="bobuGame" class="screen"><div class="card"><div class="inner"><h2>📘 ボブジテン</h2><div class="big-output" id="bobuPreview">Wi‑Fiをカタカナ禁止で説明せよ</div><div class="row"><button class="btn primary" onclick="document.getElementById('bobuPreview').textContent=['YouTubeを日本語だけで説明せよ','エレベーターを擬音禁止で説明せよ','スマホを赤ちゃんに説明せよ'][Math.floor(Math.random()*3)]">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
 
 <section id="roulette" class="screen">
   <div class="roulette-fullscreen">
