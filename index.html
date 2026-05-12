@@ -2632,6 +2632,19 @@ function fitBrushText(text){
 .radio-dj-post{margin-top:20px;padding:22px;border-radius:24px;background:rgba(2,6,23,.62);border:1px solid rgba(148,163,184,.28);box-shadow:inset 0 0 24px rgba(0,0,0,.22)}
 .radio-dj-rn{font-size:clamp(20px,3vw,34px);font-weight:900;color:#fef3c7;margin-bottom:8px}.radio-dj-meta{color:#93c5fd;font-weight:700;margin-bottom:14px}.radio-dj-letter{font-size:clamp(22px,3.6vw,44px);line-height:1.55;font-weight:800;white-space:pre-wrap}.radio-dj-controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.radio-dj-history{margin-top:12px;color:#cbd5e1}.radio-dj-category{background:#111827;border:1px solid rgba(148,163,184,.35);color:#e5e7eb;border-radius:14px;padding:10px 12px}.radio-dj-small{font-size:13px;color:#94a3b8}.radio-dj-fav{color:#fde68a;font-weight:900}
 
+
+/* v122 ワードハンター */
+.word-hunter-stage{background:linear-gradient(135deg,rgba(15,23,42,.96),rgba(30,41,59,.94));border-radius:18px}
+.word-hunter-panel{margin-top:14px;text-align:center;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:18px;background:rgba(2,6,23,.55)}
+.word-hunter-timer{font-size:clamp(52px,10vw,104px);font-weight:950;letter-spacing:.04em;line-height:1}
+.word-hunter-current{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.word-hunter-current>div{border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:14px;background:rgba(255,255,255,.05)}
+.word-hunter-theme,.word-hunter-word{font-size:clamp(28px,5vw,56px);font-weight:950;line-height:1.15;margin-top:8px;word-break:break-word}
+.word-hunter-word{color:#fbbf24}
+.word-hunter-edit textarea{width:100%;font-family:inherit}
+.word-hunter-history{margin-top:12px;font-size:13px;color:#cbd5e1;line-height:1.7;white-space:pre-wrap}
+@media(max-width:720px){.word-hunter-current{grid-template-columns:1fr}.word-hunter-timer{font-size:58px}}
+
 </style>
 
 <link rel="icon" type="image/png" href="icon_streamstaff_final.png">
@@ -2741,6 +2754,7 @@ function fitBrushText(text){
   <div class="tool-item"><div class="tool-title">🎭 セリフ</div><button class="btn" onclick="showScreen('serifGame')">開く</button></div>
   <div class="tool-item"><div class="tool-title">🍻 レロレロ酒場</div><button class="btn" onclick="showScreen('reloGame')">開く</button></div>
   <div class="tool-item"><div class="tool-title">📻 なりきりラジオDJ</div><button class="btn" onclick="showScreen('radioDjGame'); if(window.renderRadioDj) renderRadioDj();">開く</button></div>
+  <div class="tool-item"><div class="tool-title">🕵️ ワードハンター</div><button class="btn" onclick="showScreen('wordHunterGame'); if(window.renderWordHunter) renderWordHunter();">開く</button></div>
   <div class="tool-item"><div class="tool-title">🐼 動物</div><button class="btn" onclick="showScreen('animalGame')">開く</button></div>
   <div class="tool-item"><div class="tool-title">😂 いつ誰</div><button class="btn" onclick="showScreen('itsudareGame')">開く</button></div>
   <div class="tool-item"><div class="tool-title">🧠 大喜利</div><button class="btn" onclick="showScreen('ogiriGame')">開く</button></div>
@@ -2910,6 +2924,67 @@ function fitBrushText(text){
     </div>
     <div class="radio-dj-history" id="radioDjHistory">履歴 0 / 0</div>
     <p class="radio-dj-small">※枕詞と質問/相談はカテゴリごとに結び付け。温度差事故を減らして、ラジオ投稿っぽく出します。</p>
+  </div></div>
+</section>
+
+
+<section id="wordHunterGame" class="screen">
+  <div class="card"><div class="inner word-hunter-stage">
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div>
+        <h2 style="margin:0 0 6px">🕵️ ワードハンター</h2>
+        <p class="muted">テーマに沿って自然にトークし、制限時間内にリスナーへお題ワードを言わせるトーク特化型ミニゲーム。</p>
+      </div>
+      <button class="btn" onclick="showScreen('games')">ゲーム一覧へ戻る</button>
+    </div>
+    <div class="word-hunter-panel">
+      <div class="word-hunter-timer" id="wordHunterTimer">05:00</div>
+      <div class="muted" id="wordHunterStatus">準備中</div>
+    </div>
+    <div class="grid two" style="margin-top:12px">
+      <label>テーマ難易度<select id="wordHunterDifficulty">
+        <option value="easy">EASY：広く話しやすい</option>
+        <option value="normal" selected>NORMAL：ほどよく誘導</option>
+        <option value="hard">HARD：トーク力勝負</option>
+        <option value="all">全部混ぜ</option>
+      </select></label>
+      <label>アラーム音<select id="wordHunterSound"></select></label>
+      <label>制限時間 分<input id="wordHunterMin" type="number" min="0" max="60" value="5"></label>
+      <label>制限時間 秒<input id="wordHunterSec" type="number" min="0" max="59" value="0"></label>
+    </div>
+    <div class="word-hunter-current">
+      <div>
+        <div class="muted">今回のテーマ</div>
+        <div class="word-hunter-theme" id="wordHunterTheme">---</div>
+      </div>
+      <div>
+        <div class="muted">枠主だけ見るお題ワード</div>
+        <div class="word-hunter-word" id="wordHunterWord">---</div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="wordHunterRollBtn" type="button">テーマ＆お題を抽選</button>
+      <button class="btn" id="wordHunterRollThemeBtn" type="button">テーマだけ</button>
+      <button class="btn" id="wordHunterRollWordBtn" type="button">お題だけ</button>
+      <button class="btn primary" id="wordHunterStartBtn" type="button">スタート</button>
+      <button class="btn" id="wordHunterPauseBtn" type="button">一時停止</button>
+      <button class="btn" id="wordHunterResetBtn" type="button">リセット</button>
+    </div>
+    <div class="mini-panel" style="margin-top:12px;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px;background:rgba(255,255,255,.04)">
+      <b>勝敗メモ</b>
+      <p class="muted" style="line-height:1.7;margin:6px 0 0">① 枠主はテーマを宣言してトーク開始。② リスナーにお題ワードを言わせたらハント成功。③ 時間後に「今回のお題は？」と聞く。正解されたらリスナー勝利。正解されず、コメントにお題が出ていたら枠主勝利。お題を言わせられなかったら枠主負け。</p>
+    </div>
+    <details class="word-hunter-edit" style="margin-top:14px">
+      <summary>テーマ・お題を編集する</summary>
+      <div class="grid two" style="margin-top:12px">
+        <label>EASYテーマ<textarea id="wordHunterThemesEasy" rows="8"></textarea></label>
+        <label>NORMALテーマ<textarea id="wordHunterThemesNormal" rows="8"></textarea></label>
+        <label>HARDテーマ<textarea id="wordHunterThemesHard" rows="8"></textarea></label>
+        <label>お題ワード<textarea id="wordHunterWords" rows="8"></textarea></label>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="btn primary" id="wordHunterSaveListsBtn" type="button">保存</button><button class="btn" id="wordHunterRestoreBtn" type="button">初期リストに戻す</button></div>
+    </details>
+    <div class="word-hunter-history" id="wordHunterHistory">履歴なし</div>
   </div></div>
 </section>
 
@@ -9270,6 +9345,28 @@ window.nextRadioDj=function(){const sel=document.getElementById('radioDjCategory
 window.moveRadioDj=function(d){const rs=radioState(); if(!rs.history.length)return; rs.index=Math.max(0,Math.min(rs.history.length-1,rs.index+d)); if(window.save)save(); renderRadioDj();};
 window.toggleRadioFav=function(){const rs=radioState(); const cur=rs.history[rs.index]; if(cur){cur.fav=!cur.fav;if(window.save)save();renderRadioDj();}};
 document.addEventListener('DOMContentLoaded',function(){const n=document.getElementById('radioDjNextBtn'),p=document.getElementById('radioDjPrevBtn'),f=document.getElementById('radioDjForwardBtn'),fav=document.getElementById('radioDjFavBtn'),cat=document.getElementById('radioDjCategory'); if(n)n.onclick=nextRadioDj; if(p)p.onclick=()=>moveRadioDj(-1); if(f)f.onclick=()=>moveRadioDj(1); if(fav)fav.onclick=toggleRadioFav; if(cat)cat.onchange=nextRadioDj; try{renderRadioDj()}catch(e){}});
+})();
+</script>
+
+
+<script>
+(function(){
+const WH_DEFAULT=JSON.parse("{\"themes\": {\"easy\": [\"食べ物\", \"学校\", \"恋愛\", \"仕事\", \"休日\", \"コンビニ\", \"お風呂\", \"寝る前\", \"カラオケ\", \"ゲーム\", \"夏の思い出\", \"冬の思い出\", \"旅行\", \"スマホ\", \"家族\", \"友達\", \"バイト\", \"給食\", \"弁当\", \"居酒屋\", \"買い物\", \"料理\", \"掃除\", \"洗濯\", \"ペット\", \"天気\", \"朝の準備\", \"夜更かし\", \"地元\", \"運動\"], \"normal\": [\"修学旅行\", \"初デート\", \"黒歴史\", \"深夜テンション\", \"満員電車\", \"実家あるある\", \"一人暮らし\", \"忘れ物\", \"遅刻\", \"美容室\", \"歯医者\", \"病院の待合室\", \"雨の日\", \"夏祭り\", \"文化祭\", \"体育祭\", \"飲み会の帰り道\", \"コンビニの新商品\", \"冷蔵庫の中身\", \"カバンの中身\", \"財布の中身\", \"部屋の片付け\", \"スマホの充電\", \"イヤホン\", \"寝坊した朝\", \"風呂上がり\", \"給料日前\", \"休日の昼\", \"夜食\", \"昔の流行\"], \"hard\": [\"匂い\", \"間\", \"タイミング\", \"静か\", \"気まずさ\", \"優しさ\", \"こだわり\", \"習慣\", \"センス\", \"懐かしさ\", \"距離感\", \"緊張\", \"油断\", \"勝負どころ\", \"見栄\", \"大人っぽさ\", \"子供っぽさ\", \"運命\", \"偶然\", \"謎の自信\", \"謎の不安\", \"季節感\", \"清潔感\", \"生活感\", \"無駄遣い\", \"節約\", \"第一印象\", \"空気を読む\", \"空気を壊す\", \"テンション管理\"]}, \"words\": [\"唐揚げ\", \"靴下\", \"救急車\", \"炭酸\", \"サングラス\", \"駄菓子\", \"洗濯機\", \"水族館\", \"ガラケー\", \"ポテチ\", \"牛乳\", \"プリン\", \"カレー\", \"ラーメン\", \"焼き鳥\", \"たこ焼き\", \"おにぎり\", \"アイス\", \"コーヒー\", \"エナドリ\", \"味噌汁\", \"納豆\", \"目玉焼き\", \"ハンバーグ\", \"チャーハン\", \"餃子\", \"寿司\", \"焼きそば\", \"コロッケ\", \"ポテト\", \"ケチャップ\", \"マヨネーズ\", \"醤油\", \"わさび\", \"歯ブラシ\", \"シャンプー\", \"ドライヤー\", \"タオル\", \"枕\", \"布団\", \"毛布\", \"カーテン\", \"冷蔵庫\", \"電子レンジ\", \"掃除機\", \"リモコン\", \"充電器\", \"イヤホン\", \"スマホ\", \"財布\", \"鍵\", \"傘\", \"自転車\", \"電車\", \"バス\", \"タクシー\", \"飛行機\", \"信号\", \"横断歩道\", \"コンビニ\", \"スーパー\", \"自販機\", \"公園\", \"映画館\", \"カラオケ\", \"ゲームセンター\", \"本屋\", \"病院\", \"美容室\", \"学校\", \"職員室\", \"体育館\", \"プール\", \"黒板\", \"消しゴム\", \"鉛筆\", \"ノート\", \"ランドセル\", \"制服\", \"部活\", \"宿題\", \"テスト\", \"給食\", \"弁当\", \"焼肉\", \"居酒屋\", \"ビール\", \"レモンサワー\", \"焼酎\", \"梅酒\", \"水\", \"氷\", \"ストロー\", \"紙袋\", \"段ボール\", \"ハサミ\", \"セロテープ\", \"輪ゴム\", \"マスク\", \"メガネ\", \"帽子\", \"パーカー\", \"ジーンズ\", \"スニーカー\", \"サンダル\", \"指輪\", \"時計\", \"香水\", \"汗\", \"猫\", \"犬\", \"ハムスター\", \"ゴリラ\", \"パンダ\", \"カラス\", \"鳩\", \"蚊\", \"カメムシ\", \"イルカ\", \"ペンギン\", \"恐竜\", \"宇宙人\", \"幽霊\", \"ゾンビ\", \"魔法\", \"勇者\", \"ラスボス\", \"宝箱\", \"地図\", \"花火\", \"雪だるま\", \"桜\", \"海\", \"山\", \"温泉\", \"サウナ\", \"筋トレ\", \"ランニング\", \"ギター\", \"ドラム\", \"マイク\", \"配信\", \"コメント\", \"ギフト\", \"初見\", \"常連\", \"寝落ち\", \"ミュート\", \"通知\", \"バグ\", \"アップデート\", \"パスワード\", \"Wi-Fi\", \"電波\", \"充電切れ\", \"スクショ\", \"自撮り\", \"プリクラ\", \"財布忘れ\", \"遅刻\", \"寝癖\", \"くしゃみ\", \"しゃっくり\", \"腹筋\", \"罰ゲーム\", \"一発ギャグ\", \"モノマネ\", \"早口言葉\", \"黒歴史\", \"思い出\", \"告白\", \"失恋\", \"デート\", \"嫉妬\", \"プロポーズ\", \"結婚式\", \"卒業式\", \"入学式\", \"誕生日\", \"クリスマス\", \"正月\", \"ハロウィン\", \"バレンタイン\", \"お年玉\", \"福袋\", \"宝くじ\"]}");
+function whState(){window.state=window.state||{}; if(!state.wordHunter){state.wordHunter={themes:JSON.parse(JSON.stringify(WH_DEFAULT.themes)),words:WH_DEFAULT.words.slice(),difficulty:'normal',theme:'---',word:'---',duration:300,remaining:300,running:false,sound:'alarm_clock',history:[]};} if(!state.wordHunter.themes)state.wordHunter.themes=JSON.parse(JSON.stringify(WH_DEFAULT.themes)); if(!Array.isArray(state.wordHunter.words))state.wordHunter.words=WH_DEFAULT.words.slice(); return state.wordHunter;}
+function whPick(a){return a[Math.floor(Math.random()*a.length)]||'---'}
+function whThemePool(diff){const w=whState(),t=w.themes||WH_DEFAULT.themes; if(diff==='all')return [].concat(t.easy||[],t.normal||[],t.hard||[]); return (t[diff]&&t[diff].length?t[diff]:WH_DEFAULT.themes[diff]||WH_DEFAULT.themes.normal);}
+function whFmt(sec){sec=Math.max(0,Number(sec)||0); const m=Math.floor(sec/60),ss=sec%60; return String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0');}
+function whRecord(kind){const w=whState(); w.history.unshift({at:new Date().toLocaleString(),kind,theme:w.theme,word:w.word}); w.history=w.history.slice(0,20);}
+window.renderWordHunter=function(){const w=whState(); const $=id=>document.getElementById(id); if($('wordHunterTimer'))$('wordHunterTimer').textContent=whFmt(w.remaining); if($('wordHunterStatus'))$('wordHunterStatus').textContent=w.running?'ハント中':'準備中 / 停止中'; if($('wordHunterTheme'))$('wordHunterTheme').textContent=w.theme||'---'; if($('wordHunterWord'))$('wordHunterWord').textContent=w.word||'---'; if($('wordHunterDifficulty'))$('wordHunterDifficulty').value=w.difficulty||'normal'; if($('wordHunterMin'))$('wordHunterMin').value=Math.floor((w.duration||300)/60); if($('wordHunterSec'))$('wordHunterSec').value=(w.duration||300)%60; if($('wordHunterSound')&&window.timerSounds){$('wordHunterSound').innerHTML=timerSounds.map(s=>`<option value="${s.id}" ${w.sound===s.id?'selected':''}>${s.label}</option>`).join('');} if($('wordHunterThemesEasy'))$('wordHunterThemesEasy').value=(w.themes.easy||[]).join('\n'); if($('wordHunterThemesNormal'))$('wordHunterThemesNormal').value=(w.themes.normal||[]).join('\n'); if($('wordHunterThemesHard'))$('wordHunterThemesHard').value=(w.themes.hard||[]).join('\n'); if($('wordHunterWords'))$('wordHunterWords').value=(w.words||[]).join('\n'); if($('wordHunterHistory'))$('wordHunterHistory').textContent=w.history&&w.history.length?w.history.map((h,i)=>`${i+1}. ${h.at}｜${h.kind}｜${h.theme} × ${h.word}`).join('\n'):'履歴なし';};
+window.rollWordHunter=function(mode){const w=whState(); w.difficulty=(document.getElementById('wordHunterDifficulty')?.value)||w.difficulty||'normal'; const words=w.words&&w.words.length?w.words:WH_DEFAULT.words; if(mode!=='word')w.theme=whPick(whThemePool(w.difficulty)); if(mode!=='theme')w.word=whPick(words); whRecord('抽選'); if(window.save)save(); renderWordHunter();};
+window.setWordHunterBase=function(){const w=whState(); const min=Number(document.getElementById('wordHunterMin')?.value)||0, sec=Math.min(59,Number(document.getElementById('wordHunterSec')?.value)||0); w.duration=Math.max(1,min*60+sec); if(!w.running)w.remaining=w.duration; w.sound=document.getElementById('wordHunterSound')?.value||w.sound||'alarm_clock'; w.difficulty=document.getElementById('wordHunterDifficulty')?.value||w.difficulty||'normal'; if(window.save)save(); renderWordHunter();};
+window.startWordHunter=function(){setWordHunterBase(); const w=whState(); w.running=true; if(window.save)save(); renderWordHunter();};
+window.pauseWordHunter=function(){const w=whState(); w.running=false; if(window.save)save(); renderWordHunter();};
+window.resetWordHunter=function(){const w=whState(); w.running=false; w.remaining=w.duration||300; if(window.save)save(); renderWordHunter();};
+window.saveWordHunterLists=function(){const w=whState(); const lines=id=>(document.getElementById(id)?.value||'').split(/\n+/).map(x=>x.trim()).filter(Boolean); w.themes={easy:lines('wordHunterThemesEasy'),normal:lines('wordHunterThemesNormal'),hard:lines('wordHunterThemesHard')}; w.words=lines('wordHunterWords'); if(!w.words.length)w.words=WH_DEFAULT.words.slice(); if(window.save)save(); renderWordHunter();};
+window.restoreWordHunterLists=function(){if(!confirm('テーマとお題を初期リストに戻す？'))return; const w=whState(); w.themes=JSON.parse(JSON.stringify(WH_DEFAULT.themes)); w.words=WH_DEFAULT.words.slice(); if(window.save)save(); renderWordHunter();};
+let whTimer=null; function ensureWhTimer(){if(whTimer)return; whTimer=setInterval(()=>{const w=whState(); if(!w.running)return; w.remaining=Math.max(0,(w.remaining||0)-1); if(w.remaining<=0){w.running=false; whRecord('終了'); try{ if(typeof playAlarm==='function')playAlarm(w.sound||'alarm_clock'); }catch(e){} } if(window.save)save(); renderWordHunter();},1000);}
+document.addEventListener('DOMContentLoaded',function(){ensureWhTimer(); const bind=(id,fn)=>{const el=document.getElementById(id); if(el)el.onclick=fn}; bind('wordHunterRollBtn',()=>rollWordHunter('both')); bind('wordHunterRollThemeBtn',()=>rollWordHunter('theme')); bind('wordHunterRollWordBtn',()=>rollWordHunter('word')); bind('wordHunterStartBtn',startWordHunter); bind('wordHunterPauseBtn',pauseWordHunter); bind('wordHunterResetBtn',resetWordHunter); bind('wordHunterSaveListsBtn',saveWordHunterLists); bind('wordHunterRestoreBtn',restoreWordHunterLists); ['wordHunterDifficulty','wordHunterSound','wordHunterMin','wordHunterSec'].forEach(id=>{const el=document.getElementById(id); if(el)el.onchange=setWordHunterBase;}); try{renderWordHunter()}catch(e){console.warn(e)}});
 })();
 </script>
 
