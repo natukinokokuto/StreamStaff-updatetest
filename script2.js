@@ -153,8 +153,6 @@ state.listeners.forEach(l=>{
   if(typeof l.bloodType!=="string") l.bloodType="";
   if(typeof l.firstVisitDate!=="string") l.firstVisitDate="";
   if(typeof l.nickname!=="string") l.nickname="";
-  if(typeof l.searchYomi!=="string") l.searchYomi="";
-  if(typeof l.searchTags!=="string") l.searchTags="";
   if(!l.favorites) l.favorites={};
   ["project","game","food","area","music","anime","habit","free1","free2","ngTopic","dislikeFood","firstGame","mainWeapon","holiday","bgm","localThing","season","animal","oshi","firstStream","oneLine","teaseLine"].forEach(k=>{ if(typeof l.favorites[k]!=="string") l.favorites[k]=""; });
   if(!Array.isArray(l.topicSeeds)) l.topicSeeds=[];
@@ -763,18 +761,10 @@ function renderMemo(){
       ${achievedList(l)}
       <h3>カレンダー同期メモ</h3>
       ${calendarMemoList(l.name)}
-      <label>検索用よみ</label>
-      <input data-search-yomi="${i}" value="${escapeHtml(l.searchYomi||"")}" placeholder="例：あらた / びーる / よろしくたろう">
-      <p class="muted" style="margin-top:4px">アプリ内検索にヒットさせるためのよみがな。記号・絵文字（★🍺+など）は自動で無視されるため通常は入力不要です。絵文字のみ・当て字・特殊な名前だけ設定してください。</p>
-      <label>検索用タグ</label>
-      <input data-search-tags="${i}" value="${escapeHtml(l.searchTags||"")}" placeholder="例：酒 飲み 雑談 深夜">
-      <p class="muted" style="margin-top:4px">スペース区切りで検索に引っかけたい言葉を追加できます。話題レスキュー連動にも使える下準備です。</p>
       <label>常連メモ</label>
       <textarea data-memo="${i}">${escapeHtml(l.memo||"")}</textarea>
     </div></div>`).join("");
   memoGrid.querySelectorAll("textarea").forEach(t=>t.onchange=()=>{state.listeners[Number(t.dataset.memo)].memo=t.value;save()});
-  memoGrid.querySelectorAll("[data-search-yomi]").forEach(inp=>inp.onchange=()=>{state.listeners[Number(inp.dataset.searchYomi)].searchYomi=inp.value.trim();save()});
-  memoGrid.querySelectorAll("[data-search-tags]").forEach(inp=>inp.onchange=()=>{state.listeners[Number(inp.dataset.searchTags)].searchTags=inp.value.trim();save()});
   memoGrid.querySelectorAll("[data-birthday]").forEach(inp=>inp.onchange=()=>{
     state.listeners[Number(inp.dataset.birthday)].birthday=inp.value;
     save();renderMemo();renderCalendar();
@@ -2001,8 +1991,6 @@ state.tools = state.tools || structuredClone(defaultState.tools);
   if(typeof l.bloodType!=="string") l.bloodType="";
   if(typeof l.firstVisitDate!=="string") l.firstVisitDate="";
   if(typeof l.nickname!=="string") l.nickname="";
-  if(typeof l.searchYomi!=="string") l.searchYomi="";
-  if(typeof l.searchTags!=="string") l.searchTags="";
   if(!l.favorites) l.favorites={};
   ["project","game","food","area","music","anime","habit","free1","free2","ngTopic","dislikeFood","firstGame","mainWeapon","holiday","bgm","localThing","season","animal","oshi","firstStream","oneLine","teaseLine"].forEach(k=>{ if(typeof l.favorites[k]!=="string") l.favorites[k]=""; });
   if(!Array.isArray(l.topicSeeds)) l.topicSeeds=[]; });
