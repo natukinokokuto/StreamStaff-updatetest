@@ -100,6 +100,12 @@
       box-shadow:0 0 0 3px #21d4fd33;
       background:#f4fdff;
     }
+
+    .cal-day.selected{
+      outline:3px solid #7c3aed;
+      outline-offset:-3px;
+      box-shadow:0 0 0 3px #7c3aed33, 0 8px 22px #00000018;
+    }
     .cal-day.sat .cal-num{color:#2196f3}
     .cal-day.sun .cal-num{color:#ff4d5e}
     .cal-week{
@@ -2769,7 +2775,30 @@ function fitBrushText(text){
     <div class="row"><button class="btn primary" onclick="rollSerifGame()">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div>
   </div></div>
 </section>
-<section id="reloGame" class="screen"><div class="card"><div class="inner"><h2>🍻 レロレロ酒場</h2><p class="muted">和製英語・横文字を重点追加。噛まずに言えるか勝負。</p><div class="big-output" id="reloPreview">アジェンダ</div><div class="row"><button class="btn primary" onclick="rollStageGame('relo','reloPreview')">回す</button><button class="btn" onclick="showScreen('games')">戻る</button></div></div></div></section>
+<section id="reloGame" class="screen"><div class="card"><div class="inner">
+  <h2>🍻 レロレロ酒場</h2>
+  <p class="muted">お題を「ラリルレロ」だけで読んで、リスナーが元の言葉を当てるゲーム。</p>
+  <div class="mini-panel" style="border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:12px;margin:10px 0;background:rgba(255,255,255,.04)">
+    <b>ルール</b>
+    <div class="muted" style="margin-top:6px;line-height:1.7">
+      ① 枠主は正解を確認する。<br>
+      ② 正解の言葉を母音に合わせてラリルレロだけに変えて読む（ン・ー・ッはそのまま）。<br>
+      ③ リスナーはコメントで元の言葉を当てる。<br>
+      ※ 例：ウインカー → ルリンラー。回答モードではラリルレロ表記を画面に出して、みんなで発音しながら考えられる。
+    </div>
+  </div>
+  <div class="row" style="gap:8px;align-items:center">
+    <label style="display:flex;gap:6px;align-items:center"><input type="radio" name="reloMode" value="host" checked onchange="renderReloMode()"> 枠主読み上げ</label>
+    <label style="display:flex;gap:6px;align-items:center"><input type="radio" name="reloMode" value="answer" onchange="renderReloMode()"> 回答モード</label>
+  </div>
+  <div class="big-output" id="reloPreview">ラリルレロ酒場へようこそ</div>
+  <p class="muted" id="reloHint">枠主読み上げ：正解は枠主だけ確認して、ラリルレロで読んでね。</p>
+  <div id="reloAnswerBox" class="mini-panel" style="display:none;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:12px;margin:10px 0;background:rgba(255,255,255,.04)">
+    <div class="muted">正解</div>
+    <div id="reloAnswer" style="font-size:22px;font-weight:800">---</div>
+  </div>
+  <div class="row"><button class="btn primary" onclick="rollReloGame()">回す</button><button class="btn" onclick="toggleReloAnswer()">正解表示</button><button class="btn" onclick="showScreen('games')">戻る</button></div>
+</div></div></section>
 <section id="animalGame" class="screen"><div class="card"><div class="inner">
   <h2>🐾 動物なりきり大喜利</h2>
   <p class="muted">出た動物になりきって質問に答えるゲーム。苦手な人は語尾だけでもOK！ 自分のことを動物化して答えてもOK。</p>
@@ -3179,7 +3208,7 @@ function fitBrushText(text){
         <div class="card"><div class="inner">
           <h2 id="selectedDateTitle">日付メモ</h2>
           <p class="muted">登録日・返礼品獲得日・自由メモをここで管理。常連メモに自動同期される。</p>
-          <label>対象常連</label>
+          <label>対象（枠主 / 常連）</label>
           <select id="calendarListener"></select>
           <label>種類</label>
           <select id="calendarType"></select>
@@ -3454,6 +3483,14 @@ function fitBrushText(text){
 
   <label>表示メモ</label>
   <input id="hostMemoInput" placeholder="例：枠主チップ / 主催者">
+
+  <label>枠主の誕生日（カレンダー/お知らせ用・任意）</label>
+  <div class="birthday-row">
+    <input id="hostBirthMonthInput" type="number" min="1" max="12" placeholder="月">
+    <span>/</span>
+    <input id="hostBirthDayInput" type="number" min="1" max="31" placeholder="日">
+  </div>
+  <div class="leap-note" id="hostLeapNote" style="display:none">🎂 2/29生まれ：平年は2/28扱いでカレンダー表示します。</div>
 
   <div class="host-talk-settings">
     <h3 style="margin:0 0 8px">話題レスキュー用プロフィール</h3>
@@ -4671,13 +4708,86 @@ function renderPrivateAnimalList(){
 }
 setTimeout(()=>{ renderPrivateAnimalList(); if(document.getElementById('animalVisual')) renderAnimalCard(builtInAnimalData[0], '最近ハマってることは？'); },0);
 
+
+let currentReloAnswer = "";
+const RELO_READING_MAP = {"マーボー豆腐": "マーボードウフ", "チャンジャ": "チャンジャ", "鮭とば": "サケトバ", "たこわさ": "タコワサ", "だし巻きたまご": "ダシマキタマゴ", "枝豆": "エダマメ", "焼きナス": "ヤキナス", "冷やしトマト": "ヒヤシトマト", "もつ鍋": "モツナベ", "軟骨のから揚げ": "ナンコツノカラアゲ", "サラリーマン": "サラリーマン", "オーダーメイド": "オーダーメイド", "ガソリンスタンド": "ガソリンスタンド", "コンセント": "コンセント", "ノートパソコン": "ノートパソコン", "キーホルダー": "キーホルダー", "ベビーカー": "ベビーカー", "ペットボトル": "ペットボトル", "フライドポテト": "フライドポテト", "シュークリーム": "シュークリーム", "ホットケーキ": "ホットケーキ", "アイスコーヒー": "アイスコーヒー", "モーニングコール": "モーニングコール", "クレーム": "クレーム", "リフォーム": "リフォーム", "リサイクルショップ": "リサイクルショップ", "バイキング": "バイキング", "コインランドリー": "コインランドリー", "パワハラ": "パワハラ", "セクハラ": "セクハラ", "ノンアル": "ノンアル", "テイクアウト": "テイクアウト", "テーブルチャージ": "テーブルチャージ", "フリーダイヤル": "フリーダイヤル", "ワンピース": "ワンピース", "スキンシップ": "スキンシップ", "マイブーム": "マイブーム", "リベンジ": "リベンジ", "レベルアップ": "レベルアップ", "スキルアップ": "スキルアップ", "サインペン": "サインペン", "シャープペン": "シャープペン", "ビニール袋": "ビニールブクロ", "ダンボール": "ダンボール", "ホームセンター": "ホームセンター", "ゲームセンター": "ゲームセンター", "ライブハウス": "ライブハウス", "タレント": "タレント", "アイドル": "アイドル", "グラビア": "グラビア", "テンション": "テンション", "ハイテンション": "ハイテンション", "ローテンション": "ローテンション", "ナイーブ": "ナイーブ", "ドンマイ": "ドンマイ", "ファイト": "ファイト", "サービスエリア": "サービスエリア", "バックミラー": "バックミラー", "ウインカー": "ウインカー", "フロントガラス": "フロントガラス", "ハンドルキーパー": "ハンドルキーパー", "キッチンペーパー": "キッチンペーパー", "サランラップ": "サランラップ", "電子レンジ": "デンシレンジ", "オーブントースター": "オーブントースター", "フリーサイズ": "フリーサイズ", "オーバーオール": "オーバーオール", "マンツーマン": "マンツーマン", "キャッチコピー": "キャッチコピー", "イメージチェンジ": "イメージチェンジ", "スキンヘッド": "スキンヘッド", "モーニングセット": "モーニングセット", "カンニング": "カンニング", "アルバイト": "アルバイト", "パート": "パート", "サラダバー": "サラダバー", "ドリンクバー": "ドリンクバー", "ソフトクリーム": "ソフトクリーム", "タッチパネル": "タッチパネル", "セルフレジ": "セルフレジ", "ガードマン": "ガードマン", "ベテラン": "ベテラン", "デッドボール": "デッドボール", "ナイター": "ナイター", "ゲームオーバー": "ゲームオーバー"};
+function normalizeReloReading(text){
+  return String(text||'')
+    .replace(/[ぁ-ん]/g, ch => String.fromCharCode(ch.charCodeAt(0) + 0x60))
+    .replace(/ヴ/g,'ブ');
+}
+function reloVowelToRa(vowel){
+  return {a:'ラ', i:'リ', u:'ル', e:'レ', o:'ロ'}[vowel] || '';
+}
+function kanaCharVowel(ch){
+  if('アカサタナハマヤラワガザダバパァャヮ'.includes(ch)) return 'a';
+  if('イキシチニヒミリヰギジヂビピィ'.includes(ch)) return 'i';
+  if('ウクスツヌフムユルグズヅブプゥュ'.includes(ch)) return 'u';
+  if('エケセテネヘメレヱゲゼデベペェ'.includes(ch)) return 'e';
+  if('オコソトノホモヨロヲゴゾドボポォョ'.includes(ch)) return 'o';
+  return '';
+}
+function kanaToRero(text){
+  const raw=String(text||'');
+  const src=normalizeReloReading(RELO_READING_MAP[raw] || raw);
+  const smallVowels={'ャ':'a','ュ':'u','ョ':'o','ァ':'a','ィ':'i','ゥ':'u','ェ':'e','ォ':'o'};
+  let out='';
+  for(let i=0;i<src.length;i++){
+    const ch=src[i];
+    const next=src[i+1];
+    if(ch==='ン'){ out+='ン'; continue; }
+    if(ch==='ー' || ch==='ッ' || ch===' ' || ch==='　'){ out+=ch; continue; }
+    if(smallVowels[next] && kanaCharVowel(ch)){
+      out+=reloVowelToRa(smallVowels[next]);
+      i++;
+      continue;
+    }
+    if(smallVowels[ch]){ out+=reloVowelToRa(smallVowels[ch]); continue; }
+    const vowel=kanaCharVowel(ch);
+    if(vowel){ out+=reloVowelToRa(vowel); continue; }
+    out+=ch;
+  }
+  return out;
+}
+function getReloMode(){
+  return document.querySelector('input[name="reloMode"]:checked')?.value || 'host';
+}
+function renderReloMode(){
+  const hint=document.getElementById('reloHint');
+  const ans=document.getElementById('reloAnswerBox');
+  const mode=getReloMode();
+  if(hint) hint.textContent = mode==='host' ? '枠主読み上げ：正解は枠主だけ確認して、ラリルレロで読んでね。' : '回答モード：ラリルレロ表記を画面に出して、みんなで元の言葉を当てよう。';
+  if(ans) ans.style.display='none';
+  if(currentReloAnswer) {
+    const prev=document.getElementById('reloPreview');
+    if(prev) prev.textContent = mode==='host' ? `お題を引いた！枠主は正解表示で確認して読んでね` : kanaToRero(currentReloAnswer);
+  }
+}
+function rollReloGame(){
+  currentReloAnswer = pick(state.customGames.relo || []) || 'アジェンダ';
+  const mode=getReloMode();
+  const prev=document.getElementById('reloPreview');
+  const ans=document.getElementById('reloAnswer');
+  const box=document.getElementById('reloAnswerBox');
+  if(prev) prev.textContent = mode==='host' ? 'お題を引いた！枠主は正解表示で確認して読んでね' : kanaToRero(currentReloAnswer);
+  if(ans) ans.textContent=currentReloAnswer;
+  if(box) box.style.display='none';
+}
+function toggleReloAnswer(){
+  if(!currentReloAnswer) rollReloGame();
+  const ans=document.getElementById('reloAnswer');
+  const box=document.getElementById('reloAnswerBox');
+  if(ans) ans.textContent=currentReloAnswer;
+  if(box) box.style.display = box.style.display==='none' ? 'block' : 'none';
+}
+
 const gameData={
   animal:{label:"動物",roll:()=>{ rollAnimalGame(); return `🐾 動物なりきり大喜利を表示したよ`; }},
   ogiri:{label:"大喜利",roll:()=>`🧠 大喜利：${pick(state.customGames.ogiri)}`},
   line:{label:"セリフ",roll:()=>`🎭 セリフ：${pick(state.customGames.line)}`},
   itsu:{label:"いつ誰",roll:()=>`🧩 ${pick(state.customGames.when)} ${pick(state.customGames.who)} ${pick(state.customGames.where)} ${pick(state.customGames.what)}`},
   bob:{label:"ボブ",roll:()=>`📘 ボブジテン：${pick(state.customGames.bob)} ※カタカナ禁止で説明`},
-  relo:{label:"酒場",roll:()=>`🍻 レロレロ酒場：${pick(state.customGames.relo)} を噛まずに言える？`}
+  relo:{label:"酒場",roll:()=>{ rollReloGame(); return "🍻 レロレロ酒場を表示したよ"; }}
 };
 function rollStageGame(key, targetId){
   if(key==='line' && targetId==='serifPreview'){ rollSerifGame(); return; }
@@ -4974,7 +5084,7 @@ function renderRewards(){
   rewardEditor.querySelectorAll("[data-del]").forEach(btn=>btn.onclick=()=>{state.rewards.splice(Number(btn.dataset.del),1);save();renderBonus();renderMemo()});
 }
 addReward.onclick=()=>{state.rewards.push({days:1,name:"新しい達成品"});state.rewards.sort((a,b)=>a.days-b.days);save();renderBonus()}
-addListener.onclick=()=>{const name=prompt("常連名");if(!name)return;const today=ymd(new Date());state.listeners.push({name,days:[],logboByMonth:{[state.logboMonth]:[]},memo:"",penalty:0,registeredDate:today});selectedListener=state.listeners.length-1;state.calendarEvents.push({id:uid("cal"),date:today,listener:name,type:"登録日",item:"常連登録"});save();renderBonus();renderMemo();renderCalendar()}
+addListener.onclick=()=>{const name=prompt("常連名");if(!name)return;const today=ymd(new Date());state.listeners.push({name,days:[],logboByMonth:{[state.logboMonth]:[]},memo:"",penalty:0,registeredDate:today,updatedAt:new Date().toISOString(),searchYomi:"",searchTags:""});selectedListener=state.listeners.length-1;state.calendarEvents.push({id:uid("cal"),date:today,listener:name,type:"登録日",item:"常連登録"});save();renderBonus();renderMemo();renderCalendar()}
 function deleteListener(index){
   const l=state.listeners[index];
   if(!l)return;
@@ -5234,6 +5344,7 @@ if(window.saveListenerDetail) saveListenerDetail.onclick=()=>{
     teaseLine:favTeaseLine.value.trim()
   };
   l.topicSeeds=generateTopicSeeds(l);
+  l.updatedAt=new Date().toISOString();
   if(l.firstVisitDate) l.registeredDate=l.firstVisitDate;
 
   if(oldName!==newName){
@@ -5713,6 +5824,19 @@ function yearlyEventsForDate(date){
     sourceId:ev.id
   }));
 }
+function getCalendarHostName(){
+  const h=state.hostProfile || {};
+  return String(h.name || "").trim();
+}
+function getCalendarTargets(){
+  const hostName=getCalendarHostName();
+  const targets=[];
+  if(hostName) targets.push({name:hostName,label:"★ " + hostName + "（枠主）",host:true});
+  (state.listeners||[]).forEach(l=>{
+    if(l && l.name) targets.push({name:l.name,label:l.name,host:false});
+  });
+  return targets;
+}
 function eventsForDate(date){
   const evs=[...(state.calendarEvents||[]).filter(ev=>ev.date===date), ...monthlyEventsForDate(date), ...yearlyEventsForDate(date)];
   // registeredDate from listeners also shown, even if old data has no explicit event
@@ -5729,6 +5853,12 @@ function eventsForDate(date){
       }
     }
   });
+  const hostName=getCalendarHostName();
+  const hostBirthday=state.hostProfile && state.hostProfile.birthday ? state.hostProfile.birthday : "";
+  if(hostName && hostBirthday && birthdayMatchesDate(hostBirthday,date) && !evs.some(ev=>ev.listener===hostName && ev.type==="誕生日")){
+    const note=isLeapBirthday(hostBirthday) ? "🎂 枠主誕生日（2/29生まれ：平年は2/28扱いで表示）" : "🎂 枠主誕生日";
+    evs.push({id:"birthday_host_"+date,date,listener:hostName,type:"誕生日",item:note,host:true});
+  }
   return evs;
 }
 function calendarMemoList(listenerName){
@@ -5795,7 +5925,7 @@ function renderCalendar(){
   const y=calendarCursor.getFullYear();
   const m=calendarCursor.getMonth();
   calendarTitle.textContent=`${y}年 ${m+1}月`;
-  calendarListener.innerHTML=state.listeners.map(l=>`<option value="${escapeAttr(l.name)}">${escapeHtml(l.name)}</option>`).join("");
+  calendarListener.innerHTML=getCalendarTargets().map(t=>`<option value="${escapeAttr(t.name)}">${escapeHtml(t.label)}</option>`).join("");
   renderCalendarTypeOptions();
   renderCalendarTypeEditor();
   selectedDateTitle.textContent=`${selectedCalendarDate} の記録`;
@@ -5836,6 +5966,7 @@ function renderCalendar(){
     cells+=`<button class="cal-day 
       ${d.getMonth()!==m?"out":""}
       ${date===today?"today":""}
+      ${date===selectedCalendarDate?"selected":""}
       ${(dow===0 || isHoliday)?"sun":dow===6?"sat":""}
       " data-cal-date="${date}">
       <div class="cal-num">${d.getDate()}</div>${marks}${more}
@@ -6946,7 +7077,7 @@ const firebaseConfig = { ... }
     if(!Array.isArray(state.roulette.history)) state.roulette.history = [];
     if(!Array.isArray(state.roulette.bets)) state.roulette.bets = [];
     if(!Array.isArray(state.roulette.guestBetters)) state.roulette.guestBetters = [];
-    state.hostProfile = Object.assign({name:"", memo:"", ngWords:"", loveFantasy:false, favoriteThings:"", hobbies:"", frequentTopics:"", streamGenres:"", talkSettings:{clockEnabled:"on", clockPosition:"right", neonColor:"#39d0ff", bgTheme:"cyber", font:"system", shadow:"on", glow:"on"}}, state.hostProfile || {});
+    state.hostProfile = Object.assign({name:"", memo:"", birthday:"", ngWords:"", loveFantasy:false, favoriteThings:"", hobbies:"", frequentTopics:"", streamGenres:"", talkSettings:{clockEnabled:"on", clockPosition:"right", neonColor:"#39d0ff", bgTheme:"cyber", font:"system", shadow:"on", glow:"on"}}, state.hostProfile || {});
     state.hostProfile.talkSettings = Object.assign({clockEnabled:"on", clockPosition:"right", neonColor:"#39d0ff", bgTheme:"cyber", font:"system", shadow:"on", glow:"on"}, state.hostProfile.talkSettings || {});
 
     state.roulette.settings = Object.assign({
@@ -7160,6 +7291,7 @@ const firebaseConfig = { ... }
         memo:"ルーレットのゲスト追加から自動登録",
         penalty:0,
         registeredDate:today,
+        updatedAt:new Date().toISOString(),
         birthday:"",
         searchYomi:"",
         searchTags:"",
@@ -7518,10 +7650,17 @@ const firebaseConfig = { ... }
     const status = document.getElementById("hostProfileStatus");
     if(!nameInput || !memoInput || !status) return;
     ensureRouletteState();
-    state.hostProfile = Object.assign({name:"", memo:"", ngWords:"", loveFantasy:false, favoriteThings:"", hobbies:"", frequentTopics:"", streamGenres:"", talkSettings:{clockEnabled:"on", clockPosition:"right", neonColor:"#39d0ff", bgTheme:"cyber", font:"system", shadow:"on", glow:"on"}}, state.hostProfile || {});
+    state.hostProfile = Object.assign({name:"", memo:"", birthday:"", ngWords:"", loveFantasy:false, favoriteThings:"", hobbies:"", frequentTopics:"", streamGenres:"", talkSettings:{clockEnabled:"on", clockPosition:"right", neonColor:"#39d0ff", bgTheme:"cyber", font:"system", shadow:"on", glow:"on"}}, state.hostProfile || {});
     state.hostProfile.talkSettings = Object.assign({clockEnabled:"on", clockPosition:"right", neonColor:"#39d0ff", bgTheme:"cyber", font:"system", shadow:"on", glow:"on"}, state.hostProfile.talkSettings || {});
     nameInput.value = state.hostProfile.name || "";
     memoInput.value = state.hostProfile.memo || "";
+    const hostBd=splitBirthday(state.hostProfile.birthday || "");
+    const hostBirthMonthInput=document.getElementById("hostBirthMonthInput");
+    const hostBirthDayInput=document.getElementById("hostBirthDayInput");
+    if(hostBirthMonthInput) hostBirthMonthInput.value=hostBd.month || "";
+    if(hostBirthDayInput) hostBirthDayInput.value=hostBd.day || "";
+    const hostLeapNote=document.getElementById("hostLeapNote");
+    if(hostLeapNote) hostLeapNote.style.display=isLeapBirthday(state.hostProfile.birthday || "") ? "block" : "none";
     if(ngInput) ngInput.value = state.hostProfile.ngWords || "";
     if(loveInput) loveInput.checked = !!state.hostProfile.loveFantasy;
     const favInput = document.getElementById("hostFavoriteThingsInput");
@@ -7543,7 +7682,7 @@ const firebaseConfig = { ... }
     setVal("talkGlowInput", ts.glow || "on");
     const ngCount = String(state.hostProfile.ngWords||"").split(/\n|,/).map(x=>x.trim()).filter(Boolean).length;
     if(state.hostProfile.name){
-      status.innerHTML = '<span class="host-profile-badge">★ ' + esc(state.hostProfile.name) + '</span>' + (state.hostProfile.memo ? '　' + esc(state.hostProfile.memo) : '') + (ngCount ? '<br><span class="muted">NGワード ' + ngCount + '件 / レスキューに反映</span>' : '') + '<br><span class="muted">レスキュー表示設定：保存済み</span>';
+      status.innerHTML = '<span class="host-profile-badge">★ ' + esc(state.hostProfile.name) + '</span>' + (state.hostProfile.memo ? '　' + esc(state.hostProfile.memo) : '') + (state.hostProfile.birthday ? '<br><span class="muted">🎂 誕生日 ' + esc(state.hostProfile.birthday) + ' / カレンダー対象</span>' : '') + (ngCount ? '<br><span class="muted">NGワード ' + ngCount + '件 / レスキューに反映</span>' : '') + '<br><span class="muted">レスキュー表示設定：保存済み</span>';
     }else{
       status.textContent = "未登録";
     }
@@ -7574,9 +7713,11 @@ const firebaseConfig = { ... }
       glow: document.getElementById("talkGlowInput")?.value || "on"
     };
     if(!name){ alert("枠主名を入れてｗ"); return; }
-    state.hostProfile = {name:name, memo:memo, ngWords:ngWords, loveFantasy:loveFantasy, favoriteThings:favoriteThings, hobbies:hobbies, frequentTopics:frequentTopics, streamGenres:streamGenres, talkSettings:talkSettings};
+    state.hostProfile = {name:name, memo:memo, birthday:formatBirthday(document.getElementById("hostBirthMonthInput")?.value, document.getElementById("hostBirthDayInput")?.value), ngWords:ngWords, loveFantasy:loveFantasy, favoriteThings:favoriteThings, hobbies:hobbies, frequentTopics:frequentTopics, streamGenres:streamGenres, talkSettings:talkSettings};
     safeSave();
     renderHostProfileSettings();
+    if(typeof renderCalendar==="function") renderCalendar();
+    if(typeof renderHome==="function") renderHome();
     window.renderRoulette();
     alert("枠主情報を保存した！");
   }
@@ -7584,9 +7725,11 @@ const firebaseConfig = { ... }
   function clearHostProfileFromSettings(){
     ensureRouletteState();
     if(!confirm("枠主情報を削除する？")) return;
-    state.hostProfile = {name:"", memo:"", ngWords:"", loveFantasy:false, favoriteThings:"", hobbies:"", frequentTopics:"", streamGenres:"", talkSettings:{clockEnabled:"on", clockPosition:"right", neonColor:"#39d0ff", bgTheme:"cyber", font:"system", shadow:"on", glow:"on"}};
+    state.hostProfile = {name:"", memo:"", birthday:"", ngWords:"", loveFantasy:false, favoriteThings:"", hobbies:"", frequentTopics:"", streamGenres:"", talkSettings:{clockEnabled:"on", clockPosition:"right", neonColor:"#39d0ff", bgTheme:"cyber", font:"system", shadow:"on", glow:"on"}};
     safeSave();
     renderHostProfileSettings();
+    if(typeof renderCalendar==="function") renderCalendar();
+    if(typeof renderHome==="function") renderHome();
     window.renderRoulette();
   }
 
@@ -8471,9 +8614,21 @@ const firebaseConfig = { ... }
     try{ raw=raw.replace(/[^\p{L}\p{N}ー々〆〤]/gu,""); }catch(e){ raw=raw.replace(/[^0-9a-zぁ-んァ-ン一-龯ー々〆〤]/g,""); }
     return raw;
   }
-  function listenerSearchHaystack(l){
-    return [l.name,l.nickname,l.searchYomi,l.searchTags,l.memo,(l.topicSeeds||[]).join(' '), JSON.stringify(l.favorites||{})].map(regularSearchNormalize).join(' ');
+  function listenerSearchTokens(l){
+    const parts=[l.name,l.nickname,l.searchYomi,l.searchTags,l.memo,(l.topicSeeds||[]).join(' ')];
+    if(l && l.favorites) parts.push(Object.values(l.favorites).join(' '));
+    return parts.join(' ').split(/[\s,、，/／・|｜]+/).map(regularSearchNormalize).filter(Boolean);
   }
+  function listenerMatchesRegularSearch(l, query){
+    const q=regularSearchNormalize(query);
+    if(!q) return true;
+    const tokens=listenerSearchTokens(l||{});
+    // ルーレットと同じ検索ルール：1文字は先頭一致、2文字以上は先頭一致＋部分一致。
+    if(q.length<=1) return tokens.some(function(t){ return t.indexOf(q)===0; });
+    return tokens.some(function(t){ return t.indexOf(q)===0 || t.indexOf(q)>=0; });
+  }
+  function touchListener(l){ if(l) l.updatedAt = new Date().toISOString(); }
+  function listenerUpdatedKey(l){ return String((l && (l.updatedAt || l.modifiedAt || l.lastUpdated || l.registeredDate)) || ""); }
   function listenerSortKey(l){ return String((l && (l.searchYomi || l.kana || l.name)) || ""); }
   function ensureRegularToolbar(){
     const grid=document.getElementById("memoGrid");
@@ -8484,12 +8639,17 @@ const firebaseConfig = { ... }
     bar.innerHTML=''
       + '<input id="regularMemoSearch" placeholder="常連検索" style="flex:1;min-width:180px">'
       + '<select id="regularMemoSort">'
+      + '<option value="updated">最終更新日順</option>'
       + '<option value="kana">50音順</option>'
       + '<option value="recent">最近追加</option>'
       + '<option value="birthday">誕生日近い順</option>'
       + '</select>';
     grid.parentNode.insertBefore(bar, grid);
-    regularMemoSearch.addEventListener("input", function(){ window.__regularMemoSearch=this.value; const pos=this.selectionStart||this.value.length; renderMemo(); const next=document.getElementById("regularMemoSearch"); if(next){ next.focus(); try{next.setSelectionRange(pos,pos);}catch(e){} } });
+    regularMemoSearch.value = window.__regularMemoSearch || "";
+    regularMemoSearch.addEventListener("compositionstart", function(){ window.__regularMemoSearchComposing=true; });
+    regularMemoSearch.addEventListener("compositionend", function(){ window.__regularMemoSearchComposing=false; window.__regularMemoSearch=this.value; renderMemo(); });
+    regularMemoSearch.addEventListener("input", function(e){ window.__regularMemoSearch=this.value; if(window.__regularMemoSearchComposing || (e && e.isComposing)) return; renderMemo(); });
+    regularMemoSort.value = window.__regularMemoSort || "updated";
     regularMemoSort.addEventListener("change", function(){ window.__regularMemoSort=this.value; renderMemo(); });
   }
   function daysUntilBirthday(l){
@@ -8540,12 +8700,13 @@ const firebaseConfig = { ... }
   }
   function getSortedListeners(){
     const search=regularSearchNormalize(String(window.__regularMemoSearch || "").trim());
-    const sort=window.__regularMemoSort || "kana";
+    const sort=window.__regularMemoSort || "updated";
     let arr=(state.listeners||[]).map(function(l,i){ return {l:l,i:i}; });
     if(search){
-      arr=arr.filter(function(x){ return listenerSearchHaystack(x.l||{}).includes(search); });
+      arr=arr.filter(function(x){ return listenerMatchesRegularSearch(x.l||{}, search); });
     }
-    if(sort==="recent") arr.sort(function(a,b){ return String(b.l.registeredDate||"").localeCompare(String(a.l.registeredDate||"")); });
+    if(sort==="updated") arr.sort(function(a,b){ return listenerUpdatedKey(b.l).localeCompare(listenerUpdatedKey(a.l)) || listenerSortKey(a.l).localeCompare(listenerSortKey(b.l),'ja'); });
+    else if(sort==="recent") arr.sort(function(a,b){ return String(b.l.registeredDate||"").localeCompare(String(a.l.registeredDate||"")); });
     else if(sort==="birthday") arr.sort(function(a,b){ return daysUntilBirthday(a.l)-daysUntilBirthday(b.l); });
     else arr.sort(function(a,b){ return listenerSortKey(a.l).localeCompare(listenerSortKey(b.l),'ja'); });
     return arr;
@@ -8591,9 +8752,9 @@ const firebaseConfig = { ... }
     }).join('') || '<div class="card"><div class="inner muted">常連なし</div></div>';
 
     grid.querySelectorAll('[data-toggle-regular]').forEach(function(btn){ btn.onclick=function(){ const box=grid.querySelector('[data-regular-fold="'+btn.dataset.toggleRegular+'"]'); if(box){ box.classList.toggle('open'); btn.textContent=box.classList.contains('open')?'閉じる':'開く'; } }; });
-    grid.querySelectorAll('textarea[data-memo]').forEach(function(t){ t.onchange=function(){ state.listeners[Number(t.dataset.memo)].memo=t.value; save(); }; });
-    grid.querySelectorAll('input[data-search-yomi]').forEach(function(inp){ inp.onchange=function(){ state.listeners[Number(inp.dataset.searchYomi)].searchYomi=inp.value.trim(); save(); }; });
-    grid.querySelectorAll('input[data-search-tags]').forEach(function(inp){ inp.onchange=function(){ state.listeners[Number(inp.dataset.searchTags)].searchTags=inp.value.trim(); save(); }; });
+    grid.querySelectorAll('textarea[data-memo]').forEach(function(t){ t.onchange=function(){ const l=state.listeners[Number(t.dataset.memo)]; l.memo=t.value; touchListener(l); save(); renderMemo(); }; });
+    grid.querySelectorAll('input[data-search-yomi]').forEach(function(inp){ inp.onchange=function(){ const l=state.listeners[Number(inp.dataset.searchYomi)]; l.searchYomi=inp.value.trim(); touchListener(l); save(); renderMemo(); }; });
+    grid.querySelectorAll('input[data-search-tags]').forEach(function(inp){ inp.onchange=function(){ const l=state.listeners[Number(inp.dataset.searchTags)]; l.searchTags=inp.value.trim(); touchListener(l); save(); renderMemo(); }; });
     grid.querySelectorAll('[data-refresh-seeds]').forEach(function(btn){ btn.onclick=function(){ refreshTopicSeeds(Number(btn.dataset.refreshSeeds)); }; });
     grid.querySelectorAll('[data-open-detail]').forEach(function(btn){ btn.onclick=function(){ openListenerDetail(Number(btn.dataset.openDetail)); }; });
     grid.querySelectorAll('[data-delete-memo-listener]').forEach(function(btn){ btn.onclick=function(){ deleteListener(Number(btn.dataset.deleteMemoListener)); }; });
