@@ -3440,7 +3440,7 @@ function fitBrushText(text){
         <div style="height:14px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:10px">
           <div id="tileProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#a3e635)"></div>
         </div>
-        <p class="muted" style="margin-top:10px">タイルを押すと「埋まり/未達成」を切り替え。鉛筆で名前編集、×で削除。</p>
+        <p class="muted" style="margin-top:10px">タイル本体を押すと「埋まり/未達成」を切り替え。編集・削除は下の管理欄から行います。</p>
       </div></div>
     </div>
 
@@ -3449,7 +3449,14 @@ function fitBrushText(text){
         <h3 id="tileBoardHeading" style="margin:0">耐久タイル</h3>
         <div class="muted" id="tileBoardSub">手動管理</div>
       </div>
-      <div id="tileGrid" style="margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px"></div>
+      <div id="tileGrid" style="margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px;align-items:stretch"></div>
+      <div style="margin-top:18px;border-top:1px solid rgba(255,255,255,.10);padding-top:14px">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <h4 style="margin:0">タイル管理</h4>
+          <span class="muted">名前編集・削除はこちら</span>
+        </div>
+        <div id="tileManageList" style="margin-top:10px;display:grid;gap:8px"></div>
+      </div>
     </div></div>
   </div></div>
 </section>
@@ -6627,14 +6634,23 @@ function renderTileTool(){
   if(window.tileProgressBar) tileProgressBar.style.width=pct+"%";
   if(window.tileGrid){
     tileGrid.innerHTML=items.map((it,i)=>`
-      <div class="tile-cell ${it.done?'done':''}" data-tile-toggle="${i}" style="position:relative;min-height:82px;border-radius:18px;border:1px solid ${it.done?'rgba(34,197,94,.85)':'rgba(255,255,255,.14)'};background:${it.done?'linear-gradient(135deg,rgba(34,197,94,.28),rgba(132,204,22,.18))':'rgba(15,23,42,.72)'};box-shadow:${it.done?'0 0 22px rgba(34,197,94,.20)':'none'};display:flex;align-items:center;justify-content:center;text-align:center;padding:14px 38px 14px 12px;cursor:pointer;font-weight:950;word-break:break-word">
-        <span>${it.done?'✅ ':''}${escapeHtml(it.name||'')}</span>
-        <button class="btn mini-btn" data-tile-edit="${i}" type="button" style="position:absolute;right:7px;top:7px;padding:3px 7px">✎</button>
-        <button class="btn mini-btn danger" data-tile-del="${i}" type="button" style="position:absolute;right:7px;bottom:7px;padding:3px 7px">×</button>
-      </div>`).join('') || '<p class="muted">タイルがありません。プリセットか自由入力で作成してね。</p>';
-    tileGrid.querySelectorAll('[data-tile-toggle]').forEach(el=>el.onclick=(ev)=>{ if(ev.target.closest('button')) return; const i=Number(el.dataset.tileToggle); items[i].done=!items[i].done; save(); renderTileTool(); });
-    tileGrid.querySelectorAll('[data-tile-edit]').forEach(btn=>btn.onclick=()=>{ const i=Number(btn.dataset.tileEdit); const name=prompt('タイル名を編集', items[i].name||''); if(name!==null){items[i].name=name.trim()||items[i].name; save(); renderTileTool();} });
-    tileGrid.querySelectorAll('[data-tile-del]').forEach(btn=>btn.onclick=()=>{ const i=Number(btn.dataset.tileDel); if(confirm(`${items[i].name} を削除する？`)){items.splice(i,1); save(); renderTileTool();} });
+      <button class="tile-cell ${it.done?'done':''}" data-tile-toggle="${i}" type="button" style="aspect-ratio:1/1;width:100%;border-radius:14px;border:2px solid ${it.done?'rgba(34,197,94,.95)':'rgba(255,255,255,.16)'};background:${it.done?'linear-gradient(135deg,rgba(34,197,94,.34),rgba(132,204,22,.20))':'rgba(15,23,42,.78)'};box-shadow:${it.done?'0 0 22px rgba(34,197,94,.22), inset 0 0 0 1px rgba(255,255,255,.10)':'inset 0 0 0 1px rgba(255,255,255,.04)'};display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;cursor:pointer;font-weight:950;word-break:break-word;color:#fff;line-height:1.18;overflow:hidden">
+        <span>${it.done?'✅<br>':''}${escapeHtml(it.name||'')}</span>
+      </button>`).join('') || '<p class="muted">タイルがありません。プリセットか自由入力で作成してね。</p>';
+    tileGrid.querySelectorAll('[data-tile-toggle]').forEach(el=>el.onclick=()=>{ const i=Number(el.dataset.tileToggle); items[i].done=!items[i].done; save(); renderTileTool(); });
+  }
+  if(window.tileManageList){
+    tileManageList.innerHTML=items.map((it,i)=>`
+      <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;background:rgba(15,23,42,.58);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:8px">
+        <input data-tile-name="${i}" value="${escapeHtml(it.name||'')}" aria-label="タイル名">
+        <button class="btn mini-btn" data-tile-edit="${i}" type="button">反映</button>
+        <button class="btn mini-btn danger" data-tile-del="${i}" type="button">削除</button>
+      </div>`).join('') || '<p class="muted">管理するタイルがありません。</p>';
+    tileManageList.querySelectorAll('[data-tile-name]').forEach(inp=>{
+      inp.onchange=()=>{ const i=Number(inp.dataset.tileName); if(items[i]){items[i].name=inp.value.trim()||items[i].name; save(); renderTileTool();} };
+    });
+    tileManageList.querySelectorAll('[data-tile-edit]').forEach(btn=>btn.onclick=()=>{ const i=Number(btn.dataset.tileEdit); const inp=tileManageList.querySelector(`[data-tile-name="${i}"]`); if(items[i] && inp){items[i].name=inp.value.trim()||items[i].name; save(); renderTileTool();} });
+    tileManageList.querySelectorAll('[data-tile-del]').forEach(btn=>btn.onclick=()=>{ const i=Number(btn.dataset.tileDel); if(items[i] && confirm(`${items[i].name} を削除する？`)){items.splice(i,1); save(); renderTileTool();} });
   }
 }
 if(window.tileBoardTitle) tileBoardTitle.onchange=()=>{tileState().title=tileBoardTitle.value.trim()||'耐久タイル'; save(); renderTileTool();};
