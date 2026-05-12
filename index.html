@@ -2544,12 +2544,30 @@ function fitBrushText(text){
   border-color:transparent;
 }
 .endurance-display{
+  --endurance-progress:0%;
+  position:relative;
+  overflow:hidden;
   background:radial-gradient(circle at center,#111827,#020617 72%);
   border:1px solid #334155;
   border-radius:26px;
   padding:28px 18px;
   text-align:center;
   box-shadow:0 20px 70px #0006,inset 0 0 48px #38bdf822;
+}
+.endurance-display.goal-ring::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:26px;
+  padding:5px;
+  background:conic-gradient(from -90deg,#22d3ee var(--endurance-progress),#1e293b var(--endurance-progress) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  pointer-events:none;
+}
+.endurance-display.goal-complete::before{
+  background:conic-gradient(from -90deg,#facc15 0 100%);
 }
 .endurance-title{
   font-size:18px;
@@ -3225,8 +3243,8 @@ function fitBrushText(text){
 <div class="tool-item" style="margin-bottom:12px;background:#111827;border-color:#06b6d4">
   <div class="row" style="justify-content:space-between">
     <div>
-      <div class="tool-title">🔥 耐久カウンター</div>
-      <div class="muted">タイマー加算 / カウント加算を大画面で管理</div>
+      <div class="tool-title">⏱️ カウントアップタイマー</div>
+      <div class="muted">タイマー加算 / カウント加算を配信用の大画面で管理</div>
     </div>
     <button class="btn primary" onclick="showScreen('enduranceTool')" type="button">開く</button>
   </div>
@@ -3343,7 +3361,7 @@ function fitBrushText(text){
   <div class="card"><div class="inner endurance-stage">
     <div class="row" style="justify-content:space-between;align-items:flex-start">
       <div>
-        <h2 style="margin:0">🔥 耐久カウンター</h2>
+        <h2 style="margin:0">⏱️ カウントアップタイマー</h2>
         <p class="muted">0秒を目指すタイマーと、目標数を目指すカウンター。ボタンは自由に作成できる。</p>
       </div>
       <button class="btn" onclick="showScreen('tools')" type="button">道具へ戻る</button>
@@ -3374,10 +3392,11 @@ function fitBrushText(text){
         <input id="enduranceTitleInput" placeholder="企画名 例：NGワード耐久">
         <input id="enduranceTimerMin" type="number" min="0" value="3" style="max-width:90px" placeholder="分">
         <input id="enduranceTimerSec" type="number" min="0" max="59" value="0" style="max-width:90px" placeholder="秒">
-        <input id="enduranceCounterGoal" type="number" min="0" value="100" style="max-width:110px" placeholder="目標数">
+        <select id="enduranceTimerSound" style="max-width:180px"></select>
+        <input id="enduranceCounterGoal" type="number" min="0" value="100" style="max-width:140px" placeholder="目標数（0でなし）">
         <button class="btn primary" id="enduranceSaveBase" type="button">設定反映</button>
       </div>
-      <p class="muted">タイマーは赤点滅中もSEなし。ボタン押下時だけルーレットの「該当者なし」と同じ音を使う。</p>
+      <p class="muted">タイマー終了音は通常タイマーと同じ音源から選択。カウンター目標は0にするとゲージなし。ボタン押下時だけルーレットの「該当者なし」と同じ音を使う。</p>
     </div>
 
     <div class="endurance-config">
@@ -3802,7 +3821,8 @@ const defaultState={
     ],
     endurance:{
       mode:"timer",
-      title:"耐久タイマー",
+      title:"カウントアップタイマー",
+      timerSound:"alarm_clock",
       timerDuration:180,
       timerRemaining:180,
       timerRunning:false,
@@ -6428,6 +6448,7 @@ function enduranceState(){
   if(typeof e.timerRemaining !== "number") e.timerRemaining = e.timerDuration;
   if(typeof e.counterGoal !== "number") e.counterGoal = 100;
   if(typeof e.counterValue !== "number") e.counterValue = 0;
+  if(typeof e.timerSound !== "string") e.timerSound = "alarm_clock";
   return e;
 }
 function fmtEnduranceTime(sec){
@@ -6450,15 +6471,28 @@ function renderEnduranceTool(){
     enduranceCounterTab.classList.toggle("primary", !timerMode);
     enduranceCounterTab.classList.toggle("active", !timerMode);
   }
+  const goal = Number(e.counterGoal)||0;
+  const current = Number(e.counterValue)||0;
+  const hasGoal = !timerMode && goal > 0;
+  const progress = hasGoal ? Math.min(100, Math.max(0, current / goal * 100)) : 0;
   if(window.enduranceModeLabel) enduranceModeLabel.textContent = timerMode ? "タイマーモード" : "カウンターモード";
-  if(window.enduranceMainValue) enduranceMainValue.textContent = timerMode ? fmtEnduranceTime(e.timerRemaining) : String(e.counterValue||0);
-  if(window.enduranceSubValue) enduranceSubValue.textContent = timerMode ? `初期 ${fmtEnduranceTime(e.timerDuration)} / 0秒を目指せ` : `目標 ${e.counterGoal} / 残り ${Math.max(0,(e.counterGoal||0)-(e.counterValue||0))}`;
-  if(window.enduranceDisplayBox) enduranceDisplayBox.classList.toggle("warning", timerMode && e.timerRemaining <= 30 && e.timerRemaining > 0 && e.timerRunning);
+  if(window.enduranceMainValue) enduranceMainValue.textContent = timerMode ? fmtEnduranceTime(e.timerRemaining) : String(current);
+  if(window.enduranceSubValue) enduranceSubValue.textContent = timerMode ? `初期 ${fmtEnduranceTime(e.timerDuration)} / 0秒を目指せ` : (hasGoal ? `目標 ${goal} / ${Math.floor(progress)}% / 残り ${Math.max(0,goal-current)}` : "目標なし / 特殊カウンターとして使用中");
+  if(window.enduranceDisplayBox){
+    enduranceDisplayBox.classList.toggle("warning", timerMode && e.timerRemaining <= 30 && e.timerRemaining > 0 && e.timerRunning);
+    enduranceDisplayBox.classList.toggle("goal-ring", hasGoal);
+    enduranceDisplayBox.classList.toggle("goal-complete", hasGoal && progress >= 100);
+    enduranceDisplayBox.style.setProperty("--endurance-progress", progress + "%");
+  }
   if(window.enduranceStartPause) enduranceStartPause.textContent = timerMode ? (e.timerRunning ? "停止" : "開始") : "カウンターはボタンで加算";
   if(window.enduranceStartPause) enduranceStartPause.disabled = !timerMode;
   if(window.enduranceTitleInput) enduranceTitleInput.value = e.title || "";
   if(window.enduranceTimerMin) enduranceTimerMin.value = Math.floor((e.timerDuration||0)/60);
   if(window.enduranceTimerSec) enduranceTimerSec.value = (e.timerDuration||0)%60;
+  if(window.enduranceTimerSound){
+    enduranceTimerSound.innerHTML = timerSounds.map(snd=>`<option value="${snd.id}" ${e.timerSound===snd.id?"selected":""}>終了音：${snd.label}</option>`).join("");
+    enduranceTimerSound.value = e.timerSound || "alarm_clock";
+  }
   if(window.enduranceCounterGoal) enduranceCounterGoal.value = e.counterGoal || 0;
 
   if(window.enduranceActionButtons){
@@ -6505,7 +6539,7 @@ function ensureEnduranceTick(){
     const e=enduranceState();
     if(e.timerRunning){
       e.timerRemaining=Math.max(0,(e.timerRemaining||0)-1);
-      if(e.timerRemaining<=0){ e.timerRunning=false; if(typeof playAlarm==="function") playAlarm("alarm_clock"); }
+      if(e.timerRemaining<=0){ e.timerRunning=false; if(typeof playAlarm==="function") playAlarm(e.timerSound||"alarm_clock"); }
       save();
       if(document.getElementById("enduranceTool")?.classList.contains("active")) renderEnduranceTool();
     }
@@ -6515,7 +6549,7 @@ if(window.enduranceTimerTab) enduranceTimerTab.onclick=()=>{const e=enduranceSta
 if(window.enduranceCounterTab) enduranceCounterTab.onclick=()=>{const e=enduranceState(); e.mode="counter"; save(); renderEnduranceTool();};
 if(window.enduranceStartPause) enduranceStartPause.onclick=()=>{const e=enduranceState(); if(e.timerRemaining<=0) e.timerRemaining=e.timerDuration; e.timerRunning=!e.timerRunning; save(); renderEnduranceTool(); ensureEnduranceTick();};
 if(window.enduranceReset) enduranceReset.onclick=()=>{const e=enduranceState(); if(e.mode==="counter"){e.counterValue=0;}else{e.timerRunning=false; e.timerRemaining=e.timerDuration;} save(); renderEnduranceTool();};
-if(window.enduranceSaveBase) enduranceSaveBase.onclick=()=>{const e=enduranceState(); e.title=(enduranceTitleInput.value||"耐久タイマー").trim(); const dur=Math.max(1,(Number(enduranceTimerMin.value)||0)*60 + Math.min(59,Number(enduranceTimerSec.value)||0)); e.timerDuration=dur; if(!e.timerRunning) e.timerRemaining=dur; e.counterGoal=Math.max(0,Number(enduranceCounterGoal.value)||0); save(); renderEnduranceTool();};
+if(window.enduranceSaveBase) enduranceSaveBase.onclick=()=>{const e=enduranceState(); e.title=(enduranceTitleInput.value||"カウントアップタイマー").trim(); const dur=Math.max(1,(Number(enduranceTimerMin.value)||0)*60 + Math.min(59,Number(enduranceTimerSec.value)||0)); e.timerDuration=dur; e.timerSound=(window.enduranceTimerSound?.value)||e.timerSound||"alarm_clock"; if(!e.timerRunning) e.timerRemaining=dur; e.counterGoal=Math.max(0,Number(enduranceCounterGoal.value)||0); save(); renderEnduranceTool();};
 if(window.enduranceAddButton) enduranceAddButton.onclick=()=>{const e=enduranceState(); const name=(enduranceButtonName.value||"追加ボタン").trim(); const value=Number(enduranceButtonValue.value)||0; const unit=enduranceButtonUnit.value||"seconds"; const color=enduranceButtonColor.value||"#38bdf8"; e.buttons.push({id:uid("ed"),name,value,unit,color}); enduranceButtonName.value=""; save(); renderEnduranceTool();};
 if(window.enduranceClearButtons) enduranceClearButtons.onclick=()=>{const e=enduranceState(); if(confirm("耐久カウンターのカスタムボタンを全部消す？")){e.buttons=[]; save(); renderEnduranceTool();}};
 ensureEnduranceTick();
