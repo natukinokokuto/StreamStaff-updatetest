@@ -7055,7 +7055,24 @@ const firebaseConfig = { ... }
         : '<div class="muted">ゲスト追加すると常連メモと選択肢に自動追加。常連から削除した人はここにも残らないよ</div>';
       const guestSearch = document.getElementById("rouletteGuestSearch");
       if(guestSearch){
-        guestSearch.oninput = function(){
+        // 日本語IME入力中に再描画すると「kあ」など変換前の文字が混ざるため、変換確定まで待つ。
+        guestSearch.oncompositionstart = function(){ window.__rouletteGuestSearchComposing = true; };
+        guestSearch.oncompositionend = function(){
+          window.__rouletteGuestSearchComposing = false;
+          window.__rouletteGuestSearch = this.value;
+          const pos = this.selectionStart || this.value.length;
+          renderBetBoard();
+          const next = document.getElementById("rouletteGuestSearch");
+          if(next){
+            next.focus();
+            try{ next.setSelectionRange(pos, pos); }catch(e){}
+          }
+        };
+        guestSearch.oninput = function(e){
+          if(window.__rouletteGuestSearchComposing || (e && e.isComposing)){
+            window.__rouletteGuestSearch = this.value;
+            return;
+          }
           window.__rouletteGuestSearch = this.value;
           const pos = this.selectionStart || this.value.length;
           renderBetBoard();
