@@ -149,6 +149,8 @@ state.listeners.forEach(l=>{
   if(typeof l.bloodType!=="string") l.bloodType="";
   if(typeof l.firstVisitDate!=="string") l.firstVisitDate="";
   if(typeof l.nickname!=="string") l.nickname="";
+  if(typeof l.searchYomi!=="string") l.searchYomi="";
+  if(typeof l.searchTags!=="string") l.searchTags="";
   if(!l.favorites) l.favorites={};
   ["project","game","food","area","music","anime","habit","free1","free2","ngTopic","dislikeFood","firstGame","mainWeapon","holiday","bgm","localThing","season","animal","oshi","firstStream","oneLine","teaseLine"].forEach(k=>{ if(typeof l.favorites[k]!=="string") l.favorites[k]=""; });
   if(!Array.isArray(l.topicSeeds)) l.topicSeeds=[];
@@ -739,10 +741,18 @@ function renderMemo(){
       ${achievedList(l)}
       <h3>カレンダー同期メモ</h3>
       ${calendarMemoList(l.name)}
+      <label>検索用よみ</label>
+      <input data-search-yomi="${i}" value="${escapeHtml(l.searchYomi||"")}" placeholder="例：あらた / びーる / よろしくたろう">
+      <p class="muted" style="margin-top:4px">アプリ内検索にヒットさせるためのよみがな。記号・絵文字（★🍺+など）は自動で無視されるため通常は入力不要です。絵文字のみ・当て字・特殊な名前だけ設定してください。</p>
+      <label>検索用タグ</label>
+      <input data-search-tags="${i}" value="${escapeHtml(l.searchTags||"")}" placeholder="例：酒 飲み 雑談 深夜">
+      <p class="muted" style="margin-top:4px">スペース区切りで検索に引っかけたい言葉を追加できます。話題レスキュー連動にも使える下準備です。</p>
       <label>常連メモ</label>
       <textarea data-memo="${i}">${escapeHtml(l.memo||"")}</textarea>
     </div></div>`).join("");
   memoGrid.querySelectorAll("textarea").forEach(t=>t.onchange=()=>{state.listeners[Number(t.dataset.memo)].memo=t.value;save()});
+  memoGrid.querySelectorAll("[data-search-yomi]").forEach(inp=>inp.onchange=()=>{state.listeners[Number(inp.dataset.searchYomi)].searchYomi=inp.value.trim();save()});
+  memoGrid.querySelectorAll("[data-search-tags]").forEach(inp=>inp.onchange=()=>{state.listeners[Number(inp.dataset.searchTags)].searchTags=inp.value.trim();save()});
   memoGrid.querySelectorAll("[data-birthday]").forEach(inp=>inp.onchange=()=>{
     state.listeners[Number(inp.dataset.birthday)].birthday=inp.value;
     save();renderMemo();renderCalendar();
@@ -1897,6 +1907,8 @@ state.tools = state.tools || structuredClone(defaultState.tools);
   if(typeof l.bloodType!=="string") l.bloodType="";
   if(typeof l.firstVisitDate!=="string") l.firstVisitDate="";
   if(typeof l.nickname!=="string") l.nickname="";
+  if(typeof l.searchYomi!=="string") l.searchYomi="";
+  if(typeof l.searchTags!=="string") l.searchTags="";
   if(!l.favorites) l.favorites={};
   ["project","game","food","area","music","anime","habit","free1","free2","ngTopic","dislikeFood","firstGame","mainWeapon","holiday","bgm","localThing","season","animal","oshi","firstStream","oneLine","teaseLine"].forEach(k=>{ if(typeof l.favorites[k]!=="string") l.favorites[k]=""; });
   if(!Array.isArray(l.topicSeeds)) l.topicSeeds=[]; });
@@ -2265,6 +2277,7 @@ document.addEventListener("DOMContentLoaded",()=>renderRoulette());
     };
     let raw = String(value || "").normalize("NFKC").toLowerCase();
     raw = raw.replace(/[ァ-ン]/g, function(ch){ return String.fromCharCode(ch.charCodeAt(0) - 0x60); });
+    raw = raw.replace(/[^\p{L}\p{N}ー]/gu, "");
     raw = raw.replace(/\s+/g, "");
     let hinted = "";
     for(let i=0;i<raw.length;i++){
@@ -2274,10 +2287,25 @@ document.addEventListener("DOMContentLoaded",()=>renderRoulette());
     return hinted;
   }
 
+  function rouletteSearchHaystackForName(name){
+    const listener = Array.isArray(state.listeners) ? state.listeners.find(function(l){ return l && l.name === name; }) : null;
+    const parts = [name];
+    if(listener){
+      parts.push(listener.nickname || "");
+      parts.push(listener.searchYomi || "");
+      parts.push(listener.searchTags || "");
+      if(listener.favorites){
+        parts.push(listener.favorites.free1 || "");
+        parts.push(listener.favorites.free2 || "");
+      }
+    }
+    return normalizeRouletteSearchText(parts.join(" "));
+  }
+
   function rouletteGuestMatchesSearch(name, query){
     const q = normalizeRouletteSearchText(query);
     if(!q) return true;
-    return normalizeRouletteSearchText(name).includes(q);
+    return rouletteSearchHaystackForName(name).includes(q);
   }
 
   function rouletteLastBetSortedNames(names){
@@ -2558,6 +2586,15 @@ document.addEventListener("DOMContentLoaded",()=>renderRoulette());
           renderBetBoard();
         };
       }
+      guestList.querySelectorAll("[data-select-roulette-better]").forEach(function(btn){
+        btn.onclick = function(){
+          const name = this.dataset.selectRouletteBetter;
+          const selectEl = document.getElementById("rouletteBetterSelect");
+          window.__rouletteSelectedBetter = name;
+          if(selectEl) selectEl.value = name;
+          renderBetBoard();
+        };
+      });
     }
   }
 
