@@ -3410,7 +3410,7 @@ function fitBrushText(text){
           <div id="kujiLastOneStatus" style="font-size:18px;font-weight:900">設定なし</div>
         </div>
       </div>
-      <div id="kujiTicket" style="margin:18px auto 10px;max-width:520px;min-height:150px;border-radius:24px;background:repeating-linear-gradient(135deg,#fff7ed 0,#fff7ed 14px,#fed7aa 14px,#fed7aa 28px);color:#3b1b08;display:flex;align-items:center;justify-content:center;text-align:center;font-size:34px;font-weight:950;box-shadow:inset 0 0 0 4px rgba(120,53,15,.15),0 14px 34px rgba(0,0,0,.3);overflow:hidden;position:relative">
+      <div id="kujiTicket" style="margin:18px auto 10px;max-width:520px;min-height:210px;border-radius:28px;background:repeating-linear-gradient(135deg,#fff7ed 0,#fff7ed 14px,#fed7aa 14px,#fed7aa 28px);color:#3b1b08;display:flex;align-items:center;justify-content:center;text-align:center;font-size:34px;font-weight:950;box-shadow:inset 0 0 0 4px rgba(120,53,15,.15),0 14px 34px rgba(0,0,0,.3);overflow:hidden;position:relative">
         <div id="kujiTicketText">ぺりぺり待機中</div>
       </div>
       <div class="row" style="justify-content:center">
@@ -6535,7 +6535,14 @@ function renderKujiTool(){
   const total=kujiTotalRemaining();
   if(window.kujiTotalRemain) kujiTotalRemain.textContent = total + "本";
   if(window.kujiLastOneStatus) kujiLastOneStatus.textContent = (k.lastOne||"設定なし") + (total===1 && k.lastOne ? " / 次で発動圏内" : "");
-  if(window.kujiTicketText && !kujiTicketText.dataset.locked) kujiTicketText.textContent = total>0 ? "ぺりぺり待機中" : "くじ終了！";
+  if(window.kujiTicketText && !kujiTicketText.dataset.locked){
+    kujiTicketText.textContent = total>0 ? "ぺりぺり待機中" : "くじ終了！";
+    if(window.kujiTicket){
+      kujiTicket.style.background='repeating-linear-gradient(135deg,#fff7ed 0,#fff7ed 14px,#fed7aa 14px,#fed7aa 28px)';
+      kujiTicket.style.boxShadow='inset 0 0 0 4px rgba(120,53,15,.15),0 14px 34px rgba(0,0,0,.3)';
+      kujiTicket.style.transform='scale(1) rotate(0deg)';
+    }
+  }
   if(window.kujiPrizeList){
     kujiPrizeList.innerHTML = k.prizes.map((p,i)=>{
       const remain=kujiRemainingPrize(p);
@@ -6604,10 +6611,24 @@ function drawKuji(){
     setTimeout(()=>{ kujiTicketText.innerHTML='<div style="font-size:36px">ぺりぺり…</div><div style="height:8px;margin:12px auto 0;max-width:260px;background:linear-gradient(90deg,#92400e 0%,#f59e0b 55%,#fff7ed 55%);border-radius:999px"></div>'; },420);
     setTimeout(()=>{ kujiTicketText.innerHTML='<div style="font-size:34px">もう少し…！</div><div style="height:8px;margin:12px auto 0;max-width:260px;background:linear-gradient(90deg,#92400e 0%,#f59e0b 82%,#fff7ed 82%);border-radius:999px"></div>'; },900);
     setTimeout(()=>{
-      kujiTicketText.innerHTML = `<div><div style="font-size:18px;color:#7c2d12">＼ ぺりぺり結果 ／</div><div style="font-size:52px;color:${prize.color||'#f59e0b'};text-shadow:0 2px 0 rgba(255,255,255,.65)">${escapeHtml(prize.name)}</div>${lastOne?`<div style="margin-top:8px;color:#b45309;font-size:24px">＋ ${escapeHtml(lastOne)}</div>`:''}</div>`;
+      const remainAfter = kujiRemainingPrize(prize);
+      const totalAfter = kujiTotalRemaining();
+      const resultLabel = escapeHtml(prize.name || '賞');
+      const resultColor = prize.color || '#f59e0b';
+      kujiTicketText.innerHTML = `
+        <div style="width:100%;padding:10px 14px">
+          <div style="display:inline-block;padding:5px 14px;border-radius:999px;background:#3b1b08;color:#fff7ed;font-size:16px;letter-spacing:.08em;margin-bottom:8px">今回の結果</div>
+          <div style="font-size:82px;line-height:.95;font-weight:1000;color:${resultColor};text-shadow:0 4px 0 rgba(255,255,255,.78),0 10px 22px rgba(0,0,0,.18);-webkit-text-stroke:2px rgba(59,27,8,.28);word-break:break-word">${resultLabel}</div>
+          ${lastOne?`<div style="margin:10px auto 0;display:inline-block;padding:8px 14px;border-radius:14px;background:#fbbf24;color:#3b1b08;font-size:28px;font-weight:1000;box-shadow:0 8px 18px rgba(180,83,9,.25)">ラストワン：${escapeHtml(lastOne)}</div>`:''}
+          <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;font-size:15px;color:#7c2d12;font-weight:900">
+            <span style="padding:5px 10px;border-radius:999px;background:rgba(255,247,237,.75)">この賞 残り ${remainAfter}本</span>
+            <span style="padding:5px 10px;border-radius:999px;background:rgba(255,247,237,.75)">全体 残り ${totalAfter}本</span>
+          </div>
+        </div>`;
       if(window.kujiTicket){
-        kujiTicket.style.transform='scale(1) rotate(0deg)';
-        kujiTicket.style.boxShadow='inset 0 0 0 4px rgba(120,53,15,.15),0 14px 34px rgba(0,0,0,.3)';
+        kujiTicket.style.transform='scale(1.01) rotate(0deg)';
+        kujiTicket.style.background=`linear-gradient(135deg,#fff7ed 0%,#ffedd5 58%,${resultColor}33 100%)`;
+        kujiTicket.style.boxShadow=`inset 0 0 0 5px ${resultColor},0 24px 54px ${resultColor}55`;
       }
       delete kujiTicketText.dataset.locked;
       renderKujiTool();
