@@ -2960,10 +2960,10 @@ function fitBrushText(text){
             <input id="detailNickname" placeholder="例：○○ニキ / ○○ネキ / ○○先生">
             <label>検索用よみ</label>
             <input id="detailSearchYomi" placeholder="例：あらた / びーる / よろしくたろう">
-            <p class="muted">アプリ内検索に使うよみがな。記号・絵文字（★🍺+など）は自動で飛ばすので、通常は入力不要。当て字・特殊名・絵文字だけの名前だけ設定してね。</p>
+            <p class="muted">アプリ内検索にヒットさせるためのよみがな。記号・絵文字（★🍺+など）は自動で飛ばすので、普通の名前なら入力不要。当て字・特殊名・絵文字だけの名前だけ設定してね。</p>
             <label>検索用タグ</label>
             <input id="detailSearchTags" placeholder="例：酒 飲み 深夜 筋トレ">
-            <p class="muted">スペース区切りでOK。検索や話題レスキュー連動の補助に使う予定。</p>
+            <p class="muted">スペース区切りでOK。名前以外の言葉でも探したい時用。</p>
             <label>誕生日（月 / 日）</label>
             <div class="birthday-row">
               <input id="detailBirthMonth" type="number" min="1" max="12" placeholder="月">
@@ -7057,7 +7057,13 @@ const firebaseConfig = { ... }
       if(guestSearch){
         guestSearch.oninput = function(){
           window.__rouletteGuestSearch = this.value;
+          const pos = this.selectionStart || this.value.length;
           renderBetBoard();
+          const next = document.getElementById("rouletteGuestSearch");
+          if(next){
+            next.focus();
+            try{ next.setSelectionRange(pos, pos); }catch(e){}
+          }
         };
       }
       const guestSort = document.getElementById("rouletteGuestSort");
@@ -8078,7 +8084,17 @@ const firebaseConfig = { ... }
   function html(s){ return (typeof escapeHtml === "function") ? escapeHtml(s) : String(s ?? "").replace(/[&<>"]/g, function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];}); }
   function attr(s){ return html(s).replace(/'/g,"&#39;"); }
   function todayYmd(){ return (typeof ymd === "function") ? ymd(new Date()) : new Date().toISOString().slice(0,10); }
-  function listenerSortKey(l){ return String((l && (l.kana || l.name)) || ""); }
+  function regularSearchNormalize(value){
+    if(typeof normalizeRouletteSearchText === "function") return normalizeRouletteSearchText(value);
+    let raw=String(value||"").normalize("NFKC").toLowerCase();
+    raw=raw.replace(/[ァ-ン]/g,function(ch){return String.fromCharCode(ch.charCodeAt(0)-0x60);});
+    try{ raw=raw.replace(/[^\p{L}\p{N}ー々〆〤]/gu,""); }catch(e){ raw=raw.replace(/[^0-9a-zぁ-んァ-ン一-龯ー々〆〤]/g,""); }
+    return raw;
+  }
+  function listenerSearchHaystack(l){
+    return [l.name,l.nickname,l.searchYomi,l.searchTags,l.memo,(l.topicSeeds||[]).join(' '), JSON.stringify(l.favorites||{})].map(regularSearchNormalize).join(' ');
+  }
+  function listenerSortKey(l){ return String((l && (l.searchYomi || l.kana || l.name)) || ""); }
   function ensureRegularToolbar(){
     const grid=document.getElementById("memoGrid");
     if(!grid || document.getElementById("regularMemoToolbar")) return;
@@ -8093,7 +8109,7 @@ const firebaseConfig = { ... }
       + '<option value="birthday">誕生日近い順</option>'
       + '</select>';
     grid.parentNode.insertBefore(bar, grid);
-    regularMemoSearch.addEventListener("input", function(){ window.__regularMemoSearch=this.value; renderMemo(); });
+    regularMemoSearch.addEventListener("input", function(){ window.__regularMemoSearch=this.value; const pos=this.selectionStart||this.value.length; renderMemo(); const next=document.getElementById("regularMemoSearch"); if(next){ next.focus(); try{next.setSelectionRange(pos,pos);}catch(e){} } });
     regularMemoSort.addEventListener("change", function(){ window.__regularMemoSort=this.value; renderMemo(); });
   }
   function daysUntilBirthday(l){
@@ -8143,14 +8159,11 @@ const firebaseConfig = { ... }
     return "予定なし";
   }
   function getSortedListeners(){
-    const search=String(window.__regularMemoSearch || "").trim().toLowerCase();
+    const search=regularSearchNormalize(String(window.__regularMemoSearch || "").trim());
     const sort=window.__regularMemoSort || "kana";
     let arr=(state.listeners||[]).map(function(l,i){ return {l:l,i:i}; });
     if(search){
-      arr=arr.filter(function(x){
-        const l=x.l||{};
-        return [l.name,l.nickname,l.searchYomi,l.searchTags,l.memo,(l.topicSeeds||[]).join(' '), JSON.stringify(l.favorites||{})].join(' ').toLowerCase().includes(search);
-      });
+      arr=arr.filter(function(x){ return listenerSearchHaystack(x.l||{}).includes(search); });
     }
     if(sort==="recent") arr.sort(function(a,b){ return String(b.l.registeredDate||"").localeCompare(String(a.l.registeredDate||"")); });
     else if(sort==="birthday") arr.sort(function(a,b){ return daysUntilBirthday(a.l)-daysUntilBirthday(b.l); });
@@ -8188,6 +8201,10 @@ const firebaseConfig = { ... }
       + '<div class="penalty-details" data-penalty-detail-box="'+i+'">' + (typeof penaltyDetailList==="function" ? penaltyDetailList(l.name) : '') + '</div></div>'
       + '<h3>達成依頼 / 達成品</h3>' + (typeof achievedList==="function" ? achievedList(l) : '')
       + '<h3>カレンダー同期メモ</h3>' + (typeof calendarMemoList==="function" ? calendarMemoList(l.name) : '')
+      + '<label>検索用よみ</label><input data-search-yomi="'+i+'" value="' + attr(l.searchYomi || '') + '" placeholder="例：あらた / びーる / よろしくたろう">'
+      + '<p class="muted">アプリ内検索用。記号・絵文字（★🍺+など）は自動で飛ばすから普通の名前は入力不要。当て字・特殊名・絵文字だけの名前だけ設定。</p>'
+      + '<label>検索用タグ</label><input data-search-tags="'+i+'" value="' + attr(l.searchTags || '') + '" placeholder="例：酒 飲み 深夜 筋トレ">'
+      + '<p class="muted">スペース区切り。名前以外でも探したい時用。</p>'
       + '<label>常連メモ</label><textarea data-memo="'+i+'">' + html(l.memo || '') + '</textarea>'
       + '<div class="row" style="margin-top:8px"><button class="btn primary mini-btn" data-open-detail="'+i+'">詳細設定</button><button class="btn mini-btn" data-refresh-seeds="'+i+'">話題更新</button></div>'
       + '</div></div></div>';
@@ -8195,6 +8212,8 @@ const firebaseConfig = { ... }
 
     grid.querySelectorAll('[data-toggle-regular]').forEach(function(btn){ btn.onclick=function(){ const box=grid.querySelector('[data-regular-fold="'+btn.dataset.toggleRegular+'"]'); if(box){ box.classList.toggle('open'); btn.textContent=box.classList.contains('open')?'閉じる':'開く'; } }; });
     grid.querySelectorAll('textarea[data-memo]').forEach(function(t){ t.onchange=function(){ state.listeners[Number(t.dataset.memo)].memo=t.value; save(); }; });
+    grid.querySelectorAll('input[data-search-yomi]').forEach(function(inp){ inp.onchange=function(){ state.listeners[Number(inp.dataset.searchYomi)].searchYomi=inp.value.trim(); save(); }; });
+    grid.querySelectorAll('input[data-search-tags]').forEach(function(inp){ inp.onchange=function(){ state.listeners[Number(inp.dataset.searchTags)].searchTags=inp.value.trim(); save(); }; });
     grid.querySelectorAll('[data-refresh-seeds]').forEach(function(btn){ btn.onclick=function(){ refreshTopicSeeds(Number(btn.dataset.refreshSeeds)); }; });
     grid.querySelectorAll('[data-open-detail]').forEach(function(btn){ btn.onclick=function(){ openListenerDetail(Number(btn.dataset.openDetail)); }; });
     grid.querySelectorAll('[data-delete-memo-listener]').forEach(function(btn){ btn.onclick=function(){ deleteListener(Number(btn.dataset.deleteMemoListener)); }; });

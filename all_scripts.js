@@ -149,8 +149,6 @@ state.listeners.forEach(l=>{
   if(typeof l.bloodType!=="string") l.bloodType="";
   if(typeof l.firstVisitDate!=="string") l.firstVisitDate="";
   if(typeof l.nickname!=="string") l.nickname="";
-  if(typeof l.searchYomi!=="string") l.searchYomi="";
-  if(typeof l.searchTags!=="string") l.searchTags="";
   if(!l.favorites) l.favorites={};
   ["project","game","food","area","music","anime","habit","free1","free2","ngTopic","dislikeFood","firstGame","mainWeapon","holiday","bgm","localThing","season","animal","oshi","firstStream","oneLine","teaseLine"].forEach(k=>{ if(typeof l.favorites[k]!=="string") l.favorites[k]=""; });
   if(!Array.isArray(l.topicSeeds)) l.topicSeeds=[];
@@ -609,8 +607,6 @@ function renderListenerDetail(){
   detailName.textContent=`${l.name} の詳細設定`;
   detailInputName.value=l.name || "";
   detailNickname.value=l.nickname || "";
-  if(window.detailSearchYomi) detailSearchYomi.value=l.searchYomi || "";
-  if(window.detailSearchTags) detailSearchTags.value=l.searchTags || "";
   const bd=splitBirthday(l.birthday || "");
   detailBirthMonth.value=bd.month ? Number(bd.month) : "";
   detailBirthDay.value=bd.day ? Number(bd.day) : "";
@@ -660,8 +656,6 @@ if(window.saveListenerDetail) saveListenerDetail.onclick=()=>{
   const newName=detailInputName.value.trim() || oldName;
   l.name=newName;
   l.nickname=detailNickname.value.trim();
-  l.searchYomi=(window.detailSearchYomi ? detailSearchYomi.value.trim() : (l.searchYomi || ""));
-  l.searchTags=(window.detailSearchTags ? detailSearchTags.value.trim() : (l.searchTags || ""));
   l.birthday=formatBirthday(detailBirthMonth.value, detailBirthDay.value);
   l.birthYear=detailBirthYear.value.trim();
   l.bloodType=detailBlood.value;
@@ -1903,8 +1897,6 @@ state.tools = state.tools || structuredClone(defaultState.tools);
   if(typeof l.bloodType!=="string") l.bloodType="";
   if(typeof l.firstVisitDate!=="string") l.firstVisitDate="";
   if(typeof l.nickname!=="string") l.nickname="";
-  if(typeof l.searchYomi!=="string") l.searchYomi="";
-  if(typeof l.searchTags!=="string") l.searchTags="";
   if(!l.favorites) l.favorites={};
   ["project","game","food","area","music","anime","habit","free1","free2","ngTopic","dislikeFood","firstGame","mainWeapon","holiday","bgm","localThing","season","animal","oshi","firstStream","oneLine","teaseLine"].forEach(k=>{ if(typeof l.favorites[k]!=="string") l.favorites[k]=""; });
   if(!Array.isArray(l.topicSeeds)) l.topicSeeds=[]; });
@@ -2274,13 +2266,6 @@ document.addEventListener("DOMContentLoaded",()=>renderRoulette());
     let raw = String(value || "").normalize("NFKC").toLowerCase();
     raw = raw.replace(/[ァ-ン]/g, function(ch){ return String.fromCharCode(ch.charCodeAt(0) - 0x60); });
     raw = raw.replace(/\s+/g, "");
-    // SNS名の先頭・途中にある記号/絵文字/装飾は検索用には飛ばす。
-    // 例：+アラタ+ / ★アラタ / 🍺 → アラタ扱い。絵文字だけは検索用よみがあれば拾う。
-    try{
-      raw = raw.replace(/[^\p{L}\p{N}ー々〆〤]/gu, "");
-    }catch(e){
-      raw = raw.replace(/[^0-9a-zぁ-んァ-ン一-龯ー々〆〤]/g, "");
-    }
     let hinted = "";
     for(let i=0;i<raw.length;i++){
       const ch = raw[i];
@@ -2289,28 +2274,10 @@ document.addEventListener("DOMContentLoaded",()=>renderRoulette());
     return hinted;
   }
 
-  function listenerByNameForSearch(name){
-    return Array.isArray(state.listeners)
-      ? state.listeners.find(function(l){ return l && l.name === name; })
-      : null;
-  }
-
-  function rouletteGuestSearchHaystack(name){
-    const l = listenerByNameForSearch(name);
-    const parts = [name];
-    if(l){
-      parts.push(l.nickname || "");
-      parts.push(l.searchYomi || "");
-      parts.push(l.searchTags || "");
-      if(l.favorites) parts.push(Object.values(l.favorites).join(" "));
-    }
-    return parts.map(normalizeRouletteSearchText).join(" ");
-  }
-
   function rouletteGuestMatchesSearch(name, query){
     const q = normalizeRouletteSearchText(query);
     if(!q) return true;
-    return rouletteGuestSearchHaystack(name).includes(q);
+    return normalizeRouletteSearchText(name).includes(q);
   }
 
   function rouletteLastBetSortedNames(names){
@@ -2341,8 +2308,6 @@ document.addEventListener("DOMContentLoaded",()=>renderRoulette());
         penalty:0,
         registeredDate:today,
         birthday:"",
-        searchYomi:"",
-        searchTags:"",
         rouletteGuest:true
       });
     }
