@@ -3817,6 +3817,7 @@ VANS"></textarea>
 <audio id="seRouletteCoin" src="assets/roulette/スロットマシーン・コイン排出.mp3"></audio>
 <audio id="seRouletteResult" src="assets/roulette/ニュースタイトル表示4.mp3"></audio>
 <audio id="seRoulettePolice" src="assets/roulette/パトカー.mp3"></audio>
+<audio id="seKujiPeel" src="assets/kami_peri.m4a"></audio>
 
     <audio id="bgmChin" src="assets/bgm_wapop.mp3" loop></audio>
 
@@ -6565,6 +6566,17 @@ function renderKujiTool(){
   if(window.kujiLastOneName) kujiLastOneName.value = k.lastOne || '';
   if(window.kujiDrawBtn) kujiDrawBtn.disabled = total<=0;
 }
+function playKujiPeelSe(){
+  const a = document.getElementById("seKujiPeel");
+  if(!a) return;
+  try{
+    const seVol = Number((state.settings && state.settings.seVolume) ?? (state.roulette && state.roulette.settings && state.roulette.settings.seVolume) ?? 80);
+    a.volume = Math.max(0, Math.min(1, seVol/100));
+    a.currentTime = 0;
+    a.play().catch(()=>{});
+  }catch(e){}
+}
+
 function drawKuji(){
   const k=kujiState();
   const pool=[];
@@ -6582,19 +6594,25 @@ function drawKuji(){
   if(k.history.length>100) k.history=k.history.slice(-100);
   save();
   if(window.kujiTicketText){
+    playKujiPeelSe();
     kujiTicketText.dataset.locked='1';
-    kujiTicketText.textContent='ぺり…';
-    if(window.kujiTicket) kujiTicket.style.transform='scale(1.02) rotate(-1deg)';
-    setTimeout(()=>{ kujiTicketText.textContent='ぺりぺり…'; },450);
-    setTimeout(()=>{ kujiTicketText.textContent='開封中…'; },900);
+    kujiTicketText.innerHTML='<div style="font-size:32px">ぺり…</div><div class="muted" style="color:#7c2d12;font-size:14px;margin-top:6px">ゆっくり開封中</div>';
+    if(window.kujiTicket){
+      kujiTicket.style.transform='scale(1.02) rotate(-1deg)';
+      kujiTicket.style.boxShadow='inset 0 0 0 4px rgba(120,53,15,.15),0 20px 46px rgba(251,146,60,.28)';
+    }
+    setTimeout(()=>{ kujiTicketText.innerHTML='<div style="font-size:36px">ぺりぺり…</div><div style="height:8px;margin:12px auto 0;max-width:260px;background:linear-gradient(90deg,#92400e 0%,#f59e0b 55%,#fff7ed 55%);border-radius:999px"></div>'; },420);
+    setTimeout(()=>{ kujiTicketText.innerHTML='<div style="font-size:34px">もう少し…！</div><div style="height:8px;margin:12px auto 0;max-width:260px;background:linear-gradient(90deg,#92400e 0%,#f59e0b 82%,#fff7ed 82%);border-radius:999px"></div>'; },900);
     setTimeout(()=>{
-      kujiTicketText.innerHTML = `<div><div style="font-size:18px">＼ 当たり！ ／</div><div style="font-size:48px;color:${prize.color||'#f59e0b'}">${escapeHtml(prize.name)}</div>${lastOne?`<div style="margin-top:8px;color:#b45309;font-size:24px">＋ ${escapeHtml(lastOne)}</div>`:''}</div>`;
-      if(window.kujiTicket) kujiTicket.style.transform='scale(1) rotate(0deg)';
+      kujiTicketText.innerHTML = `<div><div style="font-size:18px;color:#7c2d12">＼ ぺりぺり結果 ／</div><div style="font-size:52px;color:${prize.color||'#f59e0b'};text-shadow:0 2px 0 rgba(255,255,255,.65)">${escapeHtml(prize.name)}</div>${lastOne?`<div style="margin-top:8px;color:#b45309;font-size:24px">＋ ${escapeHtml(lastOne)}</div>`:''}</div>`;
+      if(window.kujiTicket){
+        kujiTicket.style.transform='scale(1) rotate(0deg)';
+        kujiTicket.style.boxShadow='inset 0 0 0 4px rgba(120,53,15,.15),0 14px 34px rgba(0,0,0,.3)';
+      }
       delete kujiTicketText.dataset.locked;
       renderKujiTool();
     },1450);
   } else renderKujiTool();
-  try{ playAlarm('closed'); }catch(e){}
 }
 if(window.kujiDrawBtn) kujiDrawBtn.onclick=drawKuji;
 if(window.kujiAddPrizeBtn) kujiAddPrizeBtn.onclick=()=>{const k=kujiState(); k.prizes.push({id:uid('kuji'),name:(kujiPrizeName.value||'新しい賞').trim(),count:Math.max(1,Number(kujiPrizeCount.value)||1),drawn:0,color:kujiPrizeColor.value||'#f59e0b'}); kujiPrizeName.value=''; save(); renderKujiTool();};
