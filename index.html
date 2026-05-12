@@ -2645,6 +2645,10 @@ function fitBrushText(text){
 .word-hunter-history{margin-top:12px;font-size:13px;color:#cbd5e1;line-height:1.7;white-space:pre-wrap}
 @media(max-width:720px){.word-hunter-current{grid-template-columns:1fr}.word-hunter-timer{font-size:58px}}
 
+
+/* v124 配信すごろく */
+.sugoroku-stage{max-width:1180px;margin:0 auto}.sugo-top{display:grid;grid-template-columns:1.15fr .85fr;gap:14px}.sugo-panel{border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.045);padding:14px}.sugo-big{font-size:clamp(34px,7vw,84px);font-weight:900;letter-spacing:.04em;text-align:center;line-height:1.05}.sugo-sub{text-align:center;color:var(--muted);margin-top:6px}.sugo-mission{font-size:clamp(20px,3.2vw,38px);font-weight:850;line-height:1.35;text-align:center;padding:18px;border-radius:18px;background:linear-gradient(135deg,rgba(99,102,241,.18),rgba(236,72,153,.12));border:1px solid rgba(255,255,255,.12);min-height:92px;display:flex;align-items:center;justify-content:center;white-space:pre-wrap}.sugo-map{display:grid;grid-template-columns:repeat(auto-fit,minmax(74px,1fr));gap:8px;margin-top:12px}.sugo-cell{min-height:64px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(15,23,42,.75);padding:8px;display:flex;flex-direction:column;justify-content:space-between;gap:4px;cursor:pointer;position:relative;overflow:hidden}.sugo-cell.current{outline:3px solid #facc15;box-shadow:0 0 0 4px rgba(250,204,21,.14),0 0 22px rgba(250,204,21,.24)}.sugo-cell.goal{background:linear-gradient(135deg,rgba(250,204,21,.20),rgba(251,113,133,.18))}.sugo-cell.branch{border-color:#38bdf8}.sugo-cell.locked{opacity:.75}.sugo-cell-num{font-size:12px;color:var(--muted)}.sugo-cell-title{font-size:12px;font-weight:750;line-height:1.25}.sugo-cell-route{position:absolute;right:6px;top:5px;font-size:11px;color:#93c5fd}.sugo-mini-map{font-size:12px;line-height:1.65;white-space:pre-wrap;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:10px;max-height:190px;overflow:auto}.sugo-list{max-height:250px;overflow:auto;white-space:pre-wrap;font-size:13px;line-height:1.55}.sugo-edit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.sugo-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);font-size:12px}.sugo-locked-note{color:#fca5a5;font-weight:800}.sugo-cleared-note{color:#86efac;font-weight:800}@media(max-width:800px){.sugo-top{grid-template-columns:1fr}.sugo-map{grid-template-columns:repeat(auto-fit,minmax(62px,1fr))}.sugo-cell{min-height:58px}}
+
 </style>
 
 <link rel="icon" type="image/png" href="icon_streamstaff_final.png">
@@ -2755,6 +2759,7 @@ function fitBrushText(text){
   <div class="tool-item"><div class="tool-title">🍻 レロレロ酒場</div><button class="btn" onclick="showScreen('reloGame')">開く</button></div>
   <div class="tool-item"><div class="tool-title">📻 なりきりラジオDJ</div><button class="btn" onclick="showScreen('radioDjGame'); if(window.renderRadioDj) renderRadioDj();">開く</button></div>
   <div class="tool-item"><div class="tool-title">🕵️ ワードハンター</div><button class="btn" onclick="showScreen('wordHunterGame'); if(window.renderWordHunter) renderWordHunter();">開く</button></div>
+  <div class="tool-item"><div class="tool-title">🎲 配信すごろく <span class="sugo-badge">v125確認済</span></div><div class="muted">マス数・分岐・ランダムマップ・ミッションロック対応</div><button class="btn primary" onclick="showScreen('sugorokuGame'); if(window.renderSugoroku) renderSugoroku();">開く</button></div>
   <div class="tool-item"><div class="tool-title">🐼 動物</div><button class="btn" onclick="showScreen('animalGame')">開く</button></div>
   <div class="tool-item"><div class="tool-title">😂 いつ誰</div><button class="btn" onclick="showScreen('itsudareGame')">開く</button></div>
   <div class="tool-item"><div class="tool-title">🧠 大喜利</div><button class="btn" onclick="showScreen('ogiriGame')">開く</button></div>
@@ -2985,6 +2990,71 @@ function fitBrushText(text){
       <div class="row" style="margin-top:10px"><button class="btn primary" id="wordHunterSaveListsBtn" type="button">保存</button><button class="btn" id="wordHunterRestoreBtn" type="button">初期リストに戻す</button></div>
     </details>
     <div class="word-hunter-history" id="wordHunterHistory">履歴なし</div>
+  </div></div>
+</section>
+
+
+<section id="sugorokuGame" class="screen">
+  <div class="card"><div class="inner sugoroku-stage">
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div>
+        <h2 style="margin:0 0 6px">🎲 配信すごろく <span class="sugo-badge">v125</span></h2>
+        <p class="muted">サイコロで進み、止まったマスのミッションをクリアするまで次を振れない配信進行型すごろく。</p>
+      </div>
+      <button class="btn" onclick="showScreen('games')">ゲーム一覧へ戻る</button>
+    </div>
+
+    <div class="sugo-top" style="margin-top:12px">
+      <div class="sugo-panel">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <span class="sugo-badge" id="sugoPositionBadge">現在：START</span>
+          <span class="sugo-badge" id="sugoGoalBadge">ゴール：未設定</span>
+          <span class="sugo-badge" id="sugoRuleBadge">ピッタリ不要</span>
+        </div>
+        <div class="sugo-big" id="sugoDice">🎲</div>
+        <div class="sugo-sub" id="sugoStatus">準備中</div>
+        <div class="row" style="justify-content:center;margin-top:12px">
+          <button class="btn primary" id="sugoRollBtn" type="button">サイコロを振る</button>
+          <button class="btn" id="sugoClearBtn" type="button">ミッションクリア</button>
+          <button class="btn" id="sugoResetRunBtn" type="button">位置リセット</button>
+        </div>
+      </div>
+      <div class="sugo-panel">
+        <div class="muted">現在のミッション</div>
+        <div class="sugo-mission" id="sugoMission">マップを作ってスタート！</div>
+      </div>
+    </div>
+
+    <div class="sugo-panel" style="margin-top:14px">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h3 style="margin:0">マップ全体図</h3>
+        <div class="row">
+          <button class="btn" id="sugoAutoBtn" type="button">ランダムマップ作成</button>
+          <button class="btn" id="sugoApplyBtn" type="button">設定を反映</button>
+        </div>
+      </div>
+      <div class="sugo-map" id="sugoMap"></div>
+    </div>
+
+    <details class="sugo-panel" style="margin-top:14px" open>
+      <summary><b>マップ設定・編集</b></summary>
+      <div class="sugo-edit-grid" style="margin-top:12px">
+        <label>マス数<input id="sugoCount" type="number" min="5" max="120" value="30"></label>
+        <label>ゴール判定<select id="sugoExact"><option value="false">ピッタリじゃなくてもOK</option><option value="true">ゴールピッタリのみ</option></select></label>
+        <label>分岐方式<select id="sugoBranchMode"><option value="choice">分岐マスで選択</option><option value="random">分岐マスでランダム</option><option value="roulette">分岐先をルーレット風に決定</option></select></label>
+        <label>ランダム傾向<select id="sugoAutoType"><option value="talk">雑談ミッション多め</option><option value="chaos">カオス多め</option><option value="listener">リスナー参加多め</option><option value="penalty">罰ゲーム多め</option></select></label>
+      </div>
+      <div class="grid two" style="margin-top:10px">
+        <label>分岐スポット設定<textarea id="sugoBranches" rows="5" placeholder="例：\n8:9,15\n18:19,24"></textarea></label>
+        <label>マス別ミッション<textarea id="sugoMissions" rows="8" placeholder="1行1マス。例：\n自己紹介を盛って話す\nコメントを3件拾う"></textarea></label>
+      </div>
+      <p class="muted">分岐は「分岐元:行き先A,行き先B」。未設定なら一本道。マスをクリックするとそのマスのミッションを直接編集できます。</p>
+    </details>
+
+    <div class="grid two" style="margin-top:14px">
+      <div class="sugo-panel"><b>ルーレットマップ / ルート表示</b><div class="sugo-mini-map" id="sugoRouteText">---</div></div>
+      <div class="sugo-panel"><b>履歴</b><div class="sugo-list" id="sugoHistory">履歴なし</div></div>
+    </div>
   </div></div>
 </section>
 
@@ -9368,6 +9438,38 @@ window.saveWordHunterLists=function(){const w=whState(); const lines=id=>(docume
 window.restoreWordHunterLists=function(){if(!confirm('テーマとお題を初期リストに戻す？'))return; const w=whState(); w.themes=JSON.parse(JSON.stringify(WH_DEFAULT.themes)); w.words=WH_DEFAULT.words.slice(); if(window.save)save(); renderWordHunter();};
 let whTimer=null; function ensureWhTimer(){if(whTimer)return; whTimer=setInterval(()=>{const w=whState(); if(!w.running)return; w.remaining=Math.max(0,(w.remaining||0)-1); if(w.remaining<=0){w.running=false; whRecord('終了'); try{ if(typeof playAlarm==='function')playAlarm(w.sound||'alarm_clock'); }catch(e){} } if(window.save)save(); renderWordHunter();},1000);}
 document.addEventListener('DOMContentLoaded',function(){ensureWhTimer(); const bind=(id,fn)=>{const el=document.getElementById(id); if(el)el.onclick=fn}; bind('wordHunterRollBtn',()=>rollWordHunter('both')); bind('wordHunterRollThemeBtn',()=>rollWordHunter('theme')); bind('wordHunterRollWordBtn',()=>rollWordHunter('word')); bind('wordHunterStartBtn',startWordHunter); bind('wordHunterPauseBtn',pauseWordHunter); bind('wordHunterResetBtn',resetWordHunter); bind('wordHunterSaveListsBtn',saveWordHunterLists); bind('wordHunterRestoreBtn',restoreWordHunterLists); ['wordHunterDifficulty','wordHunterSound','wordHunterMin','wordHunterSec'].forEach(id=>{const el=document.getElementById(id); if(el)el.onchange=setWordHunterBase;}); try{renderWordHunter()}catch(e){console.warn(e)}});
+})();
+</script>
+
+
+<script>
+(function(){
+const SUGO_MISSION_BANK={
+ talk:['今の気分を一言で語る','最近ちょっと嬉しかったことを話す','コメントを3件拾う','今日の小さな失敗を話す','昔のあだ名の話をする','地元の好きなところを話す','最近買ってよかった物を話す','好きな食べ物を熱く語る','子どもの頃の思い出を1つ話す','リスナーに二択質問を出す','今だから笑える話をする','最近のマイブームを話す','一番落ち着く場所を話す','今年やりたいことを話す','今日の配信の裏話を話す'],
+ listener:['リスナーに今日の晩ご飯を聞く','リスナーに出身地を聞く','リスナーに好きなコンビニ商品を聞く','リスナーに眠気レベルを聞く','リスナーに最近ハマってるものを聞く','リスナーに一文字コメントをもらう','リスナーに二択を投げる','リスナーから次の話題を1つ募集する','初見さん向けに一言挨拶する','コメント欄で多数決を取る','リスナーに今日の点数を聞く','リスナーに好きな季節を聞く','リスナーの地域あるあるを聞く','リスナーに今いる場所の温度感を聞く','リスナーに小さな自慢を募集する'],
+ chaos:['急にラジオDJ風に読む','全力で褒めるだけの30秒','謎の決め台詞を作る','架空のCMを始める','食べ物を必殺技名っぽく言う','自分をRPGキャラとして紹介する','目の前にある物を師匠扱いする','何でもない話を感動話っぽくする','急に裁判を始める','コメント欄を王国に例える','今日の自分に称号を付ける','存在しない商品を紹介する','一番弱そうな魔法を唱える','急に探偵っぽく推理する','宇宙人に配信を説明する'],
+ penalty:['早口言葉を1回言う','変な敬語で30秒話す','一発ギャグ未満を言う','黒歴史を薄く話す','今日一番噛みそうな言葉を言う','腕立てかスクワットを少しする','一番恥ずかしい褒め方をする','モノマネを一瞬だけする','全力で謝る演技をする','自分の弱点を1つ言う','変顔を想像させる説明をする','かっこいいセリフを言う','可愛いセリフを言う','厨二病っぽく宣言する','最後の語尾を全部「だべ」にして30秒話す']
+};
+function sugoPick(a){return a[Math.floor(Math.random()*a.length)]}
+function sugoState(){window.state=window.state||{}; if(!state.sugoroku){state.sugoroku={count:30,exact:false,branchMode:'choice',pos:0,locked:false,currentMission:'START',dice:'🎲',missions:[],branches:{},history:[]}; autoSugoroku(false);} return state.sugoroku;}
+function sugoAllMissions(type){ if(type==='chaos') return SUGO_MISSION_BANK.chaos.concat(SUGO_MISSION_BANK.talk,SUGO_MISSION_BANK.listener,SUGO_MISSION_BANK.penalty); if(type==='listener') return SUGO_MISSION_BANK.listener.concat(SUGO_MISSION_BANK.talk,SUGO_MISSION_BANK.chaos); if(type==='penalty') return SUGO_MISSION_BANK.penalty.concat(SUGO_MISSION_BANK.talk,SUGO_MISSION_BANK.chaos); return SUGO_MISSION_BANK.talk.concat(SUGO_MISSION_BANK.listener,SUGO_MISSION_BANK.chaos);}
+function parseBranches(text){const out={}; (text||'').split(/\n+/).forEach(line=>{const m=line.match(/^\s*(\d+)\s*[:：]\s*(.+)$/); if(!m)return; const from=Number(m[1]); const arr=m[2].split(/[,、\s]+/).map(x=>Number(x)).filter(n=>Number.isFinite(n)&&n>from); if(arr.length)out[from]=arr;}); return out;}
+function branchesToText(b){return Object.keys(b||{}).sort((a,c)=>a-c).map(k=>`${k}:${(b[k]||[]).join(',')}`).join('\n')}
+function ensureMissions(st){st.missions=Array.isArray(st.missions)?st.missions:[]; const bank=sugoAllMissions('talk'); for(let i=0;i<st.count;i++){if(!st.missions[i])st.missions[i]=sugoPick(bank);} st.missions=st.missions.slice(0,st.count);}
+function autoSugoroku(saveIt=true){const st=sugorokuStateRaw(); const type=document.getElementById('sugoAutoType')?.value||'talk'; st.count=Math.max(5,Math.min(120,Number(document.getElementById('sugoCount')?.value)||st.count||30)); st.exact=(document.getElementById('sugoExact')?.value||String(st.exact))==='true'; st.branchMode=document.getElementById('sugoBranchMode')?.value||st.branchMode||'choice'; const bank=sugoAllMissions(type); st.missions=Array.from({length:st.count},()=>sugoPick(bank)); st.branches={}; const branchN=Math.max(0,Math.floor(st.count/12)); for(let i=0;i<branchN;i++){const from=3+Math.floor(Math.random()*Math.max(1,st.count-8)); const a=Math.min(st.count,from+1+Math.floor(Math.random()*4)); const b=Math.min(st.count,from+3+Math.floor(Math.random()*7)); if(b>from+1)st.branches[from]=Array.from(new Set([a,b]));}
+ st.pos=0; st.locked=false; st.currentMission='START'; st.dice='🎲'; st.history=st.history||[]; st.history.unshift(`${new Date().toLocaleTimeString()} ランダムマップ作成（${st.count}マス）`); st.history=st.history.slice(0,50); if(saveIt&&window.save)save(); renderSugoroku();}
+function sugorokuStateRaw(){window.state=window.state||{}; state.sugoroku=state.sugoroku||{}; return state.sugoroku;}
+function applySugorokuSettings(){const st=sugoState(); st.count=Math.max(5,Math.min(120,Number(document.getElementById('sugoCount')?.value)||30)); st.exact=(document.getElementById('sugoExact')?.value)==='true'; st.branchMode=document.getElementById('sugoBranchMode')?.value||'choice'; st.branches=parseBranches(document.getElementById('sugoBranches')?.value||''); const lines=(document.getElementById('sugoMissions')?.value||'').split(/\n+/).map(x=>x.trim()).filter(Boolean); if(lines.length)st.missions=lines; ensureMissions(st); if(st.pos>st.count)st.pos=0; if(window.save)save(); renderSugoroku();}
+function routeText(st){const parts=[]; for(let i=0;i<=st.count;i++){let label=i===0?'START':(i===st.count?'GOAL':String(i)); if(st.branches&&st.branches[i])label+=` ⇢ ${st.branches[i].join(' / ')}`; if(i===st.pos)label=`【${label}】`; parts.push(label); } return parts.join(' → ');}
+function branchDest(st,from,step){const arr=st.branches&&st.branches[from]; if(!arr||!arr.length)return from+step; if(st.branchMode==='random'||st.branchMode==='roulette') return sugoPick(arr); const ans=prompt(`分岐マス ${from}。進む先を選んでね：${arr.join(' / ')}`, String(arr[0])); const n=Number(ans); return arr.includes(n)?n:arr[0];}
+function calcDest(st,step){let raw=st.pos+step; const b=st.branches&&st.branches[st.pos]; if(b&&b.length) raw=branchDest(st,st.pos,step); if(st.exact&&raw>st.count){const over=raw-st.count; return Math.max(0,st.count-over);} return Math.min(st.count,raw);}
+function rollSugoroku(){const st=sugoState(); if(st.locked){alert('ミッションをクリアするまで次のサイコロは振れないよ'); return;} if(st.pos>=st.count){alert('もうゴールしてるよ。位置リセットで最初から遊べる。'); return;} const d=1+Math.floor(Math.random()*6); st.dice=String(d); const dest=calcDest(st,d); st.pos=dest; st.currentMission=dest>=st.count?'🎉 ゴール！お疲れ様！':(st.missions[dest-1]||'自由トーク1分'); st.locked=dest<st.count; st.history.unshift(`${new Date().toLocaleTimeString()} ${d}マス進む → ${dest}${dest>=st.count?'（ゴール）':' / '+st.currentMission}`); st.history=st.history.slice(0,50); if(window.save)save(); renderSugoroku();}
+function clearSugorokuMission(){const st=sugoState(); st.locked=false; st.history.unshift(`${new Date().toLocaleTimeString()} ミッションクリア：${st.currentMission}`); st.history=st.history.slice(0,50); if(window.save)save(); renderSugoroku();}
+function resetSugorokuRun(){const st=sugoState(); st.pos=0; st.locked=false; st.currentMission='START'; st.dice='🎲'; st.history.unshift(`${new Date().toLocaleTimeString()} 位置リセット`); if(window.save)save(); renderSugoroku();}
+function editSugorokuCell(i){if(i<=0)return; const st=sugoState(); const cur=st.missions[i-1]||''; const v=prompt(`${i}マス目のミッション`,cur); if(v!==null){st.missions[i-1]=v.trim()||cur; if(window.save)save(); renderSugoroku();}}
+window.renderSugoroku=function(){const st=sugoState(); ensureMissions(st); const $=id=>document.getElementById(id); if($('sugoCount'))$('sugoCount').value=st.count; if($('sugoExact'))$('sugoExact').value=String(!!st.exact); if($('sugoBranchMode'))$('sugoBranchMode').value=st.branchMode||'choice'; if($('sugoBranches'))$('sugoBranches').value=branchesToText(st.branches); if($('sugoMissions'))$('sugoMissions').value=st.missions.join('\n'); if($('sugoDice'))$('sugoDice').textContent=st.dice||'🎲'; if($('sugoMission'))$('sugoMission').textContent=st.currentMission||'START'; if($('sugoStatus'))$('sugoStatus').innerHTML=st.locked?'<span class="sugo-locked-note">ミッション未クリア：次のサイコロはロック中</span>':'<span class="sugo-cleared-note">サイコロOK</span>'; if($('sugoPositionBadge'))$('sugoPositionBadge').textContent=`現在：${st.pos}/${st.count}`; if($('sugoGoalBadge'))$('sugoGoalBadge').textContent=`ゴール：${st.count}マス`; if($('sugoRuleBadge'))$('sugoRuleBadge').textContent=st.exact?'ゴール：ピッタリのみ':'ゴール：通過OK'; if($('sugoRouteText'))$('sugoRouteText').textContent=routeText(st); if($('sugoHistory'))$('sugoHistory').textContent=(st.history&&st.history.length)?st.history.join('\n'):'履歴なし'; const map=$('sugoMap'); if(map){map.innerHTML=''; for(let i=0;i<=st.count;i++){const div=document.createElement('button'); div.type='button'; div.className='sugo-cell'+(i===st.pos?' current':'')+(i===st.count?' goal':'')+(st.branches&&st.branches[i]?' branch':'')+(st.locked&&i===st.pos?' locked':''); div.onclick=()=>editSugorokuCell(i); div.innerHTML=`${st.branches&&st.branches[i]?'<span class="sugo-cell-route">分岐</span>':''}<span class="sugo-cell-num">${i===0?'START':i===st.count?'GOAL':i+'マス'}</span><span class="sugo-cell-title">${i===0?'スタート':i===st.count?'ゴール':(st.missions[i-1]||'自由')}</span>`; map.appendChild(div); }} };
+window.autoSugoroku=autoSugoroku;
+document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const el=document.getElementById(id); if(el)el.onclick=fn}; b('sugoRollBtn',rollSugoroku); b('sugoClearBtn',clearSugorokuMission); b('sugoResetRunBtn',resetSugorokuRun); b('sugoAutoBtn',()=>autoSugoroku(true)); b('sugoApplyBtn',applySugorokuSettings); ['sugoCount','sugoExact','sugoBranchMode'].forEach(id=>{const el=document.getElementById(id); if(el)el.onchange=applySugorokuSettings;}); try{renderSugoroku()}catch(e){console.warn(e)}});
 })();
 </script>
 
