@@ -6748,8 +6748,7 @@ const firebaseConfig = { ... }
     let raw = String(value || "").normalize("NFKC").toLowerCase();
     raw = raw.replace(/[ァ-ン]/g, function(ch){ return String.fromCharCode(ch.charCodeAt(0) - 0x60); });
     raw = raw.replace(/\s+/g, "");
-    // SNS名の先頭・途中にある記号/絵文字/装飾は検索用には飛ばす。
-    // 例：+アラタ+ / ★アラタ / 🍺 → アラタ扱い。絵文字だけは検索用よみがあれば拾う。
+    // SNS名の記号/絵文字/装飾は検索用には飛ばす。
     try{
       raw = raw.replace(/[^\p{L}\p{N}ー々〆〤]/gu, "");
     }catch(e){
@@ -6758,7 +6757,7 @@ const firebaseConfig = { ... }
     let hinted = "";
     for(let i=0;i<raw.length;i++){
       const ch = raw[i];
-      hinted += ch + (kanjiKanaHints[ch] || "");
+      hinted += (kanjiKanaHints[ch] || ch);
     }
     return hinted;
   }
@@ -6769,7 +6768,7 @@ const firebaseConfig = { ... }
       : null;
   }
 
-  function rouletteGuestSearchHaystack(name){
+  function rouletteGuestSearchTokens(name){
     const l = listenerByNameForSearch(name);
     const parts = [name];
     if(l){
@@ -6778,13 +6777,19 @@ const firebaseConfig = { ... }
       parts.push(l.searchTags || "");
       if(l.favorites) parts.push(Object.values(l.favorites).join(" "));
     }
-    return parts.map(normalizeRouletteSearchText).join(" ");
+    return parts.join(" ").split(/[\s,、，/／・|｜]+/).map(normalizeRouletteSearchText).filter(Boolean);
   }
 
   function rouletteGuestMatchesSearch(name, query){
     const q = normalizeRouletteSearchText(query);
     if(!q) return true;
-    return rouletteGuestSearchHaystack(name).includes(q);
+    const tokens = rouletteGuestSearchTokens(name);
+    // 1文字検索は「先頭一致」のみにする。
+    // これで「あ」→アラタ/亜... は出るが、「か」→ミホ のような誤爆を防ぐ。
+    if(q.length <= 1){
+      return tokens.some(function(t){ return t.indexOf(q) === 0; });
+    }
+    return tokens.some(function(t){ return t.indexOf(q) === 0 || t.indexOf(q) >= 0; });
   }
 
   function rouletteLastBetSortedNames(names){
