@@ -2527,6 +2527,80 @@ function fitBrushText(text){
 .regular-detail-fold.open{display:block}
 .regular-detail-fold textarea{min-height:90px}
 
+
+/* v107 endurance count-up timer */
+.endurance-stage{
+  display:grid;
+  gap:16px;
+}
+.endurance-tabs{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.endurance-tabs button.active{
+  background:linear-gradient(135deg,#8b5cf6,#06b6d4);
+  color:white;
+  border-color:transparent;
+}
+.endurance-display{
+  background:radial-gradient(circle at center,#111827,#020617 72%);
+  border:1px solid #334155;
+  border-radius:26px;
+  padding:28px 18px;
+  text-align:center;
+  box-shadow:0 20px 70px #0006,inset 0 0 48px #38bdf822;
+}
+.endurance-title{
+  font-size:18px;
+  font-weight:900;
+  color:#c4b5fd;
+}
+.endurance-main{
+  font-size:clamp(56px,14vw,148px);
+  line-height:1;
+  font-weight:1000;
+  letter-spacing:.04em;
+  margin:10px 0;
+  text-shadow:0 0 34px #38bdf866;
+}
+.endurance-sub{
+  color:#94a3b8;
+  font-weight:800;
+}
+.endurance-display.warning{
+  animation:enduranceRedBlink .8s ease-in-out infinite;
+  border-color:#ef4444;
+}
+@keyframes enduranceRedBlink{
+  0%,100%{box-shadow:0 0 32px #ef444433,inset 0 0 48px #ef444422}
+  50%{box-shadow:0 0 70px #ef4444aa,inset 0 0 70px #ef444466;background:#210606}
+}
+.endurance-button-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:10px;
+}
+.endurance-hit-btn{
+  min-height:72px;
+  font-size:18px;
+  font-weight:1000;
+}
+.endurance-config{
+  display:grid;
+  gap:10px;
+  background:#08111f;
+  border:1px solid #243853;
+  border-radius:18px;
+  padding:14px;
+}
+.endurance-action-card{
+  background:#0f172a;
+  border:1px solid #26364f;
+  border-radius:14px;
+  padding:10px;
+}
+
 </style>
 
 <link rel="icon" type="image/png" href="icon_streamstaff_final.png">
@@ -3147,6 +3221,16 @@ function fitBrushText(text){
             <button class="btn primary" id="openCalendarFromTools">開く</button>
           </div>
         </div>
+
+<div class="tool-item" style="margin-bottom:12px;background:#111827;border-color:#06b6d4">
+  <div class="row" style="justify-content:space-between">
+    <div>
+      <div class="tool-title">🔥 耐久カウンター</div>
+      <div class="muted">タイマー加算 / カウント加算を大画面で管理</div>
+    </div>
+    <button class="btn primary" onclick="showScreen('enduranceTool')" type="button">開く</button>
+  </div>
+</div>
           
 
 <div class="tool-item" style="margin-bottom:12px;background:#111022;border-color:#6d28d9">
@@ -3252,6 +3336,66 @@ function fitBrushText(text){
   <audio id="alarm_alarm_clock" src="assets/alarm_clock.mp3"></audio>
   <audio id="alarm_wall_clock" src="assets/wall_clock.mp3"></audio>
   <audio id="alarm_hato2" src="assets/hato2.mp3"></audio>
+</section>
+
+
+<section id="enduranceTool" class="screen">
+  <div class="card"><div class="inner endurance-stage">
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div>
+        <h2 style="margin:0">🔥 耐久カウンター</h2>
+        <p class="muted">0秒を目指すタイマーと、目標数を目指すカウンター。ボタンは自由に作成できる。</p>
+      </div>
+      <button class="btn" onclick="showScreen('tools')" type="button">道具へ戻る</button>
+    </div>
+
+    <div class="endurance-tabs">
+      <button class="btn primary" id="enduranceTimerTab" type="button">タイマー</button>
+      <button class="btn" id="enduranceCounterTab" type="button">カウンター</button>
+    </div>
+
+    <div class="endurance-display" id="enduranceDisplayBox">
+      <div class="endurance-title" id="enduranceModeLabel">タイマーモード</div>
+      <div class="endurance-main" id="enduranceMainValue">03:00</div>
+      <div class="endurance-sub" id="enduranceSubValue">0秒を目指せ</div>
+    </div>
+
+    <div class="row" style="justify-content:center">
+      <button class="btn primary" id="enduranceStartPause" type="button">開始</button>
+      <button class="btn" id="enduranceReset" type="button">リセット</button>
+      <button class="btn danger" id="enduranceClearButtons" type="button">ボタン全削除</button>
+    </div>
+
+    <div class="endurance-button-grid" id="enduranceActionButtons"></div>
+
+    <div class="endurance-config">
+      <h3 style="margin:0">基本設定</h3>
+      <div class="row">
+        <input id="enduranceTitleInput" placeholder="企画名 例：NGワード耐久">
+        <input id="enduranceTimerMin" type="number" min="0" value="3" style="max-width:90px" placeholder="分">
+        <input id="enduranceTimerSec" type="number" min="0" max="59" value="0" style="max-width:90px" placeholder="秒">
+        <input id="enduranceCounterGoal" type="number" min="0" value="100" style="max-width:110px" placeholder="目標数">
+        <button class="btn primary" id="enduranceSaveBase" type="button">設定反映</button>
+      </div>
+      <p class="muted">タイマーは赤点滅中もSEなし。ボタン押下時だけルーレットの「該当者なし」と同じ音を使う。</p>
+    </div>
+
+    <div class="endurance-config">
+      <h3 style="margin:0">カスタムボタン追加</h3>
+      <div class="row">
+        <input id="enduranceButtonName" placeholder="ボタン名 例：ギフト / NGワード">
+        <input id="enduranceButtonValue" type="number" value="30" style="max-width:110px" placeholder="増減値">
+        <select id="enduranceButtonUnit" style="max-width:140px">
+          <option value="seconds">秒</option>
+          <option value="minutes">分</option>
+          <option value="count">カウント</option>
+        </select>
+        <input id="enduranceButtonColor" type="color" value="#38bdf8" style="max-width:80px">
+        <button class="btn primary" id="enduranceAddButton" type="button">ボタン追加</button>
+      </div>
+      <div id="enduranceButtonList" class="tool-list"></div>
+    </div>
+  </div></div>
 </section>
 
     <section id="settings" class="screen">
@@ -3655,7 +3799,21 @@ const defaultState={
     timers:[
       {id:"t_sample_1",name:"休憩",duration:180,remaining:180,running:false,sound:"hato1",done:false},
       {id:"t_sample_2",name:"企画残り",duration:300,remaining:300,running:false,sound:"alarm_clock",done:false}
-    ]
+    ],
+    endurance:{
+      mode:"timer",
+      title:"耐久タイマー",
+      timerDuration:180,
+      timerRemaining:180,
+      timerRunning:false,
+      counterGoal:100,
+      counterValue:0,
+      buttons:[
+        {id:"ed_btn_1",name:"ギフト +30秒",value:30,unit:"seconds",color:"#38bdf8"},
+        {id:"ed_btn_2",name:"NGワード +10秒",value:10,unit:"seconds",color:"#fb7185"},
+        {id:"ed_btn_3",name:"コメント +1",value:1,unit:"count",color:"#a78bfa"}
+      ]
+    }
   },
   customGames:{
     animalAnimals:["猫", "犬", "ゾウ", "牛", "キツネ", "ハト", "ゴリラ", "サル", "馬", "深夜のコンビニ店員", "クアッカワラビー", "マヌルネコ", "ハダカデバネズミ", "オカピ", "ヤブイヌ", "アイアイ", "カピバラ", "ウォンバット", "コビトカバ", "ビントロング", "フェネック", "スナネコ", "カラカル", "サーバル", "ラーテル", "ミーアキャット", "アルマジロ", "センザンコウ", "バク", "ナマケモノ", "アリクイ", "カモノハシ", "ハリモグラ", "タスマニアデビル", "キーウィ", "ハシビロコウ", "ヘビクイワシ", "ライチョウ", "エミュー", "カカポ", "アホウドリ", "シロイルカ", "イッカク", "ジュゴン", "マナティー", "ラッコ", "アザラシ", "ウミウシ", "メンダコ", "ダイオウグソクムシ", "チンアナゴ", "リュウグウノツカイ", "クリオネ", "カブトガニ", "オオサンショウウオ", "ウーパールーパー", "ベルツノガエル", "フトアゴヒゲトカゲ", "ゲッコー", "カメレオン", "カマキリ", "タランチュラ", "サソリ", "モモンガ", "プレーリードッグ", "レッサーパンダ", "シマエナガ", "アカクラゲ", "デンキウナギ", "ピラルク"],
@@ -3684,6 +3842,12 @@ state.countdowns.forEach(c=>{
     state.tools = state.tools || structuredClone(defaultState.tools);
 state.tools.counters = state.tools.counters || [];
 state.tools.timers = state.tools.timers || [];
+state.tools.endurance = state.tools.endurance || structuredClone(defaultState.tools.endurance);
+state.tools.endurance.buttons = state.tools.endurance.buttons || [];
+if(typeof state.tools.endurance.timerDuration !== "number") state.tools.endurance.timerDuration = 180;
+if(typeof state.tools.endurance.timerRemaining !== "number") state.tools.endurance.timerRemaining = state.tools.endurance.timerDuration;
+if(typeof state.tools.endurance.counterGoal !== "number") state.tools.endurance.counterGoal = 100;
+if(typeof state.tools.endurance.counterValue !== "number") state.tools.endurance.counterValue = 0;
 state.chin = state.chin || structuredClone(defaultState.chin);
 state.chin.diceCount = state.chin.diceCount || 3;
 state.chin.diceNames = state.chin.diceNames || structuredClone(defaultState.chin.diceNames);
@@ -4598,6 +4762,7 @@ function showScreen(id){
   if(id==="settings") renderSettings();
   if(id==="calendar") renderCalendar();
   if(id==="tools") renderTools();
+  if(id==="enduranceTool") renderEnduranceTool();
   if(id==="chinchiro"){ renderChinMode(); startChinBgm(); }
 }
 document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>showScreen(b.dataset.screen)));
@@ -6250,6 +6415,110 @@ if(window.addTimer) addTimer.onclick=()=>{
   newTimerName.value="";
   save();renderTools();
 }
+
+
+let enduranceTick = null;
+function enduranceState(){
+  state.tools = state.tools || {};
+  state.tools.endurance = state.tools.endurance || structuredClone(defaultState.tools.endurance);
+  const e = state.tools.endurance;
+  e.buttons = e.buttons || [];
+  if(!e.mode) e.mode = "timer";
+  if(typeof e.timerDuration !== "number") e.timerDuration = 180;
+  if(typeof e.timerRemaining !== "number") e.timerRemaining = e.timerDuration;
+  if(typeof e.counterGoal !== "number") e.counterGoal = 100;
+  if(typeof e.counterValue !== "number") e.counterValue = 0;
+  return e;
+}
+function fmtEnduranceTime(sec){
+  sec = Math.max(0, Math.floor(Number(sec)||0));
+  const m = Math.floor(sec/60);
+  const s = sec%60;
+  return String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+}
+function playEnduranceButtonSe(){
+  if(typeof playAudio === "function") playAudio("seRouletteResult", true);
+}
+function renderEnduranceTool(){
+  const e = enduranceState();
+  const timerMode = e.mode !== "counter";
+  if(window.enduranceTimerTab){
+    enduranceTimerTab.classList.toggle("primary", timerMode);
+    enduranceTimerTab.classList.toggle("active", timerMode);
+  }
+  if(window.enduranceCounterTab){
+    enduranceCounterTab.classList.toggle("primary", !timerMode);
+    enduranceCounterTab.classList.toggle("active", !timerMode);
+  }
+  if(window.enduranceModeLabel) enduranceModeLabel.textContent = timerMode ? "タイマーモード" : "カウンターモード";
+  if(window.enduranceMainValue) enduranceMainValue.textContent = timerMode ? fmtEnduranceTime(e.timerRemaining) : String(e.counterValue||0);
+  if(window.enduranceSubValue) enduranceSubValue.textContent = timerMode ? `初期 ${fmtEnduranceTime(e.timerDuration)} / 0秒を目指せ` : `目標 ${e.counterGoal} / 残り ${Math.max(0,(e.counterGoal||0)-(e.counterValue||0))}`;
+  if(window.enduranceDisplayBox) enduranceDisplayBox.classList.toggle("warning", timerMode && e.timerRemaining <= 30 && e.timerRemaining > 0 && e.timerRunning);
+  if(window.enduranceStartPause) enduranceStartPause.textContent = timerMode ? (e.timerRunning ? "停止" : "開始") : "カウンターはボタンで加算";
+  if(window.enduranceStartPause) enduranceStartPause.disabled = !timerMode;
+  if(window.enduranceTitleInput) enduranceTitleInput.value = e.title || "";
+  if(window.enduranceTimerMin) enduranceTimerMin.value = Math.floor((e.timerDuration||0)/60);
+  if(window.enduranceTimerSec) enduranceTimerSec.value = (e.timerDuration||0)%60;
+  if(window.enduranceCounterGoal) enduranceCounterGoal.value = e.counterGoal || 0;
+
+  if(window.enduranceActionButtons){
+    const visible = (e.buttons||[]).filter(b => timerMode ? b.unit !== "count" : b.unit === "count");
+    enduranceActionButtons.innerHTML = visible.map(b=>{
+      const label = b.unit === "minutes" ? `${b.value}分` : b.unit === "seconds" ? `${b.value}秒` : `${b.value}`;
+      return `<button class="btn endurance-hit-btn" data-endurance-hit="${escapeAttr(b.id)}" style="background:${escapeAttr(b.color||"#38bdf8")};border-color:transparent;color:#020617" type="button">${escapeHtml(b.name)}<br><span>${Number(b.value)>=0?"+":""}${escapeHtml(label)}</span></button>`;
+    }).join("") || `<div class="tool-item muted">このモード用のボタンなし</div>`;
+    enduranceActionButtons.querySelectorAll("[data-endurance-hit]").forEach(btn=>btn.onclick=()=>hitEnduranceButton(btn.dataset.enduranceHit));
+  }
+  if(window.enduranceButtonList){
+    enduranceButtonList.innerHTML = (e.buttons||[]).map((b,i)=>`
+      <div class="endurance-action-card">
+        <div class="row" style="justify-content:space-between">
+          <b>${escapeHtml(b.name)}</b>
+          <button class="btn danger mini-btn" data-endurance-del="${i}" type="button">削除</button>
+        </div>
+        <div class="muted">${escapeHtml(b.unit)} / ${Number(b.value)>=0?"+":""}${escapeHtml(b.value)} / ${escapeHtml(b.color||"")}</div>
+      </div>
+    `).join("") || `<div class="tool-item muted">カスタムボタンなし</div>`;
+    enduranceButtonList.querySelectorAll("[data-endurance-del]").forEach(btn=>btn.onclick=()=>{
+      const i = Number(btn.dataset.enduranceDel);
+      e.buttons.splice(i,1); save(); renderEnduranceTool();
+    });
+  }
+}
+function hitEnduranceButton(id){
+  const e = enduranceState();
+  const b = (e.buttons||[]).find(x=>String(x.id)===String(id));
+  if(!b) return;
+  const v = Number(b.value)||0;
+  if(b.unit === "count"){
+    e.counterValue = Math.max(0,(e.counterValue||0)+v);
+  }else{
+    const add = b.unit === "minutes" ? v*60 : v;
+    e.timerRemaining = Math.max(0,(e.timerRemaining||0)+add);
+  }
+  playEnduranceButtonSe();
+  save(); renderEnduranceTool();
+}
+function ensureEnduranceTick(){
+  if(enduranceTick) return;
+  enduranceTick=setInterval(()=>{
+    const e=enduranceState();
+    if(e.timerRunning){
+      e.timerRemaining=Math.max(0,(e.timerRemaining||0)-1);
+      if(e.timerRemaining<=0){ e.timerRunning=false; if(typeof playAlarm==="function") playAlarm("alarm_clock"); }
+      save();
+      if(document.getElementById("enduranceTool")?.classList.contains("active")) renderEnduranceTool();
+    }
+  },1000);
+}
+if(window.enduranceTimerTab) enduranceTimerTab.onclick=()=>{const e=enduranceState(); e.mode="timer"; save(); renderEnduranceTool();};
+if(window.enduranceCounterTab) enduranceCounterTab.onclick=()=>{const e=enduranceState(); e.mode="counter"; save(); renderEnduranceTool();};
+if(window.enduranceStartPause) enduranceStartPause.onclick=()=>{const e=enduranceState(); if(e.timerRemaining<=0) e.timerRemaining=e.timerDuration; e.timerRunning=!e.timerRunning; save(); renderEnduranceTool(); ensureEnduranceTick();};
+if(window.enduranceReset) enduranceReset.onclick=()=>{const e=enduranceState(); if(e.mode==="counter"){e.counterValue=0;}else{e.timerRunning=false; e.timerRemaining=e.timerDuration;} save(); renderEnduranceTool();};
+if(window.enduranceSaveBase) enduranceSaveBase.onclick=()=>{const e=enduranceState(); e.title=(enduranceTitleInput.value||"耐久タイマー").trim(); const dur=Math.max(1,(Number(enduranceTimerMin.value)||0)*60 + Math.min(59,Number(enduranceTimerSec.value)||0)); e.timerDuration=dur; if(!e.timerRunning) e.timerRemaining=dur; e.counterGoal=Math.max(0,Number(enduranceCounterGoal.value)||0); save(); renderEnduranceTool();};
+if(window.enduranceAddButton) enduranceAddButton.onclick=()=>{const e=enduranceState(); const name=(enduranceButtonName.value||"追加ボタン").trim(); const value=Number(enduranceButtonValue.value)||0; const unit=enduranceButtonUnit.value||"seconds"; const color=enduranceButtonColor.value||"#38bdf8"; e.buttons.push({id:uid("ed"),name,value,unit,color}); enduranceButtonName.value=""; save(); renderEnduranceTool();};
+if(window.enduranceClearButtons) enduranceClearButtons.onclick=()=>{const e=enduranceState(); if(confirm("耐久カウンターのカスタムボタンを全部消す？")){e.buttons=[]; save(); renderEnduranceTool();}};
+ensureEnduranceTick();
 
 function encodeSaveData(obj){
   const json=JSON.stringify(obj);
