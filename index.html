@@ -3414,17 +3414,33 @@ function fitBrushText(text){
       <div class="card"><div class="inner">
         <h3 style="margin-top:0">設定</h3>
         <label>タイトル</label>
-        <input id="tileBoardTitle" placeholder="例：47都道府県耐久 / 星座コンプ">
+        <input id="tileBoardTitle" placeholder="例：47都道府県耐久 / 今日の枠ビンゴ">
+        <label style="margin-top:10px">モード</label>
+        <div class="row" style="margin-top:8px">
+          <button class="btn primary" id="tileModeNormalBtn" type="button">耐久タイル</button>
+          <button class="btn" id="tileModeBingoBtn" type="button">ビンゴモード</button>
+          <label style="display:flex;align-items:center;gap:6px;margin:0;font-weight:800"><input id="tileBingoFree" type="checkbox">中央FREE</label>
+        </div>
         <div class="row" style="margin-top:10px">
           <select id="tilePresetSelect">
             <option value="zodiac">12星座</option>
             <option value="prefectures">47都道府県</option>
             <option value="blood">血液型</option>
             <option value="blank25">空白25マス</option>
+            <option value="bingoAchieve">ビンゴ：達成系</option>
+            <option value="bingoMiss">ビンゴ：ミス系</option>
+            <option value="bingoChaos">ビンゴ：カオス系</option>
+            <option value="bingoTalk">ビンゴ：雑談系</option>
           </select>
           <button class="btn primary" id="tileApplyPresetBtn" type="button">プリセット作成</button>
         </div>
-        <p class="muted">自由作成は1行につき1タイル。既存タイルは上書きされます。</p>
+        <div class="row" id="tileBingoQuickRow" style="margin-top:10px">
+          <button class="btn" data-bingo-generate="achieve" type="button">達成系をランダム作成</button>
+          <button class="btn" data-bingo-generate="miss" type="button">ミス系をランダム作成</button>
+          <button class="btn" data-bingo-generate="chaos" type="button">カオス系をランダム作成</button>
+          <button class="btn" data-bingo-generate="talk" type="button">雑談系をランダム作成</button>
+        </div>
+        <p class="muted">自由作成は1行につき1タイル。ビンゴは25マスに整えて使います。既存タイルは上書きされます。</p>
         <textarea id="tileCustomText" rows="6" placeholder="北海道
 青森
 岩手"></textarea>
@@ -3440,7 +3456,8 @@ function fitBrushText(text){
         <div style="height:14px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:10px">
           <div id="tileProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#a3e635)"></div>
         </div>
-        <p class="muted" style="margin-top:10px">タイル本体を押すと「埋まり/未達成」を切り替え。編集・削除は下の管理欄から行います。</p>
+        <div id="tileBingoStats" style="margin-top:10px;font-size:22px;font-weight:950;display:none">BINGO 0 / REACH 0</div>
+        <p class="muted" style="margin-top:10px">タイル本体を押すと「埋まり/未達成」を切り替え。ビンゴモードでは縦・横・斜めを自動判定します。</p>
       </div></div>
     </div>
 
@@ -4022,6 +4039,8 @@ const defaultState={
     },
     tiles:{
       title:"12星座コンプ",
+      mode:"normal",
+      free:false,
       items:["牡羊座","牡牛座","双子座","蟹座","獅子座","乙女座","天秤座","蠍座","射手座","山羊座","水瓶座","魚座"].map((name,i)=>({id:"tile_zodiac_"+i,name,done:false}))
     }
   },
@@ -4064,6 +4083,8 @@ state.tools.kuji.history = state.tools.kuji.history || [];
 state.tools.kuji.prizes.forEach(p=>{ if(typeof p.drawn!=="number") p.drawn=0; if(!p.color) p.color="#f59e0b"; });
 state.tools.tiles = state.tools.tiles || structuredClone(defaultState.tools.tiles);
 state.tools.tiles.items = state.tools.tiles.items || [];
+if(!state.tools.tiles.mode) state.tools.tiles.mode = 'normal';
+if(typeof state.tools.tiles.free !== 'boolean') state.tools.tiles.free = false;
 state.tools.tiles.items.forEach((t,i)=>{ if(!t.id) t.id=uid('tile'); if(typeof t.done!=="boolean") t.done=false; if(!t.name) t.name=`タイル${i+1}`; });
 
 state.chin = state.chin || structuredClone(defaultState.chin);
@@ -6606,58 +6627,113 @@ const tilePresets={
   zodiac:["牡羊座","牡牛座","双子座","蟹座","獅子座","乙女座","天秤座","蠍座","射手座","山羊座","水瓶座","魚座"],
   prefectures:["北海道","青森","岩手","宮城","秋田","山形","福島","茨城","栃木","群馬","埼玉","千葉","東京","神奈川","新潟","富山","石川","福井","山梨","長野","岐阜","静岡","愛知","三重","滋賀","京都","大阪","兵庫","奈良","和歌山","鳥取","島根","岡山","広島","山口","徳島","香川","愛媛","高知","福岡","佐賀","長崎","熊本","大分","宮崎","鹿児島","沖縄"],
   blood:["A型","B型","O型","AB型"],
-  blank25:Array.from({length:25},(_,i)=>`マス${i+1}`)
+  blank25:Array.from({length:25},(_,i)=>`マス${i+1}`),
+  bingoAchieve:["初見さんが来る","コメント10件突破","ギフトが飛ぶ","同接目標達成","常連が来る","質問コメントが来る","笑いが起きる","話題が広がる","企画が成功する","リスナー同士が会話","スクショタイム成功","高評価が増える","フォローが増える","いいツッコミが来る","名前を呼べる","昔話が出る","おすすめを聞かれる","今日の名言が出る","水分補給できる","予定時間まで続く","新しい話題が出る","誰かを褒める","サムネを褒められる","配信設定が安定","締めの挨拶成功"],
+  bingoMiss:["噛む","漢字を読み間違える","言い間違える","話が脱線する","水を飲み忘れる","同じ話をする","コメントを見逃す","操作を間違える","名前を呼び間違える","マイク確認を忘れる","画面を間違える","ツッコミ遅れる","急に黙る","謎の間が生まれる","説明が長くなる","笑って進まない","ルールを忘れる","ボタンを押し間違える","時間を見失う","言葉が出てこない","読み上げ失敗","急に素になる","予定と違うことする","自分で自分にツッコむ","締めを噛む"],
+  bingoChaos:["急に歌う","謎の例え話が出る","コメント欄が困惑","ルーレット事故る","話題が迷子になる","急に名言っぽくなる","飯テロが始まる","変なテンションになる","急に反省会","誰かが暴走する","謎ルール追加","カオスな流れになる","笑いすぎて止まる","急に小声になる","想定外の展開","無駄に熱弁する","ボケが渋滞する","全員で乗っかる","急に茶番開始","謎の勝負が始まる","コメントで大喜利開始","変なあだ名が生まれる","ツッコミ不在","枠主が迷言を残す","最後だけ綺麗に終わる"],
+  bingoTalk:["好きな食べ物の話","地元トーク","最近買った物","昔の流行り","仕事の話","ファッションの話","音楽の話","ゲームの話","アニメの話","コンビニの話","ラーメンの話","恋バナ未満の話","失敗談","子どもの頃の話","休日の過ごし方","旅行したい場所","おすすめを聞く","リスナーの地域話","季節の話","健康の話","家電の話","ペットの話","名前の由来","配信あるある","今日の締めトーク"]
 };
+const bingoCategoryMap={achieve:'bingoAchieve',miss:'bingoMiss',chaos:'bingoChaos',talk:'bingoTalk'};
+function shuffleArray(arr){ return [...arr].sort(()=>Math.random()-.5); }
+function createBingoItems(category){
+  const key=bingoCategoryMap[category]||'bingoAchieve';
+  return shuffleArray(tilePresets[key]).slice(0,25);
+}
+function bingoLines(items){
+  const lines=[];
+  for(let r=0;r<5;r++) lines.push([0,1,2,3,4].map(c=>r*5+c));
+  for(let c=0;c<5;c++) lines.push([0,1,2,3,4].map(r=>r*5+c));
+  lines.push([0,6,12,18,24],[4,8,12,16,20]);
+  const doneAt=i=>!!(items[i]&&items[i].done);
+  let bingo=0, reach=0;
+  const bingoSet=new Set(), reachSet=new Set();
+  lines.forEach(line=>{
+    const n=line.filter(doneAt).length;
+    if(n===5){ bingo++; line.forEach(i=>bingoSet.add(i)); }
+    else if(n===4){ reach++; line.filter(i=>!doneAt(i)).forEach(i=>reachSet.add(i)); }
+  });
+  return {bingo,reach,bingoSet,reachSet};
+}
+function normalizeBingoItems(t){
+  t.items=t.items||[];
+  if(t.mode==='bingo'){
+    while(t.items.length<25) t.items.push({id:uid('tile'),name:`マス${t.items.length+1}`,done:false});
+    if(t.items.length>25) t.items=t.items.slice(0,25);
+    if(t.free && t.items[12]){ t.items[12].name=t.items[12].name||'FREE'; t.items[12].done=true; }
+  }
+}
 function tileState(){
   state.tools = state.tools || {};
   state.tools.tiles = state.tools.tiles || structuredClone(defaultState.tools.tiles);
   state.tools.tiles.items = state.tools.tiles.items || [];
   return state.tools.tiles;
 }
-function setTileItems(title, names){
+function setTileItems(title, names, mode){
   const t=tileState();
   t.title=title || t.title || "耐久タイル";
+  if(mode) t.mode=mode;
   t.items=(names||[]).map((name,i)=>({id:uid('tile'),name:String(name||`タイル${i+1}`).trim()||`タイル${i+1}`,done:false}));
+  normalizeBingoItems(t);
   save();
   renderTileTool();
 }
 function renderTileTool(){
   const t=tileState();
+  normalizeBingoItems(t);
+  const isBingo=t.mode==='bingo';
   const items=t.items||[];
   const done=items.filter(x=>x.done).length;
   const total=items.length;
   const pct=total ? Math.round(done/total*100) : 0;
+  const b=isBingo ? bingoLines(items) : {bingo:0,reach:0,bingoSet:new Set(),reachSet:new Set()};
   if(window.tileBoardTitle) tileBoardTitle.value=t.title||"";
-  if(window.tileBoardHeading) tileBoardHeading.textContent=t.title||"耐久タイル";
-  if(window.tileBoardSub) tileBoardSub.textContent=`${done} / ${total} 達成`;
-  if(window.tileProgressText) tileProgressText.textContent=`${done} / ${total}（${pct}%）`;
+  if(window.tileBoardHeading) tileBoardHeading.textContent=t.title||(isBingo?'今日の枠ビンゴ':'耐久タイル');
+  if(window.tileBoardSub) tileBoardSub.textContent=isBingo?`BINGO ${b.bingo} / REACH ${b.reach}`:`${done} / ${total} 達成`;
+  if(window.tileProgressText) tileProgressText.textContent=isBingo?`${done} / ${total}（${pct}%）  BINGO ${b.bingo} / REACH ${b.reach}`:`${done} / ${total}（${pct}%）`;
   if(window.tileProgressBar) tileProgressBar.style.width=pct+"%";
+  if(window.tileBingoStats){ tileBingoStats.style.display=isBingo?'block':'none'; tileBingoStats.textContent=`BINGO ${b.bingo} / REACH ${b.reach}`; }
+  if(window.tileBingoFree){ tileBingoFree.checked=!!t.free; tileBingoFree.disabled=!isBingo; }
+  if(window.tileModeNormalBtn){ tileModeNormalBtn.className='btn '+(!isBingo?'primary':''); }
+  if(window.tileModeBingoBtn){ tileModeBingoBtn.className='btn '+(isBingo?'primary':''); }
+  if(window.tileBingoQuickRow) tileBingoQuickRow.style.display=isBingo?'flex':'none';
   if(window.tileGrid){
-    tileGrid.innerHTML=items.map((it,i)=>`
-      <button class="tile-cell ${it.done?'done':''}" data-tile-toggle="${i}" type="button" style="aspect-ratio:1/1;width:100%;border-radius:14px;border:2px solid ${it.done?'rgba(34,197,94,.95)':'rgba(255,255,255,.16)'};background:${it.done?'linear-gradient(135deg,rgba(34,197,94,.34),rgba(132,204,22,.20))':'rgba(15,23,42,.78)'};box-shadow:${it.done?'0 0 22px rgba(34,197,94,.22), inset 0 0 0 1px rgba(255,255,255,.10)':'inset 0 0 0 1px rgba(255,255,255,.04)'};display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;cursor:pointer;font-weight:950;word-break:break-word;color:#fff;line-height:1.18;overflow:hidden">
-        <span>${it.done?'✅<br>':''}${escapeHtml(it.name||'')}</span>
-      </button>`).join('') || '<p class="muted">タイルがありません。プリセットか自由入力で作成してね。</p>';
-    tileGrid.querySelectorAll('[data-tile-toggle]').forEach(el=>el.onclick=()=>{ const i=Number(el.dataset.tileToggle); items[i].done=!items[i].done; save(); renderTileTool(); });
+    tileGrid.style.gridTemplateColumns=isBingo?'repeat(5, minmax(0, 1fr))':'repeat(auto-fill,minmax(92px,1fr))';
+    tileGrid.innerHTML=items.map((it,i)=>{
+      const isFree=isBingo && t.free && i===12;
+      const lineDone=b.bingoSet.has(i);
+      const lineReach=b.reachSet.has(i);
+      const border=lineDone?'rgba(250,204,21,.95)':(it.done?'rgba(34,197,94,.95)':(lineReach?'rgba(251,191,36,.8)':'rgba(255,255,255,.16)'));
+      const bg=lineDone?'linear-gradient(135deg,rgba(250,204,21,.45),rgba(245,158,11,.22))':(it.done?'linear-gradient(135deg,rgba(34,197,94,.34),rgba(132,204,22,.20))':'rgba(15,23,42,.78)');
+      const mark=isFree?'FREE':(it.done?'✅':'');
+      return `<button class="tile-cell ${it.done?'done':''} ${lineDone?'bingo-line':''}" data-tile-toggle="${i}" type="button" style="aspect-ratio:1/1;width:100%;border-radius:14px;border:2px solid ${border};background:${bg};box-shadow:${lineDone?'0 0 26px rgba(250,204,21,.30), inset 0 0 0 1px rgba(255,255,255,.12)':(it.done?'0 0 22px rgba(34,197,94,.22), inset 0 0 0 1px rgba(255,255,255,.10)':'inset 0 0 0 1px rgba(255,255,255,.04)')};display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;cursor:pointer;font-weight:950;word-break:break-word;color:#fff;line-height:1.16;overflow:hidden;position:relative;font-size:${isBingo?'clamp(11px,1.6vw,16px)':'16px'}">
+        <span>${mark?`<b style="display:block;color:${lineDone?'#fef3c7':'#bbf7d0'};font-size:13px;margin-bottom:3px">${mark}</b>`:''}${escapeHtml(it.name||'')}</span>
+      </button>`;
+    }).join('') || '<p class="muted">タイルがありません。プリセットか自由入力で作成してね。</p>';
+    tileGrid.querySelectorAll('[data-tile-toggle]').forEach(el=>el.onclick=()=>{ const i=Number(el.dataset.tileToggle); if(isBingo && t.free && i===12) return; items[i].done=!items[i].done; save(); renderTileTool(); });
   }
   if(window.tileManageList){
     tileManageList.innerHTML=items.map((it,i)=>`
       <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;background:rgba(15,23,42,.58);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:8px">
-        <input data-tile-name="${i}" value="${escapeHtml(it.name||'')}" aria-label="タイル名">
-        <button class="btn mini-btn" data-tile-edit="${i}" type="button">反映</button>
-        <button class="btn mini-btn danger" data-tile-del="${i}" type="button">削除</button>
+        <input data-tile-name="${i}" value="${escapeHtml(it.name||'')}" aria-label="タイル名" ${isBingo&&t.free&&i===12?'disabled':''}>
+        <button class="btn mini-btn" data-tile-edit="${i}" type="button" ${isBingo&&t.free&&i===12?'disabled':''}>反映</button>
+        <button class="btn mini-btn danger" data-tile-del="${i}" type="button" ${isBingo&&t.free&&i===12?'disabled':''}>削除</button>
       </div>`).join('') || '<p class="muted">管理するタイルがありません。</p>';
     tileManageList.querySelectorAll('[data-tile-name]').forEach(inp=>{
       inp.onchange=()=>{ const i=Number(inp.dataset.tileName); if(items[i]){items[i].name=inp.value.trim()||items[i].name; save(); renderTileTool();} };
     });
     tileManageList.querySelectorAll('[data-tile-edit]').forEach(btn=>btn.onclick=()=>{ const i=Number(btn.dataset.tileEdit); const inp=tileManageList.querySelector(`[data-tile-name="${i}"]`); if(items[i] && inp){items[i].name=inp.value.trim()||items[i].name; save(); renderTileTool();} });
-    tileManageList.querySelectorAll('[data-tile-del]').forEach(btn=>btn.onclick=()=>{ const i=Number(btn.dataset.tileDel); if(items[i] && confirm(`${items[i].name} を削除する？`)){items.splice(i,1); save(); renderTileTool();} });
+    tileManageList.querySelectorAll('[data-tile-del]').forEach(btn=>btn.onclick=()=>{ const i=Number(btn.dataset.tileDel); if(items[i] && confirm(`${items[i].name} を削除する？`)){items.splice(i,1); normalizeBingoItems(t); save(); renderTileTool();} });
   }
 }
 if(window.tileBoardTitle) tileBoardTitle.onchange=()=>{tileState().title=tileBoardTitle.value.trim()||'耐久タイル'; save(); renderTileTool();};
-if(window.tileApplyPresetBtn) tileApplyPresetBtn.onclick=()=>{ const key=tilePresetSelect.value||'zodiac'; const titleMap={zodiac:'12星座コンプ',prefectures:'47都道府県制覇',blood:'血液型コンプ',blank25:'自由ビンゴ25マス'}; if(confirm('現在のタイルを上書きしてプリセットを作成する？')) setTileItems(titleMap[key]||'耐久タイル', tilePresets[key]||tilePresets.zodiac); };
-if(window.tileApplyCustomBtn) tileApplyCustomBtn.onclick=()=>{ const names=(tileCustomText.value||'').split(/\n+/).map(x=>x.trim()).filter(Boolean); if(!names.length){alert('1行につき1タイルで入力してね'); return;} if(confirm('現在のタイルを上書きして自由タイルを作成する？')) setTileItems(tileBoardTitle.value.trim()||'自由耐久タイル', names); };
-if(window.tileAddOneBtn) tileAddOneBtn.onclick=()=>{ const t=tileState(); const name=prompt('追加するタイル名', `タイル${(t.items||[]).length+1}`); if(name!==null && name.trim()){t.items.push({id:uid('tile'),name:name.trim(),done:false}); save(); renderTileTool();} };
-if(window.tileResetBtn) tileResetBtn.onclick=()=>{ const t=tileState(); if(confirm('埋め状態だけリセットする？')){(t.items||[]).forEach(x=>x.done=false); save(); renderTileTool();} };
+if(window.tileModeNormalBtn) tileModeNormalBtn.onclick=()=>{const t=tileState(); t.mode='normal'; save(); renderTileTool();};
+if(window.tileModeBingoBtn) tileModeBingoBtn.onclick=()=>{const t=tileState(); t.mode='bingo'; if(!t.title||t.title==='耐久タイル') t.title='今日の枠ビンゴ'; normalizeBingoItems(t); save(); renderTileTool();};
+if(window.tileBingoFree) tileBingoFree.onchange=()=>{const t=tileState(); t.free=tileBingoFree.checked; if(t.free && t.items[12]){t.items[12].name='FREE';t.items[12].done=true;} save(); renderTileTool();};
+if(window.tileApplyPresetBtn) tileApplyPresetBtn.onclick=()=>{ const key=tilePresetSelect.value||'zodiac'; const titleMap={zodiac:'12星座コンプ',prefectures:'47都道府県制覇',blood:'血液型コンプ',blank25:'空白25マス',bingoAchieve:'達成系ビンゴ',bingoMiss:'ミス系ビンゴ',bingoChaos:'カオス系ビンゴ',bingoTalk:'雑談系ビンゴ'}; const mode=key.startsWith('bingo')?'bingo':'normal'; if(confirm('現在のタイルを上書きしてプリセットを作成する？')) setTileItems(titleMap[key]||'耐久タイル', tilePresets[key]||tilePresets.zodiac, mode); };
+if(window.tileApplyCustomBtn) tileApplyCustomBtn.onclick=()=>{ const names=(tileCustomText.value||'').split(/\n+/).map(x=>x.trim()).filter(Boolean); if(!names.length){alert('1行につき1タイルで入力してね'); return;} if(confirm('現在のタイルを上書きして自由タイルを作成する？')) setTileItems(tileBoardTitle.value.trim()||(tileState().mode==='bingo'?'自由ビンゴ':'自由耐久タイル'), names, tileState().mode); };
+if(window.tileAddOneBtn) tileAddOneBtn.onclick=()=>{ const t=tileState(); if(t.mode==='bingo' && (t.items||[]).length>=25){alert('ビンゴモードは25マス固定だよ'); return;} const name=prompt('追加するタイル名', `タイル${(t.items||[]).length+1}`); if(name!==null && name.trim()){t.items.push({id:uid('tile'),name:name.trim(),done:false}); save(); renderTileTool();} };
+if(window.tileResetBtn) tileResetBtn.onclick=()=>{ const t=tileState(); if(confirm('埋め状態だけリセットする？')){(t.items||[]).forEach((x,i)=>x.done=!!(t.mode==='bingo'&&t.free&&i===12)); save(); renderTileTool();} };
+document.querySelectorAll('[data-bingo-generate]').forEach(btn=>btn.onclick=()=>{ const cat=btn.dataset.bingoGenerate; const titles={achieve:'達成系ビンゴ',miss:'ミス系ビンゴ',chaos:'カオス系ビンゴ',talk:'雑談系ビンゴ'}; if(confirm(`${titles[cat]||'ビンゴ'}をランダム作成する？`)) setTileItems(titles[cat]||'今日の枠ビンゴ', createBingoItems(cat), 'bingo'); });
 
 function kujiState(){
   state.tools = state.tools || {};
