@@ -2215,11 +2215,40 @@ document.addEventListener("DOMContentLoaded",()=>renderRoulette());
     window.__rouletteShowScreenPatched = true;
   }
 
+  function kanaSortNames(list){
+    return (list || []).slice().sort(function(a,b){
+      return String(a || "").localeCompare(String(b || ""), "ja", {numeric:true, sensitivity:"base"});
+    });
+  }
+
+  function activeListenerNames(){
+    return Array.isArray(state.listeners)
+      ? state.listeners.map(function(l){ return l && l.name; }).filter(Boolean)
+      : [];
+  }
+
+  function syncRouletteGuestsWithRegulars(){
+    ensureRouletteState();
+    const active = new Set(activeListenerNames());
+    const hostName = state.hostProfile && state.hostProfile.name ? state.hostProfile.name : "";
+
+    // 常連メモに存在しないゲストは、ルーレット側の候補・ベットから自動的に消す。
+    state.roulette.guestBetters = Array.from(new Set(state.roulette.guestBetters || [])).filter(function(name){
+      return active.has(name);
+    });
+
+    const validBetters = new Set((hostName ? [hostName] : []).concat(activeListenerNames()));
+    state.roulette.bets = (state.roulette.bets || []).filter(function(b){
+      return b && validBetters.has(b.name);
+    });
+  }
+
   function getBetters(){
     ensureRouletteState();
+    syncRouletteGuestsWithRegulars();
     const host = state.hostProfile && state.hostProfile.name ? [state.hostProfile.name] : [];
-    const listeners = Array.isArray(state.listeners) ? state.listeners.map(function(l){ return l.name; }).filter(Boolean) : [];
-    return Array.from(new Set(host.concat(listeners).concat(state.roulette.guestBetters || [])));
+    const listeners = activeListenerNames();
+    return kanaSortNames(Array.from(new Set(host.concat(listeners))));
   }
 
   function addListenerFromRouletteGuest(name){
@@ -2444,10 +2473,24 @@ document.addEventListener("DOMContentLoaded",()=>renderRoulette());
     }
 
     if(guestList){
-      const guests = state.roulette.guestBetters || [];
+      syncRouletteGuestsWithRegulars();
+      const q = String(window.__rouletteGuestSearch || "").trim().toLowerCase();
+      const guests = kanaSortNames(state.roulette.guestBetters || []);
+      const shown = q ? guests.filter(function(name){ return String(name).toLowerCase().includes(q); }) : guests;
       guestList.innerHTML = guests.length
-        ? '<div class="muted">追加済み：' + guests.map(function(name){ return esc(name); }).join('、') + '</div>'
-        : '<div class="muted">ゲスト追加すると常連メモと選択肢に自動追加されるよ</div>';
+        ? '<div class="roulette-guest-tools" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">'
+          + '<input id="rouletteGuestSearch" placeholder="追加済みゲスト検索" value="' + esc(window.__rouletteGuestSearch || "") + '" style="flex:1;min-width:180px">'
+          + '<span class="muted">50音順 / 常連メモ連動</span>'
+          + '</div>'
+          + '<div class="muted">追加済み：' + (shown.length ? shown.map(function(name){ return '<span class="roulette-tag" style="display:inline-block;margin:2px 4px 2px 0">' + esc(name) + '</span>'; }).join('') : '該当なし') + '</div>'
+        : '<div class="muted">ゲスト追加すると常連メモと選択肢に自動追加。常連から削除した人はここにも残らないよ</div>';
+      const guestSearch = document.getElementById("rouletteGuestSearch");
+      if(guestSearch){
+        guestSearch.oninput = function(){
+          window.__rouletteGuestSearch = this.value;
+          renderBetBoard();
+        };
+      }
     }
   }
 
