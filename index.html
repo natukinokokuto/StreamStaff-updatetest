@@ -2057,6 +2057,33 @@ function fitBrushText(text){
   margin-right:2px;
   color:#fde68a;
 }
+
+/* v106 roulette guest picker: host sticky + searchable host profile */
+#rouletteGuestPicker.roulette-guest-picker{
+  max-height:240px;
+  overflow-y:auto;
+  display:block !important;
+  padding:2px 2px 4px;
+}
+.roulette-host-sticky{
+  position:sticky;
+  top:0;
+  z-index:10;
+  padding:4px 0 7px;
+  margin-bottom:6px;
+  background:linear-gradient(180deg,rgba(15,23,42,.98),rgba(15,23,42,.92));
+  border-bottom:1px solid rgba(56,189,248,.35);
+  backdrop-filter:blur(8px);
+}
+.roulette-listener-flow{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.roulette-tag.selected{
+  outline:2px solid #facc15;
+  box-shadow:0 0 0 3px rgba(250,204,21,.18),0 0 14px rgba(250,204,21,.45);
+}
 .host-profile-badge{
   display:inline-flex;
   align-items:center;
@@ -6769,13 +6796,24 @@ const firebaseConfig = { ... }
   }
 
   function rouletteGuestSearchTokens(name){
-    const l = listenerByNameForSearch(name);
     const parts = [name];
-    if(l){
-      parts.push(l.nickname || "");
-      parts.push(l.searchYomi || "");
-      parts.push(l.searchTags || "");
-      if(l.favorites) parts.push(Object.values(l.favorites).join(" "));
+    if(isHostBetter(name)){
+      const h = state.hostProfile || {};
+      parts.push(h.memo || "");
+      parts.push(h.favoriteThings || "");
+      parts.push(h.hobbies || "");
+      parts.push(h.frequentTopics || "");
+      parts.push(h.streamGenres || "");
+      parts.push(h.ngWords || "");
+      parts.push("枠主 わくぬし 主 配信者");
+    }else{
+      const l = listenerByNameForSearch(name);
+      if(l){
+        parts.push(l.nickname || "");
+        parts.push(l.searchYomi || "");
+        parts.push(l.searchTags || "");
+        if(l.favorites) parts.push(Object.values(l.favorites).join(" "));
+      }
     }
     return parts.join(" ").split(/[\s,、，/／・|｜]+/).map(normalizeRouletteSearchText).filter(Boolean);
   }
@@ -6980,12 +7018,15 @@ const firebaseConfig = { ... }
     listeners = Array.from(new Set(listeners));
     listeners = sortMode === "last" ? rouletteLastBetSortedNames(listeners) : kanaSortNames(listeners);
     const shownListeners = listeners.filter(function(name){ return rouletteGuestMatchesSearch(name, q); });
-    const shown = hostShown.concat(shownListeners);
-    picker.innerHTML = shown.length ? shown.map(function(name){
-      const isHost = isHostBetter(name);
+    const hostHtml = hostShown.length ? hostShown.map(function(name){
       const selected = select && select.value === name;
-      return '<button class="roulette-tag ' + (isHost ? 'host-chip ' : '') + (selected ? 'selected ' : '') + '" data-select-roulette-better="' + esc(name) + '" type="button" style="display:inline-block;margin:2px 4px 2px 0;cursor:pointer">' + esc(isHost ? '★ ' + name + '（枠主）' : name) + '</button>';
-    }).join('') : '<span class="muted">該当なし</span>';
+      return '<div class="roulette-host-sticky"><button class="roulette-tag host-chip ' + (selected ? 'selected ' : '') + '" data-select-roulette-better="' + esc(name) + '" type="button" style="display:inline-block;margin:2px 4px 2px 0;cursor:pointer">' + esc('★ ' + name + '（枠主）') + '</button></div>';
+    }).join('') : '';
+    const listenerHtml = shownListeners.length ? '<div class="roulette-listener-flow">' + shownListeners.map(function(name){
+      const selected = select && select.value === name;
+      return '<button class="roulette-tag ' + (selected ? 'selected ' : '') + '" data-select-roulette-better="' + esc(name) + '" type="button" style="display:inline-block;margin:2px 4px 2px 0;cursor:pointer">' + esc(name) + '</button>';
+    }).join('') + '</div>' : '';
+    picker.innerHTML = (hostHtml || listenerHtml) ? (hostHtml + listenerHtml) : '<span class="muted">該当なし</span>';
   }
 
   function renderBetBoard(){
