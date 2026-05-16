@@ -2806,43 +2806,36 @@ function fitBrushText(text){
 
 
 
-<style id="obsTickerGlobalMaskStyle">
-.obs-preview-grid{
-  position:relative;
-  overflow:hidden;
-}
-.obs-preview-global-ticker{
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:10px;
-  height:42px;
-  pointer-events:none;
-  overflow:visible;
-  z-index:1;
-}
-.obs-preview-global-ticker-track{
-  position:absolute;
-  left:100%;
-  top:50%;
-  transform:translateY(-50%);
-  white-space:nowrap;
-  animation: obsPreviewGlobalTickerMove 14s linear infinite;
-  will-change:left, transform;
+
+
+
+<style id="obsTickerSlotScrollStyle">
+.obs-toggle-line{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:8px;
   font-weight:700;
 }
-@keyframes obsPreviewGlobalTickerMove{
+.obs-preview-cell.ticker{
+  overflow:hidden !important;
+  white-space:nowrap !important;
+  justify-content:flex-start !important;
+  position:relative;
+}
+.obs-preview-cell.ticker .ticker-runner{
+  position:absolute;
+  top:50%;
+  left:100%;
+  transform:translateY(-50%);
+  white-space:nowrap;
+  display:inline-block;
+  animation: obsTickerSlotMove 12s linear infinite;
+  will-change:left, transform;
+}
+@keyframes obsTickerSlotMove{
   from{ left:100%; transform:translate(0,-50%); }
   to{ left:0%; transform:translate(-100%,-50%); }
-}
-.obs-preview-cell.ticker{
-  position:relative;
-  overflow:hidden !important;
-  z-index:2;
-  background-clip:padding-box;
-}
-.obs-preview-cell.ticker .ticker-mask-text{
-  visibility:hidden;
 }
 </style>
 

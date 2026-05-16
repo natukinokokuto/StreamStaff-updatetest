@@ -5,73 +5,89 @@ function nowTime(){
  const d = new Date();
  return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
 }
-
 function readJson(key, fallback){
  try{return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));}
  catch(e){return fallback;}
 }
-
 function readAppState(){
  try{return JSON.parse(localStorage.getItem(APP_STATE_KEY) || "{}") || {};}
  catch(e){return {};}
 }
-
 function cleanText(v){
  if(v == null) return "";
  if(typeof v === "string" || typeof v === "number") return String(v).trim();
- if(Array.isArray(v)) return v.map(cleanText).filter(Boolean).slice(0,3).join(" / ");
+ if(Array.isArray(v)) return v.map(cleanText).filter(Boolean).slice(0,4).join(" / ");
  if(typeof v === "object"){
-   const keys = ["title","text","memo","content","name","label","value","trunk","branch","leaf"];
-   for(const k of keys){
-     const hit = cleanText(v[k]);
-     if(hit) return hit;
-   }
+   const keys = ["title","text","memo","body","content","value","item","name","label","trunk","branch","leaf","main"];
+   for(const k of keys){ const hit = cleanText(v[k]); if(hit) return hit; }
  }
  return "";
 }
-
-function latestStreamMemo(state){
- const logs = Array.isArray(state.logs) ? state.logs : [];
- const hit = logs.find(x => cleanText(x && x.title).includes("配信メモ"));
- if(hit) return cleanText(hit.text || hit.memo || hit.content || hit);
- const first = logs[0];
- return cleanText(first && (first.text || first.memo || first.content)) || "";
+function findDeepByKey(obj, keyRegex){
+ if(!obj || typeof obj !== "object") return "";
+ if(Array.isArray(obj)){
+   for(const x of obj){ const hit = findDeepByKey(x, keyRegex); if(hit) return hit; }
+   return "";
+ }
+ for(const [k,v] of Object.entries(obj)){
+   if(keyRegex.test(k)){
+     const hit = cleanText(v);
+     if(hit) return hit;
+   }
+ }
+ for(const v of Object.values(obj)){
+   const hit = findDeepByKey(v, keyRegex);
+   if(hit) return hit;
+ }
+ return "";
 }
-
+function latestStreamMemo(state){
+ let direct = findDeepByKey(state, /(streamMemo|homeMemo|broadcastMemo|deliveryMemo|配信メモ|memoText|mainMemo)/i);
+ if(direct) return direct;
+ const logs = Array.isArray(state.logs) ? state.logs : [];
+ const titled = logs.find(x => cleanText(x && (x.title || x.name || x.label)).includes("配信メモ"));
+ if(titled){
+   const hit = cleanText(titled.text || titled.memo || titled.body || titled.content || titled.value || titled.item);
+   if(hit) return hit;
+ }
+ for(const x of logs){
+   const hit = cleanText(x && (x.text || x.memo || x.body || x.content || x.value || x.item));
+   if(hit) return hit;
+ }
+ return "";
+}
 function syncedValue(kind){
  const state = readAppState();
  const tree = state.tree || {};
  if(kind === "配信メモ") return latestStreamMemo(state) || "配信メモ";
- if(kind === "幹") return cleanText(tree.trunk) || "今日のメインテーマ";
- if(kind === "枝") return cleanText(tree.branch) || "枝";
- if(kind === "葉") return cleanText(tree.leaf) || "葉";
+ if(kind === "幹") return cleanText(tree.trunk) || findDeepByKey(state, /trunk|幹|mainTheme|theme/i) || "今日のメインテーマ";
+ if(kind === "枝") return cleanText(tree.branch) || findDeepByKey(state, /branch|枝|subTheme/i) || "枝";
+ if(kind === "葉") return cleanText(tree.leaf) || findDeepByKey(state, /leaf|葉|listenerPoint/i) || "葉";
  if(kind === "お知らせ"){
    const ev = Array.isArray(state.calendarEvents) ? state.calendarEvents[0] : null;
-   return cleanText(ev && (ev.item || ev.title || ev.type)) || "お知らせ";
+   return cleanText(ev && (ev.item || ev.title || ev.type || ev.text)) || findDeepByKey(state, /notice|お知らせ/i) || "お知らせ";
  }
  if(kind === "常連メモ"){
    const l = Array.isArray(state.listeners) ? state.listeners[0] : null;
-   return l ? [l.name, l.memo].map(cleanText).filter(Boolean).join("：") : "常連メモ";
+   return l ? [l.name, l.memo].map(cleanText).filter(Boolean).join("：") : (findDeepByKey(state, /regular|listener|常連/i) || "常連メモ");
  }
  if(kind === "カレンダー"){
    const ev = Array.isArray(state.calendarEvents) ? state.calendarEvents[0] : null;
-   return ev ? [ev.date, ev.item || ev.title || ev.type].map(cleanText).filter(Boolean).join(" ") : "カレンダー";
+   return ev ? [ev.date, ev.item || ev.title || ev.type].map(cleanText).filter(Boolean).join(" ") : (findDeepByKey(state, /calendar|event|予定/i) || "カレンダー");
  }
  if(kind === "ルーレット結果"){
    const h = state.roulette && Array.isArray(state.roulette.history) ? state.roulette.history[0] : null;
-   return cleanText(h) || "ルーレット結果";
+   return cleanText(h) || findDeepByKey(state, /roulette|ルーレット/i) || "ルーレット結果";
  }
  if(kind === "カウントダウン"){
    const cd = Array.isArray(state.countdowns) ? state.countdowns[0] : null;
-   return cd ? [cd.title, cd.target].map(cleanText).filter(Boolean).join(" ") : "カウントダウン";
+   return cd ? [cd.title, cd.target].map(cleanText).filter(Boolean).join(" ") : (findDeepByKey(state, /countdown|timer|カウント/i) || "カウントダウン");
  }
  return "";
 }
-
 function defaultData(){
  return {slots:{},merge:{},titleText:"",tickerText:"",tickerScroll:true,colors:{bg:"transparent",frame:"#555555",text:"#ffffff",panel:"rgba(0,0,0,.35)"}};
 }
-
 function load(){
  const d = Object.assign(defaultData(), readJson("ss_obs_9slot_layout", defaultData()));
  d.slots = d.slots || {};
@@ -82,7 +98,6 @@ function load(){
  if(localStorage.getItem("ss_obs_ticker_scroll") === "0") d.tickerScroll = false;
  return d;
 }
-
 function labelFor(value,data){
  if(!value || value==="空白") return "";
  if(value==="タイトル") return data.titleText || localStorage.getItem("ss_obs_title_text") || "";
@@ -99,7 +114,6 @@ function labelFor(value,data){
  if(value==="枠のみ") return "";
  return syncedValue(value) || value;
 }
-
 function layoutItems(data){
  const m = data.merge || {};
  function row(prefix,rowNum){
@@ -114,18 +128,12 @@ function layoutItems(data){
  }
  return [...row("top",1),...row("mid",2),...row("bottom",3)];
 }
-
 function render(){
  const data = load();
  const overlay = document.getElementById("overlay");
- const tickerTrack = document.getElementById("globalTickerTrack");
- const tickerLayer = document.getElementById("globalTickerLayer");
  overlay.innerHTML = "";
- let globalTickerText = "";
-
  const c = data.colors || {};
  document.body.style.background = c.bg || "transparent";
-
  layoutItems(data).forEach(item=>{
    const value = (data.slots && data.slots[item.key]) || "空白";
    const div = document.createElement("div");
@@ -137,35 +145,19 @@ function render(){
    div.style.background = c.panel || "rgba(0,0,0,.35)";
    div.style.border = "2px solid " + (c.frame || "#555");
    div.style.color = c.text || "#fff";
-
    if(value==="空白") div.classList.add("empty");
    const text = labelFor(value,data);
-
    if(item.row === 3 && value.indexOf("テロップ文") >= 0 && text && data.tickerScroll !== false){
-     globalTickerText = text;
-     const mask = document.createElement("span");
-     mask.className = "ticker-mask-text";
-     mask.textContent = text;
-     div.appendChild(mask);
+     const runner = document.createElement("span");
+     runner.className = "ticker-runner";
+     runner.textContent = text;
+     div.appendChild(runner);
    }else{
      div.textContent = text;
    }
    overlay.appendChild(div);
  });
-
- if(globalTickerText && data.tickerScroll !== false){
-   tickerLayer.style.display = "block";
-   tickerTrack.textContent = globalTickerText;
-   tickerTrack.style.color = c.text || "#fff";
-   tickerTrack.style.animation = "none";
-   void tickerTrack.offsetWidth;
-   tickerTrack.style.animation = "globalTickerMove 14s linear infinite";
- }else{
-   tickerLayer.style.display = "none";
-   tickerTrack.textContent = "";
- }
 }
-
 window.addEventListener("storage", render);
 window.addEventListener("focus", render);
 document.addEventListener("visibilitychange", render);
