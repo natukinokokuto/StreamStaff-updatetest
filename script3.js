@@ -18,7 +18,7 @@
     if(!Array.isArray(state.roulette.history)) state.roulette.history = [];
     if(!Array.isArray(state.roulette.bets)) state.roulette.bets = [];
     if(!Array.isArray(state.roulette.guestBetters)) state.roulette.guestBetters = [];
-    state.hostProfile = Object.assign({name:"", memo:"", birthday:"", ngWords:"", loveFantasy:false, favoriteThings:"", hobbies:"", frequentTopics:"", streamGenres:"", talkSettings:{clockEnabled:"on", clockPosition:"right", neonColor:"#39d0ff", bgTheme:"cyber", font:"system", shadow:"on", glow:"on"}}, state.hostProfile || {});
+    state.hostProfile = Object.assign({name:"", memo:"", ngWords:"", loveFantasy:false, favoriteThings:"", hobbies:"", frequentTopics:"", streamGenres:"", talkSettings:{clockEnabled:"on", clockPosition:"right", neonColor:"#39d0ff", bgTheme:"cyber", font:"system", shadow:"on", glow:"on"}}, state.hostProfile || {});
     state.hostProfile.talkSettings = Object.assign({clockEnabled:"on", clockPosition:"right", neonColor:"#39d0ff", bgTheme:"cyber", font:"system", shadow:"on", glow:"on"}, state.hostProfile.talkSettings || {});
 
     state.roulette.settings = Object.assign({
@@ -99,122 +99,11 @@
     window.__rouletteShowScreenPatched = true;
   }
 
-  function kanaSortNames(list){
-    return (list || []).slice().sort(function(a,b){
-      return String(a || "").localeCompare(String(b || ""), "ja", {numeric:true, sensitivity:"base"});
-    });
-  }
-
-  function activeListenerNames(){
-    return Array.isArray(state.listeners)
-      ? state.listeners.map(function(l){ return l && l.name; }).filter(Boolean)
-      : [];
-  }
-
-  function syncRouletteGuestsWithRegulars(){
-    ensureRouletteState();
-    const active = new Set(activeListenerNames());
-    const hostName = state.hostProfile && state.hostProfile.name ? state.hostProfile.name : "";
-
-    // 常連メモに存在しないゲストは、ルーレット側の候補・ベットから自動的に消す。
-    state.roulette.guestBetters = Array.from(new Set(state.roulette.guestBetters || [])).filter(function(name){
-      return active.has(name);
-    });
-
-    const validBetters = new Set((hostName ? [hostName] : []).concat(activeListenerNames()));
-    state.roulette.bets = (state.roulette.bets || []).filter(function(b){
-      return b && validBetters.has(b.name);
-    });
-  }
-
   function getBetters(){
     ensureRouletteState();
-    syncRouletteGuestsWithRegulars();
-    const hostName = state.hostProfile && state.hostProfile.name ? state.hostProfile.name : "";
-    const listeners = kanaSortNames(Array.from(new Set(activeListenerNames())).filter(function(name){ return name && name !== hostName; }));
-    return hostName ? [hostName].concat(listeners) : listeners;
-  }
-
-  function normalizeRouletteSearchText(value){
-    const kanjiKanaHints = {
-      "亜":"あ", "阿":"あ", "愛":"あい", "藍":"あい", "青":"あお", "葵":"あおい",
-      "伊":"い", "井":"い", "衣":"い", "宇":"う", "江":"え", "英":"えい", "大":"おお",
-      "加":"か", "香":"か", "花":"か", "華":"か", "神":"かみ", "木":"き", "菊":"きく",
-      "久":"く", "黒":"くろ", "小":"こ", "五":"ご", "佐":"さ", "咲":"さ", "桜":"さくら",
-      "白":"しろ", "鈴":"すず", "瀬":"せ", "高":"たか", "田":"た", "千":"ち", "月":"つき",
-      "中":"なか", "七":"なな", "西":"にし", "野":"の", "橋":"はし", "原":"はら",
-      "東":"ひがし", "藤":"ふじ", "北":"ほく", "星":"ほし", "松":"まつ", "美":"み",
-      "南":"みなみ", "宮":"みや", "村":"むら", "本":"もと", "山":"やま", "雪":"ゆき",
-      "吉":"よし", "良":"りょう", "林":"りん", "和":"わ"
-    };
-    let raw = String(value || "").normalize("NFKC").toLowerCase();
-    raw = raw.replace(/[ァ-ン]/g, function(ch){ return String.fromCharCode(ch.charCodeAt(0) - 0x60); });
-    raw = raw.replace(/\s+/g, "");
-    // SNS名の記号/絵文字/装飾は検索用には飛ばす。
-    try{
-      raw = raw.replace(/[^\p{L}\p{N}ー々〆〤]/gu, "");
-    }catch(e){
-      raw = raw.replace(/[^0-9a-zぁ-んァ-ン一-龯ー々〆〤]/g, "");
-    }
-    let hinted = "";
-    for(let i=0;i<raw.length;i++){
-      const ch = raw[i];
-      hinted += (kanjiKanaHints[ch] || ch);
-    }
-    return hinted;
-  }
-
-  function listenerByNameForSearch(name){
-    return Array.isArray(state.listeners)
-      ? state.listeners.find(function(l){ return l && l.name === name; })
-      : null;
-  }
-
-  function rouletteGuestSearchTokens(name){
-    const parts = [name];
-    if(isHostBetter(name)){
-      const h = state.hostProfile || {};
-      parts.push(h.memo || "");
-      parts.push(h.favoriteThings || "");
-      parts.push(h.hobbies || "");
-      parts.push(h.frequentTopics || "");
-      parts.push(h.streamGenres || "");
-      parts.push(h.ngWords || "");
-      parts.push("枠主 わくぬし 主 配信者");
-    }else{
-      const l = listenerByNameForSearch(name);
-      if(l){
-        parts.push(l.nickname || "");
-        parts.push(l.searchYomi || "");
-        parts.push(l.searchTags || "");
-        if(l.favorites) parts.push(Object.values(l.favorites).join(" "));
-      }
-    }
-    return parts.join(" ").split(/[\s,、，/／・|｜]+/).map(normalizeRouletteSearchText).filter(Boolean);
-  }
-
-  function rouletteGuestMatchesSearch(name, query){
-    const q = normalizeRouletteSearchText(query);
-    if(!q) return true;
-    const tokens = rouletteGuestSearchTokens(name);
-    // 1文字検索は「先頭一致」のみにする。
-    // これで「あ」→アラタ/亜... は出るが、「か」→ミホ のような誤爆を防ぐ。
-    if(q.length <= 1){
-      return tokens.some(function(t){ return t.indexOf(q) === 0; });
-    }
-    return tokens.some(function(t){ return t.indexOf(q) === 0 || t.indexOf(q) >= 0; });
-  }
-
-  function rouletteLastBetSortedNames(names){
-    const base = kanaSortNames(names);
-    const rank = new Map();
-    (state.roulette.bets || []).forEach(function(b, i){ if(b && b.name) rank.set(b.name, i); });
-    return base.sort(function(a,b){
-      const ar = rank.has(a) ? rank.get(a) : -1;
-      const br = rank.has(b) ? rank.get(b) : -1;
-      if(ar !== br) return br - ar;
-      return String(a || "").localeCompare(String(b || ""), "ja", {numeric:true, sensitivity:"base"});
-    });
+    const host = state.hostProfile && state.hostProfile.name ? [state.hostProfile.name] : [];
+    const listeners = Array.isArray(state.listeners) ? state.listeners.map(function(l){ return l.name; }).filter(Boolean) : [];
+    return Array.from(new Set(host.concat(listeners).concat(state.roulette.guestBetters || []))).filter(Boolean);
   }
 
   function addListenerFromRouletteGuest(name){
@@ -222,34 +111,26 @@
     const clean = String(name || "").trim();
     if(!clean) return;
     state.listeners = Array.isArray(state.listeners) ? state.listeners : [];
-    const exists = state.listeners.some(function(l){ return l && l.name === clean; });
+    const exists = state.listeners.some(function(l){ return l && String(l.name).trim() === clean; });
     if(!exists){
       const today = (typeof ymd === "function") ? ymd(new Date()) : new Date().toISOString().slice(0,10);
       state.listeners.push({
-        name:clean,
-        days:[],
-        logboByMonth:{},
-        memo:"ルーレットのゲスト追加から自動登録",
-        penalty:0,
-        registeredDate:today,
-        updatedAt:new Date().toISOString(),
-        birthday:"",
-        searchYomi:"",
-        searchTags:"",
-        rouletteGuest:true
+        name: clean,
+        days: [],
+        logboByMonth: {},
+        memo: "",
+        penalty: 0,
+        registeredDate: today,
+        birthday: "",
+        rouletteGuest: true,
+        topicSeeds: ["ルーレット参加から登録。次に来たら今日の参加ネタを拾える"]
       });
+      if(Array.isArray(state.calendarEvents)){
+        const already = state.calendarEvents.some(function(ev){ return ev.listener === clean && ev.type === "登録日" && ev.date === today; });
+        if(!already) state.calendarEvents.push({id: (typeof uid === "function" ? uid("cal") : "cal_"+Date.now()), date: today, listener: clean, type: "登録日", item: "ルーレット参加から自動登録"});
+      }
     }
-  }
-
-  function removeRouletteGuestEverywhere(name){
-    ensureRouletteState();
-    const clean = String(name || "").trim();
-    if(!clean) return;
-    state.roulette.guestBetters = (state.roulette.guestBetters || []).filter(function(n){ return n !== clean; });
-    state.roulette.bets = (state.roulette.bets || []).filter(function(b){ return b.name !== clean; });
-    if(Array.isArray(state.listeners)){
-      state.listeners = state.listeners.filter(function(l){ return !(l && l.name === clean && l.rouletteGuest === true); });
-    }
+    state.roulette.guestBetters = Array.from(new Set((state.roulette.guestBetters || []).concat([clean])));
   }
 
   function isHostBetter(name){
@@ -381,36 +262,11 @@
     return false;
   }
 
-  function renderRouletteGuestPickerOnly(){
-    const picker = document.getElementById("rouletteGuestPicker");
-    const select = document.getElementById("rouletteBetterSelect");
-    if(!picker) return;
-    syncRouletteGuestsWithRegulars();
-    const q = String(window.__rouletteGuestSearch || "").trim();
-    const sortMode = window.__rouletteGuestSort || "kana";
-    const hostName = state.hostProfile && state.hostProfile.name ? state.hostProfile.name : "";
-    const hostShown = hostName && rouletteGuestMatchesSearch(hostName, q) ? [hostName] : [];
-    let listeners = activeListenerNames().filter(function(name){ return name && name !== hostName; });
-    listeners = Array.from(new Set(listeners));
-    listeners = sortMode === "last" ? rouletteLastBetSortedNames(listeners) : kanaSortNames(listeners);
-    const shownListeners = listeners.filter(function(name){ return rouletteGuestMatchesSearch(name, q); });
-    const hostHtml = hostShown.length ? hostShown.map(function(name){
-      const selected = select && select.value === name;
-      return '<div class="roulette-host-sticky"><button class="roulette-tag host-chip ' + (selected ? 'selected ' : '') + '" data-select-roulette-better="' + esc(name) + '" type="button" style="display:inline-block;margin:2px 4px 2px 0;cursor:pointer">' + esc('★ ' + name + '（枠主）') + '</button></div>';
-    }).join('') : '';
-    const listenerHtml = shownListeners.length ? '<div class="roulette-listener-flow">' + shownListeners.map(function(name){
-      const selected = select && select.value === name;
-      return '<button class="roulette-tag ' + (selected ? 'selected ' : '') + '" data-select-roulette-better="' + esc(name) + '" type="button" style="display:inline-block;margin:2px 4px 2px 0;cursor:pointer">' + esc(name) + '</button>';
-    }).join('') + '</div>' : '';
-    picker.innerHTML = (hostHtml || listenerHtml) ? (hostHtml + listenerHtml) : '<span class="muted">該当なし</span>';
-  }
-
   function renderBetBoard(){
     ensureRouletteState();
     const grid = document.getElementById("rouletteNumberBetGrid");
     const select = document.getElementById("rouletteBetterSelect");
     const list = document.getElementById("rouletteBetList");
-    const guestList = document.getElementById("rouletteGuestList");
 
     if(grid && !grid.dataset.ready){
       grid.innerHTML = Array.from({length:36}, function(_,i){
@@ -431,7 +287,6 @@
           }).join("")
         : '<option value="">登録者なし</option>';
       if(current) select.value = current;
-      if(window.__rouletteSelectedBetter) select.value = window.__rouletteSelectedBetter;
     }
 
     document.querySelectorAll("[data-bet]").forEach(function(cell){
@@ -465,69 +320,7 @@
         return '<div class="roulette-bet-row"><span><b>' + esc(b.name) + '</b> → ' + esc(betLabel(b.bet)) + ' <span class="roulette-tag">' + betOdds(b.bet) + '</span></span><button class="btn danger mini-btn" data-del-bet="' + i + '" type="button">削除</button></div>';
       }).join("") || '<div class="muted">まだベットなし</div>';
     }
-
-    if(guestList){
-      syncRouletteGuestsWithRegulars();
-      const sortMode = window.__rouletteGuestSort || "kana";
-      const allBetters = getBetters();
-
-      // 重要：日本語IME中に検索inputを含むHTMLを描き直すと、
-      // 「か」が「kあ」になる。なので検索欄は初回だけ作り、以後は一覧部分だけ更新する。
-      if(guestList.dataset.imeSafeReady && allBetters.length && !document.getElementById("rouletteGuestPicker")){
-        delete guestList.dataset.imeSafeReady;
-      }
-      if(!guestList.dataset.imeSafeReady){
-        guestList.innerHTML = allBetters.length
-          ? '<div class="roulette-guest-tools" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">'
-            + '<input id="rouletteGuestSearch" placeholder="あ / ア / 亜 でも探せる" style="flex:1;min-width:180px" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">'
-            + '<select id="rouletteGuestSort" style="min-width:140px">'
-            + '<option value="kana">50音順</option>'
-            + '<option value="last">最終ベット順</option>'
-            + '</select>'
-            + '<span class="muted">枠主は常に一番上 / 常連メモ連動</span>'
-            + '</div>'
-            + '<div class="muted">追加済み：</div>'
-            + '<div id="rouletteGuestPicker" class="roulette-guest-picker" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>'
-          : '<div class="muted">ゲスト追加すると常連メモと選択肢に自動追加。常連から削除した人はここにも残らないよ</div>';
-        guestList.dataset.imeSafeReady = "1";
-
-        const guestSearch = document.getElementById("rouletteGuestSearch");
-        if(guestSearch){
-          guestSearch.value = window.__rouletteGuestSearch || "";
-          guestSearch.addEventListener("compositionstart", function(){
-            window.__rouletteGuestSearchComposing = true;
-          });
-          guestSearch.addEventListener("compositionend", function(){
-            window.__rouletteGuestSearchComposing = false;
-            window.__rouletteGuestSearch = this.value;
-            renderRouletteGuestPickerOnly();
-          });
-          guestSearch.addEventListener("input", function(e){
-            window.__rouletteGuestSearch = this.value;
-            if(window.__rouletteGuestSearchComposing || (e && e.isComposing)) return;
-            renderRouletteGuestPickerOnly();
-          });
-          guestSearch.addEventListener("change", function(){
-            window.__rouletteGuestSearch = this.value;
-            renderRouletteGuestPickerOnly();
-          });
-        }
-
-        const guestSort = document.getElementById("rouletteGuestSort");
-        if(guestSort){
-          guestSort.value = sortMode;
-          guestSort.addEventListener("change", function(){
-            window.__rouletteGuestSort = this.value || "kana";
-            renderRouletteGuestPickerOnly();
-          });
-        }
-      }else{
-        const guestSort = document.getElementById("rouletteGuestSort");
-        if(guestSort && guestSort.value !== sortMode) guestSort.value = sortMode;
-      }
-
-      renderRouletteGuestPickerOnly();
-    }  }
+  }
 
   function highlightWinningBets(result){
     document.querySelectorAll("[data-bet]").forEach(function(cell){
@@ -591,17 +384,10 @@
     const status = document.getElementById("hostProfileStatus");
     if(!nameInput || !memoInput || !status) return;
     ensureRouletteState();
-    state.hostProfile = Object.assign({name:"", memo:"", birthday:"", ngWords:"", loveFantasy:false, favoriteThings:"", hobbies:"", frequentTopics:"", streamGenres:"", talkSettings:{clockEnabled:"on", clockPosition:"right", neonColor:"#39d0ff", bgTheme:"cyber", font:"system", shadow:"on", glow:"on"}}, state.hostProfile || {});
+    state.hostProfile = Object.assign({name:"", memo:"", ngWords:"", loveFantasy:false, favoriteThings:"", hobbies:"", frequentTopics:"", streamGenres:"", talkSettings:{clockEnabled:"on", clockPosition:"right", neonColor:"#39d0ff", bgTheme:"cyber", font:"system", shadow:"on", glow:"on"}}, state.hostProfile || {});
     state.hostProfile.talkSettings = Object.assign({clockEnabled:"on", clockPosition:"right", neonColor:"#39d0ff", bgTheme:"cyber", font:"system", shadow:"on", glow:"on"}, state.hostProfile.talkSettings || {});
     nameInput.value = state.hostProfile.name || "";
     memoInput.value = state.hostProfile.memo || "";
-    const hostBd=splitBirthday(state.hostProfile.birthday || "");
-    const hostBirthMonthInput=document.getElementById("hostBirthMonthInput");
-    const hostBirthDayInput=document.getElementById("hostBirthDayInput");
-    if(hostBirthMonthInput) hostBirthMonthInput.value=hostBd.month || "";
-    if(hostBirthDayInput) hostBirthDayInput.value=hostBd.day || "";
-    const hostLeapNote=document.getElementById("hostLeapNote");
-    if(hostLeapNote) hostLeapNote.style.display=isLeapBirthday(state.hostProfile.birthday || "") ? "block" : "none";
     if(ngInput) ngInput.value = state.hostProfile.ngWords || "";
     if(loveInput) loveInput.checked = !!state.hostProfile.loveFantasy;
     const favInput = document.getElementById("hostFavoriteThingsInput");
@@ -623,7 +409,7 @@
     setVal("talkGlowInput", ts.glow || "on");
     const ngCount = String(state.hostProfile.ngWords||"").split(/\n|,/).map(x=>x.trim()).filter(Boolean).length;
     if(state.hostProfile.name){
-      status.innerHTML = '<span class="host-profile-badge">★ ' + esc(state.hostProfile.name) + '</span>' + (state.hostProfile.memo ? '　' + esc(state.hostProfile.memo) : '') + (state.hostProfile.birthday ? '<br><span class="muted">🎂 誕生日 ' + esc(state.hostProfile.birthday) + ' / カレンダー対象</span>' : '') + (ngCount ? '<br><span class="muted">NGワード ' + ngCount + '件 / レスキューに反映</span>' : '') + '<br><span class="muted">レスキュー表示設定：保存済み</span>';
+      status.innerHTML = '<span class="host-profile-badge">★ ' + esc(state.hostProfile.name) + '</span>' + (state.hostProfile.memo ? '　' + esc(state.hostProfile.memo) : '') + (ngCount ? '<br><span class="muted">NGワード ' + ngCount + '件 / レスキューに反映</span>' : '') + '<br><span class="muted">レスキュー表示設定：保存済み</span>';
     }else{
       status.textContent = "未登録";
     }
@@ -654,11 +440,9 @@
       glow: document.getElementById("talkGlowInput")?.value || "on"
     };
     if(!name){ alert("枠主名を入れてｗ"); return; }
-    state.hostProfile = {name:name, memo:memo, birthday:formatBirthday(document.getElementById("hostBirthMonthInput")?.value, document.getElementById("hostBirthDayInput")?.value), ngWords:ngWords, loveFantasy:loveFantasy, favoriteThings:favoriteThings, hobbies:hobbies, frequentTopics:frequentTopics, streamGenres:streamGenres, talkSettings:talkSettings};
+    state.hostProfile = {name:name, memo:memo, ngWords:ngWords, loveFantasy:loveFantasy, favoriteThings:favoriteThings, hobbies:hobbies, frequentTopics:frequentTopics, streamGenres:streamGenres, talkSettings:talkSettings};
     safeSave();
     renderHostProfileSettings();
-    if(typeof renderCalendar==="function") renderCalendar();
-    if(typeof renderHome==="function") renderHome();
     window.renderRoulette();
     alert("枠主情報を保存した！");
   }
@@ -666,11 +450,9 @@
   function clearHostProfileFromSettings(){
     ensureRouletteState();
     if(!confirm("枠主情報を削除する？")) return;
-    state.hostProfile = {name:"", memo:"", birthday:"", ngWords:"", loveFantasy:false, favoriteThings:"", hobbies:"", frequentTopics:"", streamGenres:"", talkSettings:{clockEnabled:"on", clockPosition:"right", neonColor:"#39d0ff", bgTheme:"cyber", font:"system", shadow:"on", glow:"on"}};
+    state.hostProfile = {name:"", memo:"", ngWords:"", loveFantasy:false, favoriteThings:"", hobbies:"", frequentTopics:"", streamGenres:"", talkSettings:{clockEnabled:"on", clockPosition:"right", neonColor:"#39d0ff", bgTheme:"cyber", font:"system", shadow:"on", glow:"on"}};
     safeSave();
     renderHostProfileSettings();
-    if(typeof renderCalendar==="function") renderCalendar();
-    if(typeof renderHome==="function") renderHome();
     window.renderRoulette();
   }
 
@@ -926,11 +708,8 @@
     if(t.id === "rouletteCasinoMode"){
       ensureRouletteState();
       state.roulette.mode = "casino";
-      const resultEl = document.getElementById("rouletteResult");
-      if(resultEl){ resultEl.classList.remove("show"); resultEl.textContent = "READY"; }
       safeSave();
       window.renderRoulette();
-      renderWheel();
       renderZoom("CASINO", "BET PLEASE", false);
       return;
     }
@@ -951,37 +730,14 @@
 
     if(t.id === "addRouletteGuestBetter"){
       ensureRouletteState();
-      const rawName = prompt("ベットに置く名前");
-      const name = rawName ? rawName.trim() : "";
+      const name = prompt("ベットに置く名前");
       if(!name) return;
-      state.roulette.guestBetters = state.roulette.guestBetters || [];
-      if(!state.roulette.guestBetters.includes(name)) state.roulette.guestBetters.push(name);
       addListenerFromRouletteGuest(name);
       safeSave();
       if(typeof renderMemo === "function") renderMemo();
+      if(typeof renderBonus === "function") renderBonus();
+      if(typeof renderCalendar === "function") renderCalendar();
       window.renderRoulette();
-      return;
-    }
-
-    if(t.dataset && t.dataset.delRouletteGuest !== undefined){
-      ensureRouletteState();
-      const name = t.dataset.delRouletteGuest;
-      if(!confirm(name + " をゲスト/常連メモから削除する？")) return;
-      removeRouletteGuestEverywhere(name);
-      safeSave();
-      if(typeof renderMemo === "function") renderMemo();
-      window.renderRoulette();
-      return;
-    }
-
-    if(t.dataset && t.dataset.selectRouletteBetter !== undefined){
-      const select = document.getElementById("rouletteBetterSelect");
-      const name = t.dataset.selectRouletteBetter;
-      if(select){
-        select.value = name;
-        window.__rouletteSelectedBetter = name;
-      }
-      renderBetBoard();
       return;
     }
 
@@ -1010,12 +766,6 @@
       const name = select && select.value ? select.value : "";
       if(!name){
         alert("先に登録者かゲスト名を選んでｗ");
-        return;
-      }
-
-      if((state.roulette.bets || []).some(function(b){ return b.bet === bet; })){
-        playAudio("seRoulettePolice", true);
-        alert("この種類にはもうベット済み！1種類につき1ベットまでだよｗ");
         return;
       }
 
