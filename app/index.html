@@ -3378,6 +3378,16 @@ function fitBrushText(text){
     </section>
 
     <section id="memo" class="screen">
+      <div class="regular-toolbar" id="regularMemoToolbar">
+        <button class="btn primary" id="regularMemoAddListener" type="button">＋ 常連追加</button>
+        <input id="regularMemoSearch" placeholder="常連検索" style="flex:1;min-width:180px">
+        <select id="regularMemoSort">
+          <option value="updated">最終更新日順</option>
+          <option value="kana">50音順</option>
+          <option value="recent">最近追加</option>
+          <option value="birthday">誕生日近い順</option>
+        </select>
+      </div>
       <div class="grid" id="memoGrid"></div>
     </section>
 
@@ -9251,27 +9261,35 @@ const firebaseConfig = { ... }
   function listenerSortKey(l){ return regularSearchNormalize(String((l && (l.searchYomi || l.kana || l.name)) || "")); }
   function ensureRegularToolbar(){
     const grid=document.getElementById("memoGrid");
-    if(!grid || document.getElementById("regularMemoToolbar")) return;
-    const bar=document.createElement("div");
-    bar.id="regularMemoToolbar";
-    bar.className="regular-toolbar";
-    bar.innerHTML=''
-      + '<button class="btn primary" id="regularMemoAddListener" type="button">＋ 常連追加</button>'
-      + '<input id="regularMemoSearch" placeholder="常連検索" style="flex:1;min-width:180px">'
-      + '<select id="regularMemoSort">'
-      + '<option value="updated">最終更新日順</option>'
-      + '<option value="kana">50音順</option>'
-      + '<option value="recent">最近追加</option>'
-      + '<option value="birthday">誕生日近い順</option>'
-      + '</select>';
-    const addBtn=document.getElementById("regularMemoAddListener");
+    if(!grid) return;
+    let bar=document.getElementById("regularMemoToolbar");
+    if(!bar){
+      bar=document.createElement("div");
+      bar.id="regularMemoToolbar";
+      bar.className="regular-toolbar";
+      bar.innerHTML=''
+        + '<button class="btn primary" id="regularMemoAddListener" type="button">＋ 常連追加</button>'
+        + '<input id="regularMemoSearch" placeholder="常連検索" style="flex:1;min-width:180px">'
+        + '<select id="regularMemoSort">'
+        + '<option value="updated">最終更新日順</option>'
+        + '<option value="kana">50音順</option>'
+        + '<option value="recent">最近追加</option>'
+        + '<option value="birthday">誕生日近い順</option>'
+        + '</select>';
+      grid.parentNode.insertBefore(bar, grid);
+    }
+
+    const addBtn=bar.querySelector("#regularMemoAddListener");
+    const searchInput=bar.querySelector("#regularMemoSearch");
+    const sortSelect=bar.querySelector("#regularMemoSort");
+
     if(addBtn){
       addBtn.onclick=function(){
         const raw=prompt("常連名", "新しい常連");
         const name=String(raw||"").trim();
         if(!name) return;
         state.listeners=state.listeners||[];
-        const today=todayYmd();
+        const today=(typeof todayYmd==="function") ? todayYmd() : (typeof ymd==="function" ? ymd(new Date()) : new Date().toISOString().slice(0,10));
         const listener={
           name:name,
           days:[],
@@ -9298,22 +9316,35 @@ const firebaseConfig = { ... }
           state.roulette.guestBetters=state.roulette.guestBetters||[];
           if(!state.roulette.guestBetters.includes(name)) state.roulette.guestBetters.push(name);
         }
+        window.__regularMemoSearch="";
+        window.__regularMemoSort="kana";
+        if(searchInput) searchInput.value="";
+        if(sortSelect) sortSelect.value="kana";
         try{ save(); }catch(e){}
         try{ renderBonus(); }catch(e){}
         try{ renderCalendar(); }catch(e){}
         try{ renderRoulette(); }catch(e){}
-        window.__regularMemoSearch="";
         try{ renderMemo(); }catch(e){}
         if(typeof openListenerDetail==="function") openListenerDetail(newIndex);
       };
     }
-    grid.parentNode.insertBefore(bar, grid);
-    regularMemoSearch.value = window.__regularMemoSearch || "";
-    regularMemoSearch.addEventListener("compositionstart", function(){ window.__regularMemoSearchComposing=true; });
-    regularMemoSearch.addEventListener("compositionend", function(){ window.__regularMemoSearchComposing=false; window.__regularMemoSearch=this.value; renderMemo(); });
-    regularMemoSearch.addEventListener("input", function(e){ window.__regularMemoSearch=this.value; if(window.__regularMemoSearchComposing || (e && e.isComposing)) return; renderMemo(); });
-    regularMemoSort.value = window.__regularMemoSort || "updated";
-    regularMemoSort.addEventListener("change", function(){ window.__regularMemoSort=this.value; renderMemo(); });
+
+    if(searchInput && !searchInput.dataset.regularBound){
+      searchInput.dataset.regularBound="1";
+      searchInput.value = window.__regularMemoSearch || "";
+      searchInput.addEventListener("compositionstart", function(){ window.__regularMemoSearchComposing=true; });
+      searchInput.addEventListener("compositionend", function(){ window.__regularMemoSearchComposing=false; window.__regularMemoSearch=this.value; renderMemo(); });
+      searchInput.addEventListener("input", function(e){ window.__regularMemoSearch=this.value; if(window.__regularMemoSearchComposing || (e && e.isComposing)) return; renderMemo(); });
+    }else if(searchInput){
+      searchInput.value = window.__regularMemoSearch || "";
+    }
+    if(sortSelect && !sortSelect.dataset.regularBound){
+      sortSelect.dataset.regularBound="1";
+      sortSelect.value = window.__regularMemoSort || "updated";
+      sortSelect.addEventListener("change", function(){ window.__regularMemoSort=this.value; renderMemo(); });
+    }else if(sortSelect){
+      sortSelect.value = window.__regularMemoSort || "updated";
+    }
   }
   function daysUntilBirthday(l){
     if(!l || !l.birthday) return 99999;
