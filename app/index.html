@@ -2666,6 +2666,60 @@ function fitBrushText(text){
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
+
+<style id="obsNineSlotLayoutStyle">
+.obs-nine-slot-layout{
+  margin:16px 0;
+  padding:16px;
+  border-radius:18px;
+  background:rgba(20,20,24,.92);
+  border:1px solid rgba(255,255,255,.12);
+}
+.obs-nine-slot-layout h3{margin:0 0 6px;font-size:20px}
+.obs-nine-help{margin:0 0 12px;opacity:.75}
+.obs-nine-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.obs-nine-grid label{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  padding:10px;
+  border-radius:14px;
+  background:rgba(255,255,255,.06);
+  font-weight:700;
+}
+.obs-nine-grid select{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.18);
+  background:#111;
+  color:#fff;
+}
+.obs-row-merge-box{
+  margin-top:12px;
+  display:grid;
+  gap:8px;
+}
+.obs-row-merge{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:12px;
+  padding:10px;
+  border-radius:12px;
+  background:rgba(255,255,255,.05);
+}
+.obs-row-merge label{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+</style>
+
 </head>
 <body>
   <div class="app">
@@ -3813,6 +3867,45 @@ function fitBrushText(text){
         <div class="row" style="justify-content:space-between;align-items:flex-start">
           <div>
             <h2 style="margin:0">🖥 OBSオーバーレイ設定</h2>
+
+<section id="obsNineSlotLayoutPanel" class="obs-nine-slot-layout">
+  <h3>OBS表示配置</h3>
+  <p class="obs-nine-help">3×3の各位置に表示内容を割り当てます。</p>
+
+  <div class="obs-nine-grid">
+    <label>左上<select id="obsSlotTopLeft" data-obs-slot="topLeft"></select></label>
+    <label>上中央<select id="obsSlotTopCenter" data-obs-slot="topCenter"></select></label>
+    <label>右上<select id="obsSlotTopRight" data-obs-slot="topRight"></select></label>
+
+    <label>左<select id="obsSlotMidLeft" data-obs-slot="midLeft"></select></label>
+    <label>中央<select id="obsSlotMidCenter" data-obs-slot="midCenter"></select></label>
+    <label>右<select id="obsSlotMidRight" data-obs-slot="midRight"></select></label>
+
+    <label>左下<select id="obsSlotBottomLeft" data-obs-slot="bottomLeft"></select></label>
+    <label>下中央<select id="obsSlotBottomCenter" data-obs-slot="bottomCenter"></select></label>
+    <label>右下<select id="obsSlotBottomRight" data-obs-slot="bottomRight"></select></label>
+  </div>
+
+  <div class="obs-row-merge-box">
+    <div class="obs-row-merge">
+      <strong>上段</strong>
+      <label><input type="checkbox" id="obsMergeTopLeft"> 左を結合</label>
+      <label><input type="checkbox" id="obsMergeTopRight"> 右を結合</label>
+    </div>
+    <div class="obs-row-merge">
+      <strong>中段</strong>
+      <label><input type="checkbox" id="obsMergeMidLeft"> 左を結合</label>
+      <label><input type="checkbox" id="obsMergeMidRight"> 右を結合</label>
+    </div>
+    <div class="obs-row-merge">
+      <strong>下段</strong>
+      <label><input type="checkbox" id="obsMergeBottomLeft"> 左を結合</label>
+      <label><input type="checkbox" id="obsMergeBottomRight"> 右を結合</label>
+    </div>
+  </div>
+</section>
+
+
             <p class="muted">左・中央・右の3スロットへ、好きな表示パーツを割り当てる方式。キャラ位置やコメント欄に合わせて自由に組める。</p>
           </div>
           <button class="btn primary" id="obsOpenOverlay" type="button">オーバーレイを別タブで開く</button>
@@ -9711,19 +9804,62 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 </script>
 
 
-<div style="padding:12px;margin:12px 0;background:#222;border-radius:12px">
-<a href="../obs_editor/index.html" style="font-size:24px;color:#00d2ff;text-decoration:none">
-OBSセル結合エディタ
-</a>
-</div>
 
+<script id="obsNineSlotLayoutScript">
+(function(){
+  const options = ["空白","幹","枝","葉","お知らせ","カレンダー","常連メモ","コメント枠","時計","テロップ","ルーレット結果","カウントダウン","枠のみ"];
+  const slotKeys = ["topLeft","topCenter","topRight","midLeft","midCenter","midRight","bottomLeft","bottomCenter","bottomRight"];
+  const mergeKeys = ["TopLeft","TopRight","MidLeft","MidRight","BottomLeft","BottomRight"];
 
-<div style="margin:14px 0;padding:16px;background:#1f1f1f;border-radius:16px">
-<a href="./obs_editor/index.html"
-style="color:#00d2ff;font-size:24px;text-decoration:none;font-weight:bold;">
-OBSセル結合型レイアウトエディタ
-</a>
-</div>
+  function load(){
+    try{
+      return JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || "{}");
+    }catch(e){
+      return {};
+    }
+  }
+
+  function save(){
+    const data = { slots:{}, merge:{} };
+    document.querySelectorAll("[data-obs-slot]").forEach(sel=>{
+      data.slots[sel.dataset.obsSlot] = sel.value;
+    });
+    mergeKeys.forEach(k=>{
+      const el = document.getElementById("obsMerge"+k);
+      if(el) data.merge[k] = el.checked;
+    });
+    localStorage.setItem("ss_obs_9slot_layout", JSON.stringify(data));
+  }
+
+  function init(){
+    const data = load();
+
+    document.querySelectorAll("[data-obs-slot]").forEach(sel=>{
+      if(sel.dataset.ready === "1") return;
+      sel.innerHTML = options.map(v=>`<option value="${v}">${v}</option>`).join("");
+      sel.value = (data.slots && data.slots[sel.dataset.obsSlot]) || "空白";
+      sel.addEventListener("change", save);
+      sel.dataset.ready = "1";
+    });
+
+    mergeKeys.forEach(k=>{
+      const el = document.getElementById("obsMerge"+k);
+      if(!el || el.dataset.ready === "1") return;
+      el.checked = !!(data.merge && data.merge[k]);
+      el.addEventListener("change", save);
+      el.dataset.ready = "1";
+    });
+
+    save();
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", init);
+  }else{
+    init();
+  }
+})();
+</script>
 
 </body>
 </html>
