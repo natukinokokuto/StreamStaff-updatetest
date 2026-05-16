@@ -9946,24 +9946,53 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     el.style.setProperty("--obs-text-color", c.text || "#ffffff");
   }
 
-  function renderPreview(data){
+  
+function renderPreview(data){
     const grid = document.getElementById("obsPreviewGrid");
     if(!grid) return;
+
     const c = data.colors || {};
-    grid.style.background = c.bg || "rgba(0,0,0,.25)";
+    grid.style.background = c.bg || "#000000";
     grid.innerHTML = "";
-    slots.forEach(([key,label])=>{
+
+    const slotMap = {
+      topLeft:"左上",topCenter:"上中央",topRight:"右上",
+      midLeft:"左",midCenter:"中央",midRight:"右",
+      bottomLeft:"左下",bottomCenter:"下中央",bottomRight:"右下"
+    };
+
+    slots.forEach(([key])=>{
       const value = (data.slots && data.slots[key]) || "空白";
+
       const cell = document.createElement("div");
       cell.className = "obs-preview-cell";
+
       if(value === "空白"){
         cell.classList.add("empty");
       }
+
       applyColors(cell, data);
-      cell.textContent = labelFor(value, data);
+
+      let display = labelFor(value, data);
+
+      if(value === "コメント枠"){
+        display = "コメント\nコメント\nコメント";
+      }
+
+      if(value === "幹"){
+        display = "雑談テーマ";
+      }
+
+      if(value === "枠のみ"){
+        display = "";
+      }
+
+      cell.innerHTML = '<div style="white-space:pre-line">'+display+'</div>';
+
       grid.appendChild(cell);
     });
   }
+
 
   function init(){
     const data = load();
