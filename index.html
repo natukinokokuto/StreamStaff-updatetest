@@ -9994,23 +9994,52 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     return value;
   }
 
+
   function buildLayout(data){
     const m = data.merge || {};
-    const items = [
-      {key:"topLeft", row:1, col:1, rowSpan:1, colSpan:m.obsMergeTopLeft ? 2 : 1, hide:false},
-      {key:"topCenter", row:1, col:2, rowSpan:1, colSpan:1, hide:!!m.obsMergeTopLeft || !!m.obsMergeTopRight},
-      {key:"topRight", row:1, col:m.obsMergeTopRight ? 2 : 3, rowSpan:1, colSpan:m.obsMergeTopRight ? 2 : 1, hide:false},
 
-      {key:"midLeft", row:2, col:1, rowSpan:1, colSpan:m.obsMergeMidLeft ? 2 : 1, hide:false},
-      {key:"midCenter", row:2, col:2, rowSpan:1, colSpan:1, hide:!!m.obsMergeMidLeft || !!m.obsMergeMidRight},
-      {key:"midRight", row:2, col:m.obsMergeMidRight ? 2 : 3, rowSpan:1, colSpan:m.obsMergeMidRight ? 2 : 1, hide:false},
+    function row(prefix, rowNum){
+      const leftKey = prefix + "Left";
+      const centerKey = prefix + "Center";
+      const rightKey = prefix + "Right";
 
-      {key:"bottomLeft", row:3, col:1, rowSpan:1, colSpan:m.obsMergeBottomLeft ? 2 : 1, hide:false},
-      {key:"bottomCenter", row:3, col:2, rowSpan:1, colSpan:1, hide:!!m.obsMergeBottomLeft || !!m.obsMergeBottomRight},
-      {key:"bottomRight", row:3, col:m.obsMergeBottomRight ? 2 : 3, rowSpan:1, colSpan:m.obsMergeBottomRight ? 2 : 1, hide:false}
+      const mergeLeft = !!m["obsMerge" + prefix[0].toUpperCase() + prefix.slice(1) + "Left"];
+      const mergeRight = !!m["obsMerge" + prefix[0].toUpperCase() + prefix.slice(1) + "Right"];
+
+      if(mergeLeft && mergeRight){
+        return [
+          {key:leftKey, row:rowNum, col:1, rowSpan:1, colSpan:3, hide:false}
+        ];
+      }
+
+      if(mergeLeft){
+        return [
+          {key:leftKey, row:rowNum, col:1, rowSpan:1, colSpan:2, hide:false},
+          {key:rightKey, row:rowNum, col:3, rowSpan:1, colSpan:1, hide:false}
+        ];
+      }
+
+      if(mergeRight){
+        return [
+          {key:leftKey, row:rowNum, col:1, rowSpan:1, colSpan:1, hide:false},
+          {key:centerKey, row:rowNum, col:2, rowSpan:1, colSpan:2, hide:false}
+        ];
+      }
+
+      return [
+        {key:leftKey, row:rowNum, col:1, rowSpan:1, colSpan:1, hide:false},
+        {key:centerKey, row:rowNum, col:2, rowSpan:1, colSpan:1, hide:false},
+        {key:rightKey, row:rowNum, col:3, rowSpan:1, colSpan:1, hide:false}
+      ];
+    }
+
+    return [
+      ...row("top", 1),
+      ...row("mid", 2),
+      ...row("bottom", 3)
     ];
-    return items.filter(x=>!x.hide);
   }
+
 
   function applyColors(el, data){
     const c = data.colors || {};
@@ -10030,8 +10059,8 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
       const value = (data.slots && data.slots[item.key]) || "空白";
       const cell = document.createElement("div");
       cell.className = "obs-preview-cell";
-      cell.style.gridRow = item.row + " / span " + item.rowSpan;
-      cell.style.gridColumn = item.col + " / span " + item.colSpan;
+      cell.style.gridRow = item.row + " / span " + (item.rowSpan || 1);
+      cell.style.gridColumn = item.col + " / span " + (item.colSpan || 1);
 
       if(item.colSpan > 1) cell.classList.add("merged");
       if(item.row === 1) cell.classList.add("topbar");

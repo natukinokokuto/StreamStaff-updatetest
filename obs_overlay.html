@@ -98,19 +98,46 @@ function labelFor(value,data){
 
 function layoutItems(data){
  const m = data.merge || {};
+
+ function row(prefix,rowNum){
+   const leftKey = prefix+"Left";
+   const centerKey = prefix+"Center";
+   const rightKey = prefix+"Right";
+
+   const cap = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+   const mergeLeft = !!m["obsMerge"+cap+"Left"];
+   const mergeRight = !!m["obsMerge"+cap+"Right"];
+
+   if(mergeLeft && mergeRight){
+     return [{key:leftKey,row:rowNum,col:1,colSpan:3}];
+   }
+
+   if(mergeLeft){
+     return [
+       {key:leftKey,row:rowNum,col:1,colSpan:2},
+       {key:rightKey,row:rowNum,col:3,colSpan:1}
+     ];
+   }
+
+   if(mergeRight){
+     return [
+       {key:leftKey,row:rowNum,col:1,colSpan:1},
+       {key:centerKey,row:rowNum,col:2,colSpan:2}
+     ];
+   }
+
+   return [
+     {key:leftKey,row:rowNum,col:1,colSpan:1},
+     {key:centerKey,row:rowNum,col:2,colSpan:1},
+     {key:rightKey,row:rowNum,col:3,colSpan:1}
+   ];
+ }
+
  return [
-  {key:"topLeft", row:1, col:1, colSpan:m.obsMergeTopLeft ? 2 : 1, hide:false},
-  {key:"topCenter", row:1, col:2, colSpan:1, hide:!!m.obsMergeTopLeft || !!m.obsMergeTopRight},
-  {key:"topRight", row:1, col:m.obsMergeTopRight ? 2 : 3, colSpan:m.obsMergeTopRight ? 2 : 1, hide:false},
-
-  {key:"midLeft", row:2, col:1, colSpan:m.obsMergeMidLeft ? 2 : 1, hide:false},
-  {key:"midCenter", row:2, col:2, colSpan:1, hide:!!m.obsMergeMidLeft || !!m.obsMergeMidRight},
-  {key:"midRight", row:2, col:m.obsMergeMidRight ? 2 : 3, colSpan:m.obsMergeMidRight ? 2 : 1, hide:false},
-
-  {key:"bottomLeft", row:3, col:1, colSpan:m.obsMergeBottomLeft ? 2 : 1, hide:false},
-  {key:"bottomCenter", row:3, col:2, colSpan:1, hide:!!m.obsMergeBottomLeft || !!m.obsMergeBottomRight},
-  {key:"bottomRight", row:3, col:m.obsMergeBottomRight ? 2 : 3, colSpan:m.obsMergeBottomRight ? 2 : 1, hide:false}
- ].filter(x=>!x.hide);
+   ...row("top",1),
+   ...row("mid",2),
+   ...row("bottom",3)
+ ];
 }
 
 function render(){
@@ -147,7 +174,9 @@ function render(){
 }
 
 window.addEventListener("storage", render);
-setInterval(render,1000);
+window.addEventListener("focus", render);
+document.addEventListener("visibilitychange", render);
+setInterval(render,500);
 render();
 </script>
 </body>
