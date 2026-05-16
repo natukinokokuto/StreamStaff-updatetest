@@ -115,23 +115,14 @@ function layoutItems(data){
  return [...row("top",1),...row("mid",2),...row("bottom",3)];
 }
 
-function makeMarquee(text){
- const wrap = document.createElement("div");
- wrap.className = "ticker-marquee";
- const track = document.createElement("div");
- track.className = "ticker-track";
- const item = document.createElement("span");
- item.className = "ticker-item";
- item.textContent = text;
- track.appendChild(item);
- wrap.appendChild(track);
- return wrap;
-}
-
 function render(){
  const data = load();
  const overlay = document.getElementById("overlay");
+ const tickerTrack = document.getElementById("globalTickerTrack");
+ const tickerLayer = document.getElementById("globalTickerLayer");
  overlay.innerHTML = "";
+ let globalTickerText = "";
+
  const c = data.colors || {};
  document.body.style.background = c.bg || "transparent";
 
@@ -146,15 +137,33 @@ function render(){
    div.style.background = c.panel || "rgba(0,0,0,.35)";
    div.style.border = "2px solid " + (c.frame || "#555");
    div.style.color = c.text || "#fff";
+
    if(value==="空白") div.classList.add("empty");
    const text = labelFor(value,data);
+
    if(item.row === 3 && value.indexOf("テロップ文") >= 0 && text && data.tickerScroll !== false){
-     div.appendChild(makeMarquee(text));
+     globalTickerText = text;
+     const mask = document.createElement("span");
+     mask.className = "ticker-mask-text";
+     mask.textContent = text;
+     div.appendChild(mask);
    }else{
      div.textContent = text;
    }
    overlay.appendChild(div);
  });
+
+ if(globalTickerText && data.tickerScroll !== false){
+   tickerLayer.style.display = "block";
+   tickerTrack.textContent = globalTickerText;
+   tickerTrack.style.color = c.text || "#fff";
+   tickerTrack.style.animation = "none";
+   void tickerTrack.offsetWidth;
+   tickerTrack.style.animation = "globalTickerMove 14s linear infinite";
+ }else{
+   tickerLayer.style.display = "none";
+   tickerTrack.textContent = "";
+ }
 }
 
 window.addEventListener("storage", render);

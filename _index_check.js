@@ -5609,17 +5609,12 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
   }
 
   function makeMarquee(text){
-    const wrap = document.createElement("div");
-    wrap.className = "ticker-marquee";
-    const track = document.createElement("div");
-    track.className = "ticker-track";
-    const a = document.createElement("span");
-    a.className = "ticker-item";
-    a.textContent = text;
-    track.appendChild(a);
-    wrap.appendChild(track);
-    return wrap;
+    const span = document.createElement("span");
+    span.className = "ticker-mask-text";
+    span.textContent = text;
+    return span;
   }
+
 
   function renderPreview(data){
     const grid = document.getElementById("obsPreviewGrid");
@@ -5627,6 +5622,8 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     const c = data.colors || {};
     grid.style.background = c.bg || "#000000";
     grid.innerHTML = "";
+
+    let globalTickerText = "";
 
     buildLayout(data).forEach(item=>{
       const value = (data.slots && data.slots[item.key]) || "空白";
@@ -5644,7 +5641,9 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
       }else{
         applyColors(cell, data);
         const text = labelFor(value, data);
+
         if(item.row === 3 && value.indexOf("テロップ文") >= 0 && text && data.tickerScroll){
+          globalTickerText = text;
           cell.appendChild(makeMarquee(text));
         }else{
           cell.textContent = text;
@@ -5654,7 +5653,19 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
       if(value === "枠のみ") cell.textContent = "";
       grid.appendChild(cell);
     });
+
+    if(globalTickerText && data.tickerScroll){
+      const layer = document.createElement("div");
+      layer.className = "obs-preview-global-ticker";
+      const track = document.createElement("div");
+      track.className = "obs-preview-global-ticker-track";
+      track.textContent = globalTickerText;
+      track.style.color = (data.colors && data.colors.text) || "#ffffff";
+      layer.appendChild(track);
+      grid.appendChild(layer);
+    }
   }
+
 
   function init(){
     const data = load();
