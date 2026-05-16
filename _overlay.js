@@ -109,11 +109,7 @@ function makeMarquee(text){
  const a = document.createElement("span");
  a.className = "ticker-item";
  a.textContent = text;
- const b = document.createElement("span");
- b.className = "ticker-item";
- b.textContent = text;
  track.appendChild(a);
- track.appendChild(b);
  wrap.appendChild(track);
  return wrap;
 }
