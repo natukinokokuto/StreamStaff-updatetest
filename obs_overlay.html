@@ -17,6 +17,27 @@
   .safe{width:100%;height:100%;border:2px dashed rgba(255,255,255,.38);border-radius:34px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:calc(clamp(22px,2vw,40px) * var(--scale));font-weight:950;color:rgba(255,255,255,.48);background:rgba(0,0,0,.08)}
   .label{font-size:calc(15px * var(--scale));color:#bae6fd;font-weight:950;letter-spacing:.08em}.text{font-size:calc(clamp(22px,1.8vw,36px) * var(--scale));font-weight:950;line-height:1.25;white-space:pre-wrap;word-break:break-word}.muted{font-size:calc(16px * var(--scale));color:#dbeafe;line-height:1.55;white-space:pre-wrap}.single{font-size:calc(clamp(28px,2.8vw,54px) * var(--scale));font-weight:950;line-height:1.2}.bottom{position:absolute;left:30px;right:30px;bottom:26px;display:flex;gap:14px;align-items:center;padding:14px 20px;border-radius:22px;background:var(--panel);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(8px);font-size:calc(clamp(18px,1.7vw,32px) * var(--scale));font-weight:900}.bottom .tag{color:#bae6fd}.bottom .ticker{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.guide .slot{outline:1px dashed rgba(255,255,255,.28);outline-offset:6px;border-radius:30px}
 </style>
+
+<style>
+.obs-preview-grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:8px;
+margin-top:10px;
+}
+.obs-preview-cell{
+min-height:80px;
+background:#222;
+border:2px solid #555;
+border-radius:12px;
+display:flex;
+align-items:center;
+justify-content:center;
+color:#fff;
+padding:8px;
+text-align:center;
+}
+</style>
 </head>
 <body>
 <div class="overlay" id="overlay">
@@ -64,6 +85,46 @@ function render(){
 }
 function tick(){const d=new Date(); const txt=d.getFullYear()+'/'+pad(d.getMonth()+1)+'/'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); clock.textContent=txt; const inline=document.getElementById('inlineClock'); if(inline)inline.textContent=txt;}
 render(); setInterval(()=>{render();tick()},1000); window.addEventListener('storage',render);
+</script>
+
+<script>
+(function(){
+function render(){
+ const data = JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || '{"slots":{}}');
+ const root = document.body;
+ root.innerHTML = "";
+
+ const wrap = document.createElement("div");
+ wrap.style.display = "grid";
+ wrap.style.gridTemplateColumns = "repeat(3,1fr)";
+ wrap.style.gap = "8px";
+
+ const keys = [
+ "topLeft","topCenter","topRight",
+ "midLeft","midCenter","midRight",
+ "bottomLeft","bottomCenter","bottomRight"
+ ];
+
+ keys.forEach(k=>{
+   const d = document.createElement("div");
+   d.style.minHeight = "120px";
+   d.style.background = "#222";
+   d.style.border = "2px solid #555";
+   d.style.borderRadius = "12px";
+   d.style.display = "flex";
+   d.style.alignItems = "center";
+   d.style.justifyContent = "center";
+   d.style.color = "#fff";
+   d.textContent = (data.slots && data.slots[k]) || "空白";
+   wrap.appendChild(d);
+ });
+
+ root.appendChild(wrap);
+}
+
+window.addEventListener("storage", render);
+render();
+})();
 </script>
 </body>
 </html>

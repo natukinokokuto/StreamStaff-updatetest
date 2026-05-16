@@ -2783,6 +2783,11 @@ function fitBrushText(text){
     
 
 
+
+<div id="obsPreviewWrap" style="margin-top:20px">
+<h3>プレビュー</h3>
+<div id="obsPreviewGrid" class="obs-preview-grid"></div>
+</div>
 </section>
 
     <section id="games" class="screen">
@@ -3914,34 +3919,7 @@ function fitBrushText(text){
           <div>
             <div class="grid">
               <label>画面タイトル<input id="obsTitle" placeholder="例：雑談配信中"></label>
-              <label>テーマ色<input id="obsAccent" type="color" value="#38bdf8"></label>
-              <label>背景の濃さ<select id="obsBgAlpha"><option value="0.10">かなり薄め</option><option value="0.18">薄め</option><option value="0.28">普通</option><option value="0.45">濃いめ</option></select></label>
-              <label>全体フォントサイズ<select id="obsFontScale"><option value="0.9">小さめ</option><option value="1">普通</option><option value="1.15">大きめ</option><option value="1.3">特大</option></select></label>
-            </div>
-
-            <h3>スロット割り当て</h3>
-            <div class="grid">
-              <label>左側<select id="obsSlotLeft"></select></label>
-              <label>中央<select id="obsSlotCenter"></select></label>
-              <label>右側<select id="obsSlotRight"></select></label>
-            </div>
-            <div class="obs-mini-note" style="margin-top:8px">
-              例：左=枠のみ / 中央=なし / 右=幹・枝・葉。キャラを中央に置くなら中央を「なし」か「キャラ安全地帯」にすると見やすい。
-            </div>
-
-            <h3>追加表示</h3>
-            <div class="grid">
-              <label><input id="obsShowTitle" type="checkbox" style="width:auto"> タイトルを表示</label>
-              <label><input id="obsShowClock" type="checkbox" style="width:auto"> 時計を表示</label>
-              <label><input id="obsShowBottomTicker" type="checkbox" style="width:auto"> 下帯テロップを表示</label>
-              <label><input id="obsShowGuide" type="checkbox" style="width:auto"> 位置ガイド枠を表示</label>
-            </div>
-
-            <h3>テロップ文</h3>
-            <textarea id="obsTickerText" rows="2" placeholder="例：初見さん歓迎 / コメント拾います / 今日のテーマ募集中"></textarea>
-
-            <h3>OBS用URL</h3>
-            <div class="obs-urlbox" id="obsUrlBox">未生成</div>
+              <labelUrlBox">未生成</div>
             <div class="row" style="margin-top:12px">
               <button class="btn primary" id="obsSaveSettings" type="button">OBS設定を保存</button>
               <button class="btn" id="obsCopyUrl" type="button">URLコピー</button>
@@ -9806,82 +9784,70 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 
 
 
+
 <script id="obsNineSlotLayoutScript">
 (function(){
-  const baseOptions = ["空白","幹","枝","葉","お知らせ","カレンダー","常連メモ","コメント枠","ルーレット結果","カウントダウン","枠のみ"];
-  const topOptions = ["空白","タイトル","時計","タイトル＋時計","幹","お知らせ","枠のみ"];
-  const midOptions = ["空白","幹","枝","葉","コメント枠","常連メモ","カレンダー","ルーレット結果","枠のみ"];
-  const bottomOptions = ["空白","テロップ文","テロップ文＋時計","お知らせ","カウントダウン","枠のみ"];
 
-  const optionMap = {
-    topLeft: topOptions,
-    topCenter: topOptions,
-    topRight: topOptions,
-    midLeft: midOptions,
-    midCenter: midOptions,
-    midRight: midOptions,
-    bottomLeft: bottomOptions,
-    bottomCenter: bottomOptions,
-    bottomRight: bottomOptions
-  };
+const slotNames = [
+"topLeft","topCenter","topRight",
+"midLeft","midCenter","midRight",
+"bottomLeft","bottomCenter","bottomRight"
+];
 
-  const mergeKeys = ["TopLeft","TopRight","MidLeft","MidRight","BottomLeft","BottomRight"];
+function renderPreview(data){
+  const grid = document.getElementById("obsPreviewGrid");
+  if(!grid) return;
 
-  function load(){
-    try{
-      return JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || "{}");
-    }catch(e){
-      return {};
-    }
-  }
+  grid.innerHTML = "";
 
-  function save(){
-    const data = { slots:{}, merge:{} };
-    document.querySelectorAll("[data-obs-slot]").forEach(sel=>{
-      data.slots[sel.dataset.obsSlot] = sel.value;
-    });
-    mergeKeys.forEach(k=>{
-      const el = document.getElementById("obsMerge"+k);
-      if(el) data.merge[k] = el.checked;
-    });
-    localStorage.setItem("ss_obs_9slot_layout", JSON.stringify(data));
-  }
+  slotNames.forEach(key=>{
+    const div = document.createElement("div");
+    div.className = "obs-preview-cell";
+    div.textContent = (data.slots && data.slots[key]) || "空白";
+    grid.appendChild(div);
+  });
+}
 
-  function init(){
-    const data = load();
+function save(){
+  const data = {slots:{}, merge:{}};
 
-    document.querySelectorAll("[data-obs-slot]").forEach(sel=>{
-      const key = sel.dataset.obsSlot;
-      const options = optionMap[key] || baseOptions;
-      const prev = data.slots && data.slots[key];
+  document.querySelectorAll("[data-obs-slot]").forEach(sel=>{
+    data.slots[sel.dataset.obsSlot] = sel.value;
+  });
 
-      sel.innerHTML = options.map(v=>`<option value="${v}">${v}</option>`).join("");
-      sel.value = options.includes(prev) ? prev : "空白";
+  document.querySelectorAll("input[type='checkbox'][id^='obsMerge']").forEach(ch=>{
+    data.merge[ch.id] = ch.checked;
+  });
 
-      if(sel.dataset.ready !== "1"){
-        sel.addEventListener("change", save);
-        sel.dataset.ready = "1";
-      }
-    });
+  localStorage.setItem("ss_obs_9slot_layout", JSON.stringify(data));
 
-    mergeKeys.forEach(k=>{
-      const el = document.getElementById("obsMerge"+k);
-      if(!el || el.dataset.ready === "1") return;
-      el.checked = !!(data.merge && data.merge[k]);
-      el.addEventListener("change", save);
-      el.dataset.ready = "1";
-    });
+  renderPreview(data);
+}
 
-    save();
-  }
+function init(){
+  document.querySelectorAll("[data-obs-slot]").forEach(sel=>{
+    sel.addEventListener("change", save);
+  });
 
-  if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", init);
-  }else{
-    init();
-  }
+  document.querySelectorAll("input[type='checkbox'][id^='obsMerge']").forEach(ch=>{
+    ch.addEventListener("change", save);
+  });
+
+  const current = JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || '{"slots":{}}');
+  renderPreview(current);
+
+  save();
+}
+
+if(document.readyState === "loading"){
+ document.addEventListener("DOMContentLoaded", init);
+}else{
+ init();
+}
+
 })();
 </script>
+
 
 
 </body>
