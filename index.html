@@ -10125,16 +10125,24 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     renderPreview(data);
   }
 
+
   function labelFor(value, data){
     if(!value || value === "空白") return "";
-    if(value === "タイトル") return data.titleText || "";
+    if(value === "タイトル") return data.titleText || localStorage.getItem("ss_obs_title_text") || "";
     if(value === "時計") return nowTime();
-    if(value === "タイトル＋時計") return (data.titleText ? data.titleText + "　" : "") + nowTime();
-    if(value === "テロップ文") return data.tickerText || "";
-    if(value === "テロップ文＋時計") return (data.tickerText ? data.tickerText + "　" : "") + nowTime();
+    if(value === "タイトル＋時計"){
+      const title = data.titleText || localStorage.getItem("ss_obs_title_text") || "";
+      return title ? title + "　" + nowTime() : nowTime();
+    }
+    if(value === "テロップ文") return data.tickerText || localStorage.getItem("ss_obs_ticker_text") || "";
+    if(value === "テロップ文＋時計"){
+      const ticker = data.tickerText || localStorage.getItem("ss_obs_ticker_text") || "";
+      return ticker ? ticker + "　" + nowTime() : nowTime();
+    }
     if(value === "枠のみ") return "";
     return syncedValue(value) || value;
   }
+
 
   function buildLayout(data){
     const m = data.merge || {};
