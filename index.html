@@ -2874,19 +2874,28 @@ function fitBrushText(text){
 </style>
 
 
-<style id="v170HideOnlyCss">
-/* 古いざっくりプレビューだけ隠す。OBS表示配置プレビューは残す */
-#obsPreviewBox,
-#obsPreviewBox + .obs-mini-note{
-  display:none !important;
-}
-
-/* 古い「画面タイトル」入力だけ隠す。OBS用タイトル文 #obsTitleText は残す */
-#obsTitle,
-label:has(#obsTitle){
+<style id="v171_safe_hide_labels">
+/* Hide only labels/headings, never containers */
+.obs-rough-preview-title,
+.obs-screen-title-label{
   display:none !important;
 }
 </style>
+<script id="v171_safe_hide_labels_script">
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.querySelectorAll('h1,h2,h3,h4,h5,h6,label,div,span').forEach(el=>{
+    const t=(el.textContent||'').trim();
+    if(t==='ざっくり見た目プレビュー'){
+      el.style.display='none';
+      el.classList.add('obs-rough-preview-title');
+    }
+    if(t==='画面タイトル'){
+      el.style.display='none';
+      el.classList.add('obs-screen-title-label');
+    }
+  });
+});
+</script>
 
 </head>
 <body>
@@ -10340,24 +10349,6 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 
 
 
-
-
-<script id="v170HideOnlyScript">
-(function(){
-  function hideOnlyOldRoughPreview(){
-    document.querySelectorAll("h1,h2,h3,h4,h5,h6").forEach(function(h){
-      if((h.textContent || "").includes("ざっくり見た目プレビュー")){
-        h.style.display = "none";
-      }
-    });
-  }
-  if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", hideOnlyOldRoughPreview);
-  }else{
-    hideOnlyOldRoughPreview();
-  }
-})();
-</script>
 
 </body>
 </html>
