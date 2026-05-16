@@ -3813,7 +3813,7 @@ function fitBrushText(text){
         <div class="row" style="justify-content:space-between;align-items:flex-start">
           <div>
             <h2 style="margin:0">🖥 OBSオーバーレイ設定</h2>
-            <p class="muted">OBSの「ブラウザソース」に貼る専用画面を作る。キャラとコメントはそのまま、StreamStaff情報だけ乗せる用。</p>
+            <p class="muted">左・中央・右の3スロットへ、好きな表示パーツを割り当てる方式。キャラ位置やコメント欄に合わせて自由に組める。</p>
           </div>
           <button class="btn primary" id="obsOpenOverlay" type="button">オーバーレイを別タブで開く</button>
         </div>
@@ -3821,21 +3821,32 @@ function fitBrushText(text){
           <div>
             <div class="grid">
               <label>画面タイトル<input id="obsTitle" placeholder="例：雑談配信中"></label>
-              <label>構図<select id="obsLayout">
-                <option value="rightBoard">右ボード型：キャラ中央＋右に情報</option>
-                <option value="bottomBar">下帯型：下にテロップ</option>
-                <option value="centerBoard">中央ボード型：情報を中央寄せ</option>
-              </select></label>
               <label>テーマ色<input id="obsAccent" type="color" value="#38bdf8"></label>
-              <label>背景の濃さ<select id="obsBgAlpha"><option value="0.15">薄め</option><option value="0.28">普通</option><option value="0.45">濃いめ</option></select></label>
+              <label>背景の濃さ<select id="obsBgAlpha"><option value="0.10">かなり薄め</option><option value="0.18">薄め</option><option value="0.28">普通</option><option value="0.45">濃いめ</option></select></label>
+              <label>全体フォントサイズ<select id="obsFontScale"><option value="0.9">小さめ</option><option value="1">普通</option><option value="1.15">大きめ</option><option value="1.3">特大</option></select></label>
             </div>
-            <h3>表示ON/OFF</h3>
+
+            <h3>スロット割り当て</h3>
             <div class="grid">
-              <label><input id="obsShowClock" type="checkbox" style="width:auto"> 時計を表示</label>
-              <label><input id="obsShowTree" type="checkbox" style="width:auto"> 幹・枝・葉を表示</label>
-              <label><input id="obsShowNotice" type="checkbox" style="width:auto"> お知らせを表示</label>
-              <label><input id="obsShowSafe" type="checkbox" style="width:auto"> キャラ安全地帯を表示</label>
+              <label>左側<select id="obsSlotLeft"></select></label>
+              <label>中央<select id="obsSlotCenter"></select></label>
+              <label>右側<select id="obsSlotRight"></select></label>
             </div>
+            <div class="obs-mini-note" style="margin-top:8px">
+              例：左=枠のみ / 中央=なし / 右=幹・枝・葉。キャラを中央に置くなら中央を「なし」か「キャラ安全地帯」にすると見やすい。
+            </div>
+
+            <h3>追加表示</h3>
+            <div class="grid">
+              <label><input id="obsShowTitle" type="checkbox" style="width:auto"> タイトルを表示</label>
+              <label><input id="obsShowClock" type="checkbox" style="width:auto"> 時計を表示</label>
+              <label><input id="obsShowBottomTicker" type="checkbox" style="width:auto"> 下帯テロップを表示</label>
+              <label><input id="obsShowGuide" type="checkbox" style="width:auto"> 位置ガイド枠を表示</label>
+            </div>
+
+            <h3>テロップ文</h3>
+            <textarea id="obsTickerText" rows="2" placeholder="例：初見さん歓迎 / コメント拾います / 今日のテーマ募集中"></textarea>
+
             <h3>OBS用URL</h3>
             <div class="obs-urlbox" id="obsUrlBox">未生成</div>
             <div class="row" style="margin-top:12px">
@@ -3844,16 +3855,22 @@ function fitBrushText(text){
               <button class="btn" id="obsRefreshPreview" type="button">プレビュー更新</button>
             </div>
             <div class="obs-mini-note" style="margin-top:12px">
-              OBSでは「ソース追加 → ブラウザ → URLに上のURLを貼る」。幅は1920、高さは1080推奨。背景は透過なので、今のキャラ・ニコニコ風コメントの上に重ねられる。
+              OBSでは「ソース追加 → ブラウザ → URLに上のURLを貼る」。幅1920・高さ1080推奨。背景は透過。
             </div>
           </div>
           <div>
             <h3 style="margin-top:0">ざっくり見た目プレビュー</h3>
             <div class="obs-preview-box" id="obsPreviewBox">
               <div class="obs-preview-title" id="obsPreviewTitle">雑談配信中</div>
-              <div class="obs-preview-card" id="obsPreviewCard">幹：今日の話題<br>枝：脱線先<br>葉：コメントのツボ</div>
-              <div class="obs-preview-safe" id="obsPreviewSafe">キャラ<br>安全地帯</div>
-              <div class="obs-preview-bottom" id="obsPreviewBottom">お知らせ・次の予定</div>
+              <div style="position:absolute;inset:74px 14px 56px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+                <div class="obs-preview-card" id="obsPreviewLeft">左側</div>
+                <div class="obs-preview-safe" id="obsPreviewCenter">中央</div>
+                <div class="obs-preview-card" id="obsPreviewRight">右側</div>
+              </div>
+              <div class="obs-preview-bottom" id="obsPreviewBottom">下帯テロップ</div>
+            </div>
+            <div class="obs-mini-note" style="margin-top:12px">
+              表示候補：幹・枝・葉 / お知らせ / カレンダー予定 / 今日の常連メモ / ルーレット結果 / カウントダウン / 枠のみ / キャラ安全地帯 / 時計。まずはOBSで映える「枠のみ」「幹」「お知らせ」が強い。
             </div>
           </div>
         </div>
@@ -9644,49 +9661,50 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 })();
 
 
-// v135 OBS Overlay Settings
+// v136 OBS Overlay Slot Settings
 (function(){
-  const OBS_DEFAULT={title:"雑談配信中",layout:"rightBoard",accent:"#38bdf8",bgAlpha:"0.28",showClock:true,showTree:true,showNotice:true,showSafe:true};
+  const OBS_PARTS={
+    none:'なし', frame:'枠のみ', safe:'キャラ安全地帯', tree:'幹・枝・葉', trunk:'幹だけ', notice:'お知らせ', calendar:'カレンダー予定', regular:'今日の常連メモ', roulette:'ルーレット結果', countdown:'カウントダウン', clock:'時計', title:'タイトル'
+  };
+  const OBS_DEFAULT={title:'雑談配信中',accent:'#38bdf8',bgAlpha:'0.28',fontScale:'1',slotLeft:'frame',slotCenter:'none',slotRight:'tree',showTitle:true,showClock:true,showBottomTicker:true,showGuide:false,tickerText:'初見さん歓迎 / コメント拾います / 今日のテーマ募集中'};
   function ensureObsSettings(){
-    window.state=window.state||{};
-    state.settings=state.settings||{};
-    state.settings.obs=Object.assign({},OBS_DEFAULT,state.settings.obs||{});
+    window.state=window.state||{}; state.settings=state.settings||{};
+    const old=state.settings.obs||{};
+    const migrated={};
+    if(old.showSafe) migrated.slotCenter='safe';
+    if(old.showNotice) migrated.showBottomTicker=true;
+    if(old.showTree===false && !old.slotRight) migrated.slotRight='notice';
+    state.settings.obs=Object.assign({},OBS_DEFAULT,migrated,old);
     return state.settings.obs;
   }
-  function obsUrl(){
-    const base=location.href.split('#')[0].replace(/index\.html.*$/,'').replace(/\?.*$/,'');
-    return base + 'obs_overlay.html';
-  }
+  function obsUrl(){const base=location.href.split('#')[0].replace(/index\.html.*$/,'').replace(/\?.*$/,''); return base+'obs_overlay.html';}
+  function fillPartSelect(id,val){const el=document.getElementById(id); if(!el)return; const cur=val||el.value; el.innerHTML=Object.entries(OBS_PARTS).map(([k,v])=>`<option value="${k}">${v}</option>`).join(''); el.value=cur;}
   window.renderObsSettings=function(){
     const o=ensureObsSettings();
+    fillPartSelect('obsSlotLeft',o.slotLeft); fillPartSelect('obsSlotCenter',o.slotCenter); fillPartSelect('obsSlotRight',o.slotRight);
     const set=(id,val,prop)=>{const el=document.getElementById(id); if(!el)return; if(prop==='checked')el.checked=!!val; else el.value=val;};
-    set('obsTitle',o.title); set('obsLayout',o.layout); set('obsAccent',o.accent); set('obsBgAlpha',o.bgAlpha);
-    set('obsShowClock',o.showClock,'checked'); set('obsShowTree',o.showTree,'checked'); set('obsShowNotice',o.showNotice,'checked'); set('obsShowSafe',o.showSafe,'checked');
-    const box=document.getElementById('obsUrlBox'); if(box)box.textContent=obsUrl();
-    obsUpdatePreview();
+    set('obsTitle',o.title); set('obsAccent',o.accent); set('obsBgAlpha',o.bgAlpha); set('obsFontScale',o.fontScale);
+    set('obsSlotLeft',o.slotLeft); set('obsSlotCenter',o.slotCenter); set('obsSlotRight',o.slotRight);
+    set('obsShowTitle',o.showTitle,'checked'); set('obsShowClock',o.showClock,'checked'); set('obsShowBottomTicker',o.showBottomTicker,'checked'); set('obsShowGuide',o.showGuide,'checked'); set('obsTickerText',o.tickerText||'');
+    const box=document.getElementById('obsUrlBox'); if(box)box.textContent=obsUrl(); obsUpdatePreview();
   };
+  function labelFor(part){return OBS_PARTS[part]||'なし'}
   window.obsUpdatePreview=function(){
     const o=ensureObsSettings();
-    const title=document.getElementById('obsPreviewTitle'), card=document.getElementById('obsPreviewCard'), safe=document.getElementById('obsPreviewSafe'), bottom=document.getElementById('obsPreviewBottom'), box=document.getElementById('obsPreviewBox');
-    if(title){title.textContent=o.title||'雑談配信中'; title.style.borderColor=o.accent;}
-    if(card){card.style.display=o.showTree?'block':'none'; card.style.borderColor=o.accent; card.innerHTML='幹：'+escapeHtml(state.tree?.trunk||'今日の話題')+'<br>枝：'+escapeHtml(String(state.tree?.branch||'脱線先').split('\n')[0])+'<br>葉：'+escapeHtml(state.tree?.leaf||'コメントのツボ');}
-    if(safe){safe.style.display=o.showSafe?'flex':'none'; safe.style.borderColor=o.accent;}
-    if(bottom){bottom.style.display=o.showNotice?'block':'none'; bottom.textContent='お知らせ・次の予定をここに表示'; bottom.style.borderColor=o.accent;}
+    const title=document.getElementById('obsPreviewTitle'), left=document.getElementById('obsPreviewLeft'), center=document.getElementById('obsPreviewCenter'), right=document.getElementById('obsPreviewRight'), bottom=document.getElementById('obsPreviewBottom'), box=document.getElementById('obsPreviewBox');
+    if(title){title.textContent=(o.showTitle?o.title:'タイトル非表示')+(o.showClock?'　🕒':''); title.style.display=o.showTitle||o.showClock?'block':'none'; title.style.borderColor=o.accent;}
+    [[left,o.slotLeft,'左'],[center,o.slotCenter,'中央'],[right,o.slotRight,'右']].forEach(([el,part,pos])=>{if(!el)return; el.textContent=pos+'：'+labelFor(part); el.style.display=part==='none'?'none':'flex'; el.style.borderColor=o.accent;});
+    if(bottom){bottom.style.display=o.showBottomTicker?'block':'none'; bottom.textContent=o.tickerText||'下帯テロップ'; bottom.style.borderColor=o.accent;}
     if(box){box.style.background='radial-gradient(circle at 50% 20%, '+hexToRgba(o.accent,.20)+', rgba(15,23,42,.96) 58%)';}
   };
-  function readObsForm(){
-    const g=id=>document.getElementById(id);
-    return {title:g('obsTitle')?.value||'雑談配信中',layout:g('obsLayout')?.value||'rightBoard',accent:g('obsAccent')?.value||'#38bdf8',bgAlpha:g('obsBgAlpha')?.value||'0.28',showClock:!!g('obsShowClock')?.checked,showTree:!!g('obsShowTree')?.checked,showNotice:!!g('obsShowNotice')?.checked,showSafe:!!g('obsShowSafe')?.checked};
-  }
+  function readObsForm(){const g=id=>document.getElementById(id); return {title:g('obsTitle')?.value||'雑談配信中',accent:g('obsAccent')?.value||'#38bdf8',bgAlpha:g('obsBgAlpha')?.value||'0.28',fontScale:g('obsFontScale')?.value||'1',slotLeft:g('obsSlotLeft')?.value||'frame',slotCenter:g('obsSlotCenter')?.value||'none',slotRight:g('obsSlotRight')?.value||'tree',showTitle:!!g('obsShowTitle')?.checked,showClock:!!g('obsShowClock')?.checked,showBottomTicker:!!g('obsShowBottomTicker')?.checked,showGuide:!!g('obsShowGuide')?.checked,tickerText:g('obsTickerText')?.value||''};}
   function saveObs(){state.settings=state.settings||{}; state.settings.obs=readObsForm(); if(window.save)save(); renderObsSettings(); alert('OBS設定を保存した！');}
   function hexToRgba(hex,a){const m=String(hex||'#38bdf8').replace('#',''); const n=parseInt(m.length===3?m.split('').map(x=>x+x).join(''):m,16); return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}
   document.addEventListener('DOMContentLoaded',function(){
     const b=(id,fn)=>{const el=document.getElementById(id); if(el)el.onclick=fn;};
-    b('obsSaveSettings',saveObs);
-    b('obsRefreshPreview',function(){state.settings.obs=readObsForm(); obsUpdatePreview();});
-    b('obsOpenOverlay',function(){window.open(obsUrl(),'_blank');});
+    b('obsSaveSettings',saveObs); b('obsRefreshPreview',function(){state.settings.obs=readObsForm(); obsUpdatePreview();}); b('obsOpenOverlay',function(){window.open(obsUrl(),'_blank');});
     b('obsCopyUrl',async function(){const url=obsUrl(); try{await navigator.clipboard.writeText(url); alert('OBS用URLをコピーした！');}catch(e){prompt('このURLをコピーしてOBSに貼ってね',url);}});
-    ['obsTitle','obsLayout','obsAccent','obsBgAlpha','obsShowClock','obsShowTree','obsShowNotice','obsShowSafe'].forEach(id=>{const el=document.getElementById(id); if(el)el.oninput=()=>{state.settings.obs=readObsForm(); obsUpdatePreview();};});
+    ['obsTitle','obsAccent','obsBgAlpha','obsFontScale','obsSlotLeft','obsSlotCenter','obsSlotRight','obsShowTitle','obsShowClock','obsShowBottomTicker','obsShowGuide','obsTickerText'].forEach(id=>{const el=document.getElementById(id); if(el)el.oninput=()=>{state.settings.obs=readObsForm(); obsUpdatePreview();}; if(el)el.onchange=()=>{state.settings.obs=readObsForm(); obsUpdatePreview();};});
   });
 })();
 
