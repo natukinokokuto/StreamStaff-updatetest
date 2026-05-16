@@ -5617,28 +5617,41 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 
 
 
+
   function startTickerRunner(runner, container, speedPxPerSec){
+    if(runner.dataset.started === "1") return;
+    runner.dataset.started = "1";
     requestAnimationFrame(()=>{
       const boxW = container.clientWidth || 0;
       const textW = runner.scrollWidth || 0;
+      if(!boxW || !textW) return;
       const distance = boxW + textW;
       const duration = Math.max(6, distance / (speedPxPerSec || 80));
-
+      runner.style.transform = "translate(" + boxW + "px,-50%)";
       runner.animate(
         [
           { transform: "translate(" + boxW + "px,-50%)" },
           { transform: "translate(-" + textW + "px,-50%)" }
         ],
-        {
-          duration: duration * 1000,
-          iterations: Infinity,
-          easing: "linear"
-        }
+        { duration: duration * 1000, iterations: Infinity, easing: "linear" }
       );
     });
   }
 
+
+  let __lastObsPreviewSignature = "";
+
   function renderPreview(data){
+    const __sig = JSON.stringify({
+      slots:data.slots,
+      merge:data.merge,
+      titleText:data.titleText,
+      tickerText:data.tickerText,
+      tickerScroll:data.tickerScroll,
+      colors:data.colors
+    });
+    if(__sig === __lastObsPreviewSignature) return;
+    __lastObsPreviewSignature = __sig;
     const grid = document.getElementById("obsPreviewGrid");
     if(!grid) return;
     const c = data.colors || {};
@@ -5660,6 +5673,7 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 
       if(value === "空白"){
         cell.classList.add("empty");
+        cell.textContent = "";
       }else{
         applyColors(cell, data);
         const text = labelFor(value, data);

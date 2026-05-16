@@ -129,29 +129,43 @@ function layoutItems(data){
  return [...row("top",1),...row("mid",2),...row("bottom",3)];
 }
 
+
 function startTickerRunner(runner, container, speedPxPerSec){
+ if(runner.dataset.started === "1") return;
+ runner.dataset.started = "1";
  requestAnimationFrame(()=>{
    const boxW = container.clientWidth || 0;
    const textW = runner.scrollWidth || 0;
+   if(!boxW || !textW) return;
    const distance = boxW + textW;
    const duration = Math.max(6, distance / (speedPxPerSec || 80));
-
+   runner.style.transform = "translate(" + boxW + "px,-50%)";
    runner.animate(
      [
        { transform: "translate(" + boxW + "px,-50%)" },
        { transform: "translate(-" + textW + "px,-50%)" }
      ],
-     {
-       duration: duration * 1000,
-       iterations: Infinity,
-       easing: "linear"
-     }
+     { duration: duration * 1000, iterations: Infinity, easing: "linear" }
    );
  });
 }
 
-function render(){
- const data = load();
+
+let __lastObsRenderSignature = "";
+
+function render(force){
+ const __dataForSig = load();
+ const __sig = JSON.stringify({
+   slots: __dataForSig.slots,
+   merge: __dataForSig.merge,
+   titleText: __dataForSig.titleText,
+   tickerText: __dataForSig.tickerText,
+   tickerScroll: __dataForSig.tickerScroll,
+   colors: __dataForSig.colors
+ });
+ if(!force && __sig === __lastObsRenderSignature) return;
+ __lastObsRenderSignature = __sig;
+ const data = __dataForSig;
  const overlay = document.getElementById("overlay");
  overlay.innerHTML = "";
  const c = data.colors || {};
@@ -167,7 +181,12 @@ function render(){
    div.style.background = c.panel || "rgba(0,0,0,.35)";
    div.style.border = "2px solid " + (c.frame || "#555");
    div.style.color = c.text || "#fff";
-   if(value==="空白") div.classList.add("empty");
+   if(value==="空白"){
+     div.classList.add("empty");
+     div.textContent = "";
+     overlay.appendChild(div);
+     return;
+   }
    const text = labelFor(value,data);
    if(item.row === 3 && value.indexOf("テロップ文") >= 0 && text && data.tickerScroll !== false){
      const runner = document.createElement("span");
@@ -181,8 +200,8 @@ function render(){
    overlay.appendChild(div);
  });
 }
-window.addEventListener("storage", render);
-window.addEventListener("focus", render);
-document.addEventListener("visibilitychange", render);
-setInterval(render,300);
-render();
+window.addEventListener("storage", ()=>render(true));
+window.addEventListener("focus", ()=>render(true));
+document.addEventListener("visibilitychange", ()=>render(true));
+setInterval(()=>render(false),1000);
+render(true);
