@@ -1,1 +1,69 @@
-<!doctype html><html lang='ja'><head><meta charset='utf-8'><title>StreamStaff OBS Overlay</title><style>body{margin:0;background:transparent;color:white;font-family:sans-serif;overflow:hidden}.wrap{position:fixed;inset:0;pointer-events:none}.top{position:absolute;top:20px;left:20px;font-size:42px;font-weight:bold;background:rgba(0,0,0,.5);padding:10px 20px;border-radius:20px}.comments{position:absolute;right:30px;top:120px;width:420px}.c{background:rgba(0,0,0,.45);margin:10px 0;padding:12px 16px;border-radius:16px;backdrop-filter:blur(4px);animation:f 12s linear infinite}@keyframes f{0%{transform:translateX(40px);opacity:0}10%,90%{transform:translateX(0);opacity:1}100%{transform:translateX(-20px);opacity:0}}.safe{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:520px;height:760px;border:2px dashed rgba(255,255,255,.3);border-radius:30px;display:flex;align-items:center;justify-content:center;font-size:30px;color:rgba(255,255,255,.4)}</style></head><body><div class='wrap'><div class='top'>雑談配信中</div><div class='comments'><div class='c'>コメント表示エリア</div><div class='c'>OBSブラウザソース用</div><div class='c'>キャラと被らない右配置</div></div><div class='safe'>キャラクター安全地帯</div></div></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StreamStaff OBS Overlay</title>
+<style>
+  :root{--accent:#38bdf8;--panel:rgba(0,0,0,.28);--scale:1}
+  html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+  .overlay{position:fixed;inset:0;pointer-events:none;font-size:calc(16px * var(--scale))}
+  .top-title{position:absolute;top:24px;left:28px;font-size:calc(clamp(28px,3vw,58px) * var(--scale));font-weight:950;letter-spacing:.04em;padding:12px 22px;border-radius:22px;background:var(--panel);border:2px solid var(--accent);box-shadow:0 0 28px color-mix(in srgb,var(--accent),transparent 55%),0 12px 40px rgba(0,0,0,.35);backdrop-filter:blur(8px)}
+  .clock{position:absolute;top:30px;right:30px;font-size:calc(clamp(18px,1.7vw,32px) * var(--scale));font-weight:900;padding:10px 16px;border-radius:18px;background:var(--panel);border:1px solid rgba(255,255,255,.18)}
+  .slot{position:absolute;top:126px;bottom:92px;width:29vw;display:flex;align-items:stretch;justify-content:center}
+  .slot.left{left:30px}.slot.center{left:50%;transform:translateX(-50%)}.slot.right{right:30px}
+  .stack{display:grid;gap:12px;width:100%;align-content:start}.card{border-radius:24px;padding:18px 20px;background:var(--panel);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(8px);box-shadow:0 16px 38px rgba(0,0,0,.28)}
+  .big-frame{width:100%;height:100%;border:3px solid var(--accent);border-radius:34px;background:rgba(0,0,0,.05);box-shadow:0 0 34px color-mix(in srgb,var(--accent),transparent 62%)}
+  .safe{width:100%;height:100%;border:2px dashed rgba(255,255,255,.38);border-radius:34px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:calc(clamp(22px,2vw,40px) * var(--scale));font-weight:950;color:rgba(255,255,255,.48);background:rgba(0,0,0,.08)}
+  .label{font-size:calc(15px * var(--scale));color:#bae6fd;font-weight:950;letter-spacing:.08em}.text{font-size:calc(clamp(22px,1.8vw,36px) * var(--scale));font-weight:950;line-height:1.25;white-space:pre-wrap;word-break:break-word}.muted{font-size:calc(16px * var(--scale));color:#dbeafe;line-height:1.55;white-space:pre-wrap}.single{font-size:calc(clamp(28px,2.8vw,54px) * var(--scale));font-weight:950;line-height:1.2}.bottom{position:absolute;left:30px;right:30px;bottom:26px;display:flex;gap:14px;align-items:center;padding:14px 20px;border-radius:22px;background:var(--panel);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(8px);font-size:calc(clamp(18px,1.7vw,32px) * var(--scale));font-weight:900}.bottom .tag{color:#bae6fd}.bottom .ticker{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.guide .slot{outline:1px dashed rgba(255,255,255,.28);outline-offset:6px;border-radius:30px}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay">
+  <div class="top-title" id="topTitle">雑談配信中</div>
+  <div class="clock" id="clock"></div>
+  <div class="slot left" id="slotLeft"></div>
+  <div class="slot center" id="slotCenter"></div>
+  <div class="slot right" id="slotRight"></div>
+  <div class="bottom" id="bottomTicker"><span class="tag">INFO</span><span class="ticker" id="tickerText"></span></div>
+</div>
+<script>
+const KEY='stream_manager_integrated_v1';
+const DEF={title:'雑談配信中',accent:'#38bdf8',bgAlpha:'0.28',fontScale:'1',slotLeft:'frame',slotCenter:'none',slotRight:'tree',showTitle:true,showClock:true,showBottomTicker:true,showGuide:false,tickerText:'初見さん歓迎 / コメント拾います / 今日のテーマ募集中'};
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return {}}}
+function esc(s){return String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
+function pad(n){return String(n).padStart(2,'0')}
+function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function eventText(st){const evs=Array.isArray(st.calendarEvents)?st.calendarEvents:[]; const today=new Date(); const out=[]; for(let i=0;i<=3;i++){const d=new Date(today.getFullYear(),today.getMonth(),today.getDate()+i); const date=ymd(d); evs.filter(e=>e.date===date).forEach(e=>out.push((i===0?'今日':i+'日後')+'：'+(e.title||e.memo||e.type||'予定')))} return out.slice(0,4).join('\n')||'予定なし'}
+function regularText(st){const regs=Array.isArray(st.regulars)?st.regulars:[]; if(!regs.length)return '常連メモなし'; return regs.slice(0,3).map(r=>'・'+(r.name||r.nickname||'名前なし')+(r.memo?'：'+r.memo:'')).join('\n')}
+function rouletteText(st){const r=st.roulette||{}; return r.lastResult||r.result||r.current||'ルーレット待機中'}
+function countdownText(st){const cds=Array.isArray(st.countdowns)?st.countdowns:[]; if(!cds.length)return 'カウントダウン未設定'; return cds.slice(0,2).map(c=>'・'+(c.title||c.name||'予定')+(c.target?' → '+c.target:'')).join('\n')}
+function treeCards(st){const t=st.tree||{}; return `<div class="stack"><div class="card"><div class="label">幹</div><div class="text">${esc(t.trunk||'今日のメインテーマ')}</div></div><div class="card"><div class="label">枝</div><div class="text">${esc(t.branch||'脱線先')}</div></div><div class="card"><div class="label">葉</div><div class="text">${esc(t.leaf||'コメントのツボ')}</div></div></div>`}
+function partHtml(part,st,o){
+  const t=st.tree||{};
+  if(part==='none')return '';
+  if(part==='frame')return '<div class="big-frame"></div>';
+  if(part==='safe')return '<div class="safe">キャラクター<br>安全地帯</div>';
+  if(part==='tree')return treeCards(st);
+  if(part==='trunk')return `<div class="card"><div class="label">幹</div><div class="single">${esc(t.trunk||'今日のメインテーマ')}</div></div>`;
+  if(part==='notice')return `<div class="card"><div class="label">お知らせ</div><div class="text">${esc(eventText(st))}</div></div>`;
+  if(part==='calendar')return `<div class="card"><div class="label">カレンダー予定</div><div class="muted">${esc(eventText(st))}</div></div>`;
+  if(part==='regular')return `<div class="card"><div class="label">今日の常連メモ</div><div class="muted">${esc(regularText(st))}</div></div>`;
+  if(part==='roulette')return `<div class="card"><div class="label">ルーレット結果</div><div class="single">${esc(rouletteText(st))}</div></div>`;
+  if(part==='countdown')return `<div class="card"><div class="label">カウントダウン</div><div class="muted">${esc(countdownText(st))}</div></div>`;
+  if(part==='clock')return `<div class="card"><div class="label">現在時刻</div><div class="single" id="inlineClock"></div></div>`;
+  if(part==='title')return `<div class="card"><div class="label">配信タイトル</div><div class="single">${esc(o.title||'雑談配信中')}</div></div>`;
+  return '';
+}
+function render(){
+  const st=load(); const o=Object.assign({},DEF,st.settings&&st.settings.obs||{});
+  document.documentElement.style.setProperty('--accent',o.accent); document.documentElement.style.setProperty('--panel','rgba(0,0,0,'+o.bgAlpha+')'); document.documentElement.style.setProperty('--scale',o.fontScale||'1');
+  overlay.className='overlay'+(o.showGuide?' guide':''); topTitle.style.display=o.showTitle?'block':'none'; topTitle.textContent=o.title||'雑談配信中'; clock.style.display=o.showClock?'block':'none';
+  slotLeft.innerHTML=partHtml(o.slotLeft,st,o); slotCenter.innerHTML=partHtml(o.slotCenter,st,o); slotRight.innerHTML=partHtml(o.slotRight,st,o);
+  bottomTicker.style.display=o.showBottomTicker?'flex':'none'; tickerText.textContent=o.tickerText||eventText(st)||'INFO'; tick();
+}
+function tick(){const d=new Date(); const txt=d.getFullYear()+'/'+pad(d.getMonth()+1)+'/'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); clock.textContent=txt; const inline=document.getElementById('inlineClock'); if(inline)inline.textContent=txt;}
+render(); setInterval(()=>{render();tick()},1000); window.addEventListener('storage',render);
+</script>
+</body>
+</html>
