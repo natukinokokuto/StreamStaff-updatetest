@@ -1,1 +1,56 @@
-<!doctype html><html lang='ja'><head><meta charset='utf-8'><title>StreamStaff OBS Overlay</title><style>body{margin:0;background:transparent;color:white;font-family:sans-serif;overflow:hidden}.wrap{position:fixed;inset:0;pointer-events:none}.top{position:absolute;top:20px;left:20px;font-size:42px;font-weight:bold;background:rgba(0,0,0,.5);padding:10px 20px;border-radius:20px}.comments{position:absolute;right:30px;top:120px;width:420px}.c{background:rgba(0,0,0,.45);margin:10px 0;padding:12px 16px;border-radius:16px;backdrop-filter:blur(4px);animation:f 12s linear infinite}@keyframes f{0%{transform:translateX(40px);opacity:0}10%,90%{transform:translateX(0);opacity:1}100%{transform:translateX(-20px);opacity:0}}.safe{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:520px;height:760px;border:2px dashed rgba(255,255,255,.3);border-radius:30px;display:flex;align-items:center;justify-content:center;font-size:30px;color:rgba(255,255,255,.4)}</style></head><body><div class='wrap'><div class='top'>雑談配信中</div><div class='comments'><div class='c'>コメント表示エリア</div><div class='c'>OBSブラウザソース用</div><div class='c'>キャラと被らない右配置</div></div><div class='safe'>キャラクター安全地帯</div></div></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StreamStaff OBS Overlay</title>
+<style>
+  :root{--accent:#38bdf8;--panel:rgba(0,0,0,.28)}
+  html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+  .overlay{position:fixed;inset:0;pointer-events:none}
+  .title{position:absolute;top:24px;left:28px;font-size:clamp(28px,3vw,58px);font-weight:950;letter-spacing:.04em;padding:12px 22px;border-radius:22px;background:var(--panel);border:2px solid var(--accent);box-shadow:0 0 28px color-mix(in srgb,var(--accent),transparent 55%),0 12px 40px rgba(0,0,0,.35);backdrop-filter:blur(8px)}
+  .clock{position:absolute;top:30px;right:30px;font-size:clamp(18px,1.7vw,32px);font-weight:900;padding:10px 16px;border-radius:18px;background:var(--panel);border:1px solid rgba(255,255,255,.18)}
+  .info{position:absolute;right:34px;top:132px;width:min(460px,30vw);display:grid;gap:12px}
+  .card{border-radius:22px;padding:16px 18px;background:var(--panel);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(8px);box-shadow:0 16px 38px rgba(0,0,0,.28)}
+  .label{font-size:15px;color:#bae6fd;font-weight:950;letter-spacing:.08em}.text{font-size:clamp(20px,1.7vw,34px);font-weight:950;line-height:1.25;white-space:pre-wrap;word-break:break-word}.muted{font-size:15px;color:#dbeafe;line-height:1.55}.safe{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:min(520px,28vw);height:min(760px,78vh);border:2px dashed rgba(255,255,255,.35);border-radius:34px 34px 0 0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(18px,2vw,34px);font-weight:950;color:rgba(255,255,255,.45)}
+  .bottom{position:absolute;left:30px;right:30px;bottom:26px;display:flex;gap:14px;align-items:center;padding:14px 20px;border-radius:22px;background:var(--panel);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(8px);font-size:clamp(18px,1.7vw,32px);font-weight:900}.bottom .tag{color:#bae6fd}.bottom .ticker{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .layout-bottomBar .info{display:none}.layout-bottomBar .safe{left:78%;width:min(420px,23vw);height:min(720px,72vh)}.layout-bottomBar .bottom{display:flex!important}.layout-centerBoard .info{left:50%;right:auto;top:150px;transform:translateX(-50%);width:min(720px,52vw)}.layout-centerBoard .safe{left:18%;width:min(360px,20vw);opacity:.65}.layout-centerBoard .bottom{right:34px;left:auto;width:min(500px,30vw)}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay">
+  <div class="title" id="title">雑談配信中</div>
+  <div class="clock" id="clock"></div>
+  <div class="info" id="info">
+    <div class="card"><div class="label">幹</div><div class="text" id="trunk">今日のメインテーマ</div></div>
+    <div class="card"><div class="label">枝</div><div class="text" id="branch">脱線先</div></div>
+    <div class="card"><div class="label">葉</div><div class="text" id="leaf">コメントのツボ</div></div>
+  </div>
+  <div class="safe" id="safe">キャラクター<br>安全地帯</div>
+  <div class="bottom" id="notice"><span class="tag">お知らせ</span><span class="ticker" id="noticeText">予定なし</span></div>
+</div>
+<script>
+const KEY='stream_manager_integrated_v1';
+const DEF={title:'雑談配信中',layout:'rightBoard',accent:'#38bdf8',bgAlpha:'0.28',showClock:true,showTree:true,showNotice:true,showSafe:true};
+function esc(s){return String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return {}}}
+function pad(n){return String(n).padStart(2,'0')}
+function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function noticeText(st){
+  const evs=Array.isArray(st.calendarEvents)?st.calendarEvents:[];
+  const today=new Date(); const out=[];
+  for(let i=0;i<=3;i++){const d=new Date(today.getFullYear(),today.getMonth(),today.getDate()+i); const date=ymd(d); evs.filter(e=>e.date===date).forEach(e=>out.push((i===0?'今日':(i+'日後'))+'：'+(e.title||e.memo||e.type||'予定')));}
+  return out.slice(0,3).join('　/　') || '予定なし';
+}
+function render(){
+  const st=load(); const o=Object.assign({},DEF,st.settings&&st.settings.obs||{}); const root=document.documentElement; root.style.setProperty('--accent',o.accent); root.style.setProperty('--panel','rgba(0,0,0,'+o.bgAlpha+')');
+  overlay.className='overlay layout-'+o.layout; title.textContent=o.title||'雑談配信中';
+  clock.style.display=o.showClock?'block':'none'; info.style.display=o.showTree?'grid':'none'; safe.style.display=o.showSafe?'flex':'none'; notice.style.display=o.showNotice?'flex':'none';
+  const tree=st.tree||{}; trunk.innerHTML=esc(tree.trunk||'今日のメインテーマ'); branch.innerHTML=esc(tree.branch||'話が止まった時の逃げ道'); leaf.innerHTML=esc(tree.leaf||'コメントのツボ'); noticeText.textContent=noticeText(st);
+}
+function tick(){const d=new Date(); clock.textContent=d.getFullYear()+'/'+pad(d.getMonth()+1)+'/'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());}
+render(); tick(); setInterval(()=>{render();tick()},1000);
+window.addEventListener('storage',render);
+</script>
+</body>
+</html>

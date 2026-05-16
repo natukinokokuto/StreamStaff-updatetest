@@ -2649,6 +2649,10 @@ function fitBrushText(text){
 /* v124 配信すごろく */
 .sugoroku-stage{max-width:1180px;margin:0 auto}.sugo-top{display:grid;grid-template-columns:1.15fr .85fr;gap:14px}.sugo-panel{border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.045);padding:14px}.sugo-big{font-size:clamp(34px,7vw,84px);font-weight:900;letter-spacing:.04em;text-align:center;line-height:1.05}.sugo-sub{text-align:center;color:var(--muted);margin-top:6px}.sugo-mission{font-size:clamp(20px,3.2vw,38px);font-weight:850;line-height:1.35;text-align:center;padding:18px;border-radius:18px;background:linear-gradient(135deg,rgba(99,102,241,.18),rgba(236,72,153,.12));border:1px solid rgba(255,255,255,.12);min-height:92px;display:flex;align-items:center;justify-content:center;white-space:pre-wrap}.sugo-map{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px;margin-top:12px}.sugo-cell{min-height:92px;border-radius:16px;border:1px solid rgba(148,163,184,.35);background:linear-gradient(180deg,rgba(248,250,252,.98),rgba(226,232,240,.96));color:#0f172a;padding:9px;display:flex;flex-direction:column;justify-content:space-between;gap:5px;cursor:pointer;position:relative;overflow:hidden;text-align:left;box-shadow:0 8px 18px rgba(0,0,0,.18)}.sugo-cell:hover{transform:translateY(-1px);box-shadow:0 12px 22px rgba(0,0,0,.22)}.sugo-cell.current{outline:4px solid #facc15;box-shadow:0 0 0 5px rgba(250,204,21,.22),0 0 28px rgba(250,204,21,.35)}.sugo-cell.goal{background:linear-gradient(135deg,#fef3c7,#fecaca)}.sugo-cell.branch{border-color:#0284c7}.sugo-cell.locked{filter:saturate(1.15)}.sugo-cell-num{font-size:12px;color:#475569;font-weight:900}.sugo-cell-title{font-size:14px;font-weight:900;line-height:1.28;color:#0f172a;text-shadow:0 1px 0 rgba(255,255,255,.6);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.sugo-cell-route{position:absolute;right:6px;top:5px;font-size:11px;color:#075985;background:#e0f2fe;border:1px solid #7dd3fc;border-radius:999px;padding:2px 6px;font-weight:900}.sugo-mini-map{font-size:12px;line-height:1.65;white-space:pre-wrap;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:10px;max-height:190px;overflow:auto}.sugo-route-block{margin-top:12px;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:10px;background:rgba(15,23,42,.28)}.sugo-route-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;font-weight:900}.sugo-route-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:8px}.sugo-branch-choice{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.sugo-choice-card{border:1px solid rgba(125,211,252,.35);border-radius:16px;padding:10px;background:rgba(14,165,233,.10)}.sugo-choice-card.confirmed{outline:3px solid rgba(250,204,21,.75);background:rgba(250,204,21,.12)}.sugo-choice-label{font-size:12px;font-weight:900;color:#bae6fd;margin-bottom:4px}.sugo-branch-note{font-size:12px;color:#cbd5e1;margin-top:6px}.sugo-list{max-height:250px;overflow:auto;white-space:pre-wrap;font-size:13px;line-height:1.55}.sugo-edit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.sugo-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);font-size:12px}.sugo-locked-note{color:#fca5a5;font-weight:800}.sugo-cleared-note{color:#86efac;font-weight:800}@media(max-width:800px){.sugo-top{grid-template-columns:1fr}.sugo-map{grid-template-columns:repeat(auto-fit,minmax(82px,1fr))}.sugo-cell{min-height:84px}.sugo-cell-title{font-size:12px}}
 
+
+/* v135 OBS Overlay Settings */
+.obs-settings-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.obs-preview-box{position:relative;min-height:320px;border-radius:22px;border:1px solid rgba(125,211,252,.25);background:radial-gradient(circle at 50% 20%,rgba(56,189,248,.18),rgba(15,23,42,.96) 58%);overflow:hidden}.obs-preview-title{position:absolute;top:18px;left:18px;font-size:22px;font-weight:950;padding:10px 14px;border-radius:16px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12)}.obs-preview-card{position:absolute;right:18px;top:82px;width:42%;padding:12px;border-radius:18px;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.14);box-shadow:0 12px 30px rgba(0,0,0,.28)}.obs-preview-safe{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:34%;height:75%;border:2px dashed rgba(255,255,255,.28);border-radius:28px 28px 0 0;display:flex;align-items:center;justify-content:center;text-align:center;color:rgba(255,255,255,.54);font-weight:900}.obs-preview-bottom{position:absolute;left:18px;right:18px;bottom:18px;padding:12px 14px;border-radius:18px;background:rgba(0,0,0,.38);border:1px solid rgba(255,255,255,.12);font-weight:900}.obs-urlbox{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;word-break:break-all;line-height:1.5;background:#020617;border:1px solid rgba(148,163,184,.22);border-radius:14px;padding:12px;color:#e0f2fe}.obs-mini-note{font-size:12px;color:#cbd5e1;line-height:1.7}@media(max-width:850px){.obs-settings-grid{grid-template-columns:1fr}.obs-preview-card{width:auto;left:18px;right:18px}.obs-preview-safe{width:48%}}
+
 </style>
 
 <link rel="icon" type="image/png" href="icon_streamstaff_final.png">
@@ -2679,6 +2683,7 @@ function fitBrushText(text){
       <button data-screen="memo">常連</button><!-- v130 fix -->
       <button data-screen="calendar">カレンダー</button>
       <button data-screen="tools">道具</button>
+      <button data-screen="obsSettings">OBS表示</button>
       <button data-screen="settings">設定</button>
     </nav>
 
@@ -3800,6 +3805,60 @@ function fitBrushText(text){
     </div>
   </div></div>
 </section>
+
+
+
+    <section id="obsSettings" class="screen">
+      <div class="card"><div class="inner">
+        <div class="row" style="justify-content:space-between;align-items:flex-start">
+          <div>
+            <h2 style="margin:0">🖥 OBSオーバーレイ設定</h2>
+            <p class="muted">OBSの「ブラウザソース」に貼る専用画面を作る。キャラとコメントはそのまま、StreamStaff情報だけ乗せる用。</p>
+          </div>
+          <button class="btn primary" id="obsOpenOverlay" type="button">オーバーレイを別タブで開く</button>
+        </div>
+        <div class="obs-settings-grid" style="margin-top:14px">
+          <div>
+            <div class="grid">
+              <label>画面タイトル<input id="obsTitle" placeholder="例：雑談配信中"></label>
+              <label>構図<select id="obsLayout">
+                <option value="rightBoard">右ボード型：キャラ中央＋右に情報</option>
+                <option value="bottomBar">下帯型：下にテロップ</option>
+                <option value="centerBoard">中央ボード型：情報を中央寄せ</option>
+              </select></label>
+              <label>テーマ色<input id="obsAccent" type="color" value="#38bdf8"></label>
+              <label>背景の濃さ<select id="obsBgAlpha"><option value="0.15">薄め</option><option value="0.28">普通</option><option value="0.45">濃いめ</option></select></label>
+            </div>
+            <h3>表示ON/OFF</h3>
+            <div class="grid">
+              <label><input id="obsShowClock" type="checkbox" style="width:auto"> 時計を表示</label>
+              <label><input id="obsShowTree" type="checkbox" style="width:auto"> 幹・枝・葉を表示</label>
+              <label><input id="obsShowNotice" type="checkbox" style="width:auto"> お知らせを表示</label>
+              <label><input id="obsShowSafe" type="checkbox" style="width:auto"> キャラ安全地帯を表示</label>
+            </div>
+            <h3>OBS用URL</h3>
+            <div class="obs-urlbox" id="obsUrlBox">未生成</div>
+            <div class="row" style="margin-top:12px">
+              <button class="btn primary" id="obsSaveSettings" type="button">OBS設定を保存</button>
+              <button class="btn" id="obsCopyUrl" type="button">URLコピー</button>
+              <button class="btn" id="obsRefreshPreview" type="button">プレビュー更新</button>
+            </div>
+            <div class="obs-mini-note" style="margin-top:12px">
+              OBSでは「ソース追加 → ブラウザ → URLに上のURLを貼る」。幅は1920、高さは1080推奨。背景は透過なので、今のキャラ・ニコニコ風コメントの上に重ねられる。
+            </div>
+          </div>
+          <div>
+            <h3 style="margin-top:0">ざっくり見た目プレビュー</h3>
+            <div class="obs-preview-box" id="obsPreviewBox">
+              <div class="obs-preview-title" id="obsPreviewTitle">雑談配信中</div>
+              <div class="obs-preview-card" id="obsPreviewCard">幹：今日の話題<br>枝：脱線先<br>葉：コメントのツボ</div>
+              <div class="obs-preview-safe" id="obsPreviewSafe">キャラ<br>安全地帯</div>
+              <div class="obs-preview-bottom" id="obsPreviewBottom">お知らせ・次の予定</div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </section>
 
     <section id="settings" class="screen">
       <div class="grid">
@@ -5272,6 +5331,7 @@ function showScreen(id){
   if(id==="bonus") renderBonus();
   if(id==="memo") renderMemo();
   if(id==="settings") renderSettings();
+  if(id==="obsSettings") renderObsSettings();
   if(id==="calendar") renderCalendar();
   if(id==="tools") renderTools();
   if(id==="enduranceTool") renderEnduranceTool();
@@ -7603,6 +7663,8 @@ function spinCasinoRoulette(){
 
 document.addEventListener("DOMContentLoaded",()=>renderRoulette());
 
+
+
 </script>
 
 <div class="firebase-help-modal" id="firebaseHelpModal">
@@ -9127,6 +9189,8 @@ const firebaseConfig = { ... }
   });
 })();
 
+
+
 </script>
 
 <div class="talk-chaos-warning" id="talkChaosWarning"><div class="talk-chaos-warning-box">⚠ 社会的にまずくないですか？<br>その辺保証できません。<small>※ コメント欄は共犯です</small></div></div>
@@ -9216,6 +9280,8 @@ const firebaseConfig = { ... }
     }
   }, true);
 })();
+
+
 </script>
 
 
@@ -9470,6 +9536,8 @@ const firebaseConfig = { ... }
     document.addEventListener("DOMContentLoaded", function(){ try{ renderMemo(); }catch(e){ console.warn(e); } });
   }
 })();
+
+
 </script>
 
 
@@ -9501,6 +9569,8 @@ window.moveRadioDj=function(d){const rs=radioState(); if(!rs.history.length)retu
 window.toggleRadioFav=function(){const rs=radioState(); const cur=rs.history[rs.index]; if(cur){cur.fav=!cur.fav;if(window.save)save();renderRadioDj();}};
 document.addEventListener('DOMContentLoaded',function(){const n=document.getElementById('radioDjNextBtn'),p=document.getElementById('radioDjPrevBtn'),f=document.getElementById('radioDjForwardBtn'),fav=document.getElementById('radioDjFavBtn'),cat=document.getElementById('radioDjCategory'); if(n)n.onclick=nextRadioDj; if(p)p.onclick=()=>moveRadioDj(-1); if(f)f.onclick=()=>moveRadioDj(1); if(fav)fav.onclick=toggleRadioFav; if(cat)cat.onchange=nextRadioDj; try{renderRadioDj()}catch(e){}});
 })();
+
+
 </script>
 
 
@@ -9523,6 +9593,8 @@ window.restoreWordHunterLists=function(){if(!confirm('テーマとお題を初�
 let whTimer=null; function ensureWhTimer(){if(whTimer)return; whTimer=setInterval(()=>{const w=whState(); if(!w.running)return; w.remaining=Math.max(0,(w.remaining||0)-1); if(w.remaining<=0){w.running=false; whRecord('終了'); try{ if(typeof playAlarm==='function')playAlarm(w.sound||'alarm_clock'); }catch(e){} } if(window.save)save(); renderWordHunter();},1000);}
 document.addEventListener('DOMContentLoaded',function(){ensureWhTimer(); const bind=(id,fn)=>{const el=document.getElementById(id); if(el)el.onclick=fn}; bind('wordHunterRollBtn',()=>rollWordHunter('both')); bind('wordHunterRollThemeBtn',()=>rollWordHunter('theme')); bind('wordHunterRollWordBtn',()=>rollWordHunter('word')); bind('wordHunterStartBtn',startWordHunter); bind('wordHunterPauseBtn',pauseWordHunter); bind('wordHunterResetBtn',resetWordHunter); bind('wordHunterSaveListsBtn',saveWordHunterLists); bind('wordHunterRestoreBtn',restoreWordHunterLists); ['wordHunterDifficulty','wordHunterSound','wordHunterMin','wordHunterSec'].forEach(id=>{const el=document.getElementById(id); if(el)el.onchange=setWordHunterBase;}); try{renderWordHunter()}catch(e){console.warn(e)}});
 })();
+
+
 </script>
 
 
@@ -9570,6 +9642,54 @@ window.renderSugoroku=function(){const st=sugoState(); ensureMissions(st); const
 window.autoSugoroku=autoSugoroku;
 document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const el=document.getElementById(id); if(el)el.onclick=fn}; b('sugoRollBtn',rollSugoroku); b('sugoClearBtn',clearSugorokuMission); b('sugoResetRunBtn',resetSugorokuRun); b('sugoAutoBtn',()=>autoSugoroku(true)); b('sugoApplyBtn',applySugorokuSettings); ['sugoCount','sugoExact','sugoBranchMode'].forEach(id=>{const el=document.getElementById(id); if(el)el.onchange=applySugorokuSettings;}); try{renderSugoroku()}catch(e){console.warn(e)}});
 })();
+
+
+// v135 OBS Overlay Settings
+(function(){
+  const OBS_DEFAULT={title:"雑談配信中",layout:"rightBoard",accent:"#38bdf8",bgAlpha:"0.28",showClock:true,showTree:true,showNotice:true,showSafe:true};
+  function ensureObsSettings(){
+    window.state=window.state||{};
+    state.settings=state.settings||{};
+    state.settings.obs=Object.assign({},OBS_DEFAULT,state.settings.obs||{});
+    return state.settings.obs;
+  }
+  function obsUrl(){
+    const base=location.href.split('#')[0].replace(/index\.html.*$/,'').replace(/\?.*$/,'');
+    return base + 'obs_overlay.html';
+  }
+  window.renderObsSettings=function(){
+    const o=ensureObsSettings();
+    const set=(id,val,prop)=>{const el=document.getElementById(id); if(!el)return; if(prop==='checked')el.checked=!!val; else el.value=val;};
+    set('obsTitle',o.title); set('obsLayout',o.layout); set('obsAccent',o.accent); set('obsBgAlpha',o.bgAlpha);
+    set('obsShowClock',o.showClock,'checked'); set('obsShowTree',o.showTree,'checked'); set('obsShowNotice',o.showNotice,'checked'); set('obsShowSafe',o.showSafe,'checked');
+    const box=document.getElementById('obsUrlBox'); if(box)box.textContent=obsUrl();
+    obsUpdatePreview();
+  };
+  window.obsUpdatePreview=function(){
+    const o=ensureObsSettings();
+    const title=document.getElementById('obsPreviewTitle'), card=document.getElementById('obsPreviewCard'), safe=document.getElementById('obsPreviewSafe'), bottom=document.getElementById('obsPreviewBottom'), box=document.getElementById('obsPreviewBox');
+    if(title){title.textContent=o.title||'雑談配信中'; title.style.borderColor=o.accent;}
+    if(card){card.style.display=o.showTree?'block':'none'; card.style.borderColor=o.accent; card.innerHTML='幹：'+escapeHtml(state.tree?.trunk||'今日の話題')+'<br>枝：'+escapeHtml(String(state.tree?.branch||'脱線先').split('\n')[0])+'<br>葉：'+escapeHtml(state.tree?.leaf||'コメントのツボ');}
+    if(safe){safe.style.display=o.showSafe?'flex':'none'; safe.style.borderColor=o.accent;}
+    if(bottom){bottom.style.display=o.showNotice?'block':'none'; bottom.textContent='お知らせ・次の予定をここに表示'; bottom.style.borderColor=o.accent;}
+    if(box){box.style.background='radial-gradient(circle at 50% 20%, '+hexToRgba(o.accent,.20)+', rgba(15,23,42,.96) 58%)';}
+  };
+  function readObsForm(){
+    const g=id=>document.getElementById(id);
+    return {title:g('obsTitle')?.value||'雑談配信中',layout:g('obsLayout')?.value||'rightBoard',accent:g('obsAccent')?.value||'#38bdf8',bgAlpha:g('obsBgAlpha')?.value||'0.28',showClock:!!g('obsShowClock')?.checked,showTree:!!g('obsShowTree')?.checked,showNotice:!!g('obsShowNotice')?.checked,showSafe:!!g('obsShowSafe')?.checked};
+  }
+  function saveObs(){state.settings=state.settings||{}; state.settings.obs=readObsForm(); if(window.save)save(); renderObsSettings(); alert('OBS設定を保存した！');}
+  function hexToRgba(hex,a){const m=String(hex||'#38bdf8').replace('#',''); const n=parseInt(m.length===3?m.split('').map(x=>x+x).join(''):m,16); return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}
+  document.addEventListener('DOMContentLoaded',function(){
+    const b=(id,fn)=>{const el=document.getElementById(id); if(el)el.onclick=fn;};
+    b('obsSaveSettings',saveObs);
+    b('obsRefreshPreview',function(){state.settings.obs=readObsForm(); obsUpdatePreview();});
+    b('obsOpenOverlay',function(){window.open(obsUrl(),'_blank');});
+    b('obsCopyUrl',async function(){const url=obsUrl(); try{await navigator.clipboard.writeText(url); alert('OBS用URLをコピーした！');}catch(e){prompt('このURLをコピーしてOBSに貼ってね',url);}});
+    ['obsTitle','obsLayout','obsAccent','obsBgAlpha','obsShowClock','obsShowTree','obsShowNotice','obsShowSafe'].forEach(id=>{const el=document.getElementById(id); if(el)el.oninput=()=>{state.settings.obs=readObsForm(); obsUpdatePreview();};});
+  });
+})();
+
 </script>
 
 </body>
