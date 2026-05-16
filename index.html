@@ -3870,7 +3870,7 @@ function fitBrushText(text){
 
 <section id="obsNineSlotLayoutPanel" class="obs-nine-slot-layout">
   <h3>OBS表示配置</h3>
-  <p class="obs-nine-help">3×3の各位置に表示内容を割り当てます。</p>
+  <p class="obs-nine-help">上段はタイトル・時計系、下段はテロップ系として割り当てできます。</p>
 
   <div class="obs-nine-grid">
     <label>左上<select id="obsSlotTopLeft" data-obs-slot="topLeft"></select></label>
@@ -9805,10 +9805,26 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 
 
 
+
 <script id="obsNineSlotLayoutScript">
 (function(){
-  const options = ["空白","幹","枝","葉","お知らせ","カレンダー","常連メモ","コメント枠","時計","テロップ","ルーレット結果","カウントダウン","枠のみ"];
-  const slotKeys = ["topLeft","topCenter","topRight","midLeft","midCenter","midRight","bottomLeft","bottomCenter","bottomRight"];
+  const baseOptions = ["空白","幹","枝","葉","お知らせ","カレンダー","常連メモ","コメント枠","ルーレット結果","カウントダウン","枠のみ"];
+  const topOptions = ["空白","タイトル","時計","タイトル＋時計","幹","お知らせ","枠のみ"];
+  const midOptions = ["空白","幹","枝","葉","コメント枠","常連メモ","カレンダー","ルーレット結果","枠のみ"];
+  const bottomOptions = ["空白","テロップ文","テロップ文＋時計","お知らせ","カウントダウン","枠のみ"];
+
+  const optionMap = {
+    topLeft: topOptions,
+    topCenter: topOptions,
+    topRight: topOptions,
+    midLeft: midOptions,
+    midCenter: midOptions,
+    midRight: midOptions,
+    bottomLeft: bottomOptions,
+    bottomCenter: bottomOptions,
+    bottomRight: bottomOptions
+  };
+
   const mergeKeys = ["TopLeft","TopRight","MidLeft","MidRight","BottomLeft","BottomRight"];
 
   function load(){
@@ -9835,11 +9851,17 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     const data = load();
 
     document.querySelectorAll("[data-obs-slot]").forEach(sel=>{
-      if(sel.dataset.ready === "1") return;
+      const key = sel.dataset.obsSlot;
+      const options = optionMap[key] || baseOptions;
+      const prev = data.slots && data.slots[key];
+
       sel.innerHTML = options.map(v=>`<option value="${v}">${v}</option>`).join("");
-      sel.value = (data.slots && data.slots[sel.dataset.obsSlot]) || "空白";
-      sel.addEventListener("change", save);
-      sel.dataset.ready = "1";
+      sel.value = options.includes(prev) ? prev : "空白";
+
+      if(sel.dataset.ready !== "1"){
+        sel.addEventListener("change", save);
+        sel.dataset.ready = "1";
+      }
     });
 
     mergeKeys.forEach(k=>{
@@ -9860,6 +9882,7 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
   }
 })();
 </script>
+
 
 </body>
 </html>
