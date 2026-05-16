@@ -2873,6 +2873,14 @@ function fitBrushText(text){
 }
 </style>
 
+
+<style id="hideScreenTitleInputOnly">
+#obsTitleText,
+label:has(#obsTitleText){
+  display:none !important;
+}
+</style>
+
 </head>
 <body>
   <div class="app">
@@ -4061,7 +4069,7 @@ function fitBrushText(text){
 
   <div class="obs-input-box">
     <label>タイトル文
-      
+      <input id="obsTitleText" class="obs-text-input" type="text" placeholder="例：雑談 / 作業配信 / 初見歓迎">
     </label>
     <label>テロップ文
       <input id="obsTickerText" class="obs-text-input" type="text" placeholder="画面下に表示するテロップ文">
@@ -4105,7 +4113,7 @@ function fitBrushText(text){
         <div class="obs-settings-grid" style="margin-top:14px">
           <div>
             <div class="grid">
-              <label><input id="obsTitle" placeholder="例：雑談配信中"></label>
+              <label>画面タイトル<input id="obsTitle" placeholder="例：雑談配信中"></label>
               <labelUrlBox">未生成</div>
             <div class="row" style="margin-top:12px">
               <button class="btn primary" id="obsSaveSettings" type="button">OBS設定を保存</button>
