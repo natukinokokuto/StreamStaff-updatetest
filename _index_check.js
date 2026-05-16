@@ -5739,3 +5739,20 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     init();
   }
 })();
+
+;
+
+(function(){
+  function hideOnlyOldRoughPreview(){
+    document.querySelectorAll("h1,h2,h3,h4,h5,h6").forEach(function(h){
+      if((h.textContent || "").includes("ざっくり見た目プレビュー")){
+        h.style.display = "none";
+      }
+    });
+  }
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", hideOnlyOldRoughPreview);
+  }else{
+    hideOnlyOldRoughPreview();
+  }
+})();

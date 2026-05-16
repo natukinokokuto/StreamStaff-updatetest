@@ -2873,6 +2873,21 @@ function fitBrushText(text){
 }
 </style>
 
+
+<style id="v170HideOnlyCss">
+/* 古いざっくりプレビューだけ隠す。OBS表示配置プレビューは残す */
+#obsPreviewBox,
+#obsPreviewBox + .obs-mini-note{
+  display:none !important;
+}
+
+/* 古い「画面タイトル」入力だけ隠す。OBS用タイトル文 #obsTitleText は残す */
+#obsTitle,
+label:has(#obsTitle){
+  display:none !important;
+}
+</style>
+
 </head>
 <body>
   <div class="app">
@@ -10325,6 +10340,24 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 
 
 
+
+
+<script id="v170HideOnlyScript">
+(function(){
+  function hideOnlyOldRoughPreview(){
+    document.querySelectorAll("h1,h2,h3,h4,h5,h6").forEach(function(h){
+      if((h.textContent || "").includes("ざっくり見た目プレビュー")){
+        h.style.display = "none";
+      }
+    });
+  }
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", hideOnlyOldRoughPreview);
+  }else{
+    hideOnlyOldRoughPreview();
+  }
+})();
+</script>
 
 </body>
 </html>
