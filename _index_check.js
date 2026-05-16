@@ -5616,6 +5616,28 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
   }
 
 
+
+  function startTickerRunner(runner, container, speedPxPerSec){
+    requestAnimationFrame(()=>{
+      const boxW = container.clientWidth || 0;
+      const textW = runner.scrollWidth || 0;
+      const distance = boxW + textW;
+      const duration = Math.max(6, distance / (speedPxPerSec || 80));
+
+      runner.animate(
+        [
+          { transform: "translate(" + boxW + "px,-50%)" },
+          { transform: "translate(-" + textW + "px,-50%)" }
+        ],
+        {
+          duration: duration * 1000,
+          iterations: Infinity,
+          easing: "linear"
+        }
+      );
+    });
+  }
+
   function renderPreview(data){
     const grid = document.getElementById("obsPreviewGrid");
     if(!grid) return;
@@ -5647,6 +5669,7 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
           runner.className = "ticker-runner";
           runner.textContent = text;
           cell.appendChild(runner);
+          startTickerRunner(runner, cell, 80);
         }else{
           cell.textContent = text;
         }

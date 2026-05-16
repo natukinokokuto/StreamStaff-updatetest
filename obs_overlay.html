@@ -9,8 +9,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent
 .slot{border-radius:14px;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px 12px;font-weight:bold;font-size:24px;overflow:hidden;white-space:pre-line;text-shadow:0 2px 6px rgba(0,0,0,.55);box-sizing:border-box}
 .slot.topbar{font-size:22px;white-space:nowrap;text-overflow:ellipsis}
 .slot.ticker{font-size:20px;white-space:nowrap;justify-content:flex-start;overflow:hidden;position:relative}
-.ticker-runner{position:absolute;top:50%;left:100%;transform:translateY(-50%);white-space:nowrap;display:inline-block;animation:slotTickerMove 14s linear infinite;will-change:left,transform}
-@keyframes slotTickerMove{0%{left:100%;transform:translate(0,-50%)}100%{left:0%;transform:translate(-100%,-50%)}}to{left:0%;transform:translate(-100%,-50%)}}
+.ticker-runner{position:absolute;top:50%;left:0;white-space:nowrap;display:inline-block;transform:translate(0,-50%);will-change:transform}100%{left:0%;transform:translate(-100%,-50%)}}to{left:0%;transform:translate(-100%,-50%)}}
 .slot.empty{background:transparent!important;border:none!important}
 </style>
 </head>
@@ -146,6 +145,28 @@ function layoutItems(data){
  }
  return [...row("top",1),...row("mid",2),...row("bottom",3)];
 }
+
+function startTickerRunner(runner, container, speedPxPerSec){
+ requestAnimationFrame(()=>{
+   const boxW = container.clientWidth || 0;
+   const textW = runner.scrollWidth || 0;
+   const distance = boxW + textW;
+   const duration = Math.max(6, distance / (speedPxPerSec || 80));
+
+   runner.animate(
+     [
+       { transform: "translate(" + boxW + "px,-50%)" },
+       { transform: "translate(-" + textW + "px,-50%)" }
+     ],
+     {
+       duration: duration * 1000,
+       iterations: Infinity,
+       easing: "linear"
+     }
+   );
+ });
+}
+
 function render(){
  const data = load();
  const overlay = document.getElementById("overlay");
@@ -170,6 +191,7 @@ function render(){
      runner.className = "ticker-runner";
      runner.textContent = text;
      div.appendChild(runner);
+     startTickerRunner(runner, div, 80);
    }else{
      div.textContent = text;
    }

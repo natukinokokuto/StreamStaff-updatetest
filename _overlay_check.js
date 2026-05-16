@@ -128,6 +128,28 @@ function layoutItems(data){
  }
  return [...row("top",1),...row("mid",2),...row("bottom",3)];
 }
+
+function startTickerRunner(runner, container, speedPxPerSec){
+ requestAnimationFrame(()=>{
+   const boxW = container.clientWidth || 0;
+   const textW = runner.scrollWidth || 0;
+   const distance = boxW + textW;
+   const duration = Math.max(6, distance / (speedPxPerSec || 80));
+
+   runner.animate(
+     [
+       { transform: "translate(" + boxW + "px,-50%)" },
+       { transform: "translate(-" + textW + "px,-50%)" }
+     ],
+     {
+       duration: duration * 1000,
+       iterations: Infinity,
+       easing: "linear"
+     }
+   );
+ });
+}
+
 function render(){
  const data = load();
  const overlay = document.getElementById("overlay");
@@ -152,6 +174,7 @@ function render(){
      runner.className = "ticker-runner";
      runner.textContent = text;
      div.appendChild(runner);
+     startTickerRunner(runner, div, 80);
    }else{
      div.textContent = text;
    }
