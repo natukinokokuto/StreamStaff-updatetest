@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>StreamStaff OBS Layout Builder</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>OBS レイアウトビルダー</h1>
+
+<div class="controls">
+  <label>表示内容:
+    <select id="contentType">
+      <option>幹</option>
+      <option>お知らせ</option>
+      <option>コメント</option>
+      <option>時計</option>
+      <option>カレンダー</option>
+      <option>テロップ</option>
+      <option>枠のみ</option>
+      <option>空白</option>
+    </select>
+  </label>
+
+  <button onclick="mergeSelected()">選択セル結合</button>
+  <button onclick="hideSelected()">非表示</button>
+  <button onclick="applyContent()">内容適用</button>
+  <button onclick="resetGrid()">リセット</button>
+</div>
+
+<div id="grid">
+  <div class="cell" data-id="1">1</div>
+  <div class="cell" data-id="2">2</div>
+  <div class="cell" data-id="3">3</div>
+  <div class="cell" data-id="4">4</div>
+  <div class="cell" data-id="5">5</div>
+  <div class="cell" data-id="6">6</div>
+  <div class="cell" data-id="7">7</div>
+  <div class="cell" data-id="8">8</div>
+  <div class="cell" data-id="9">9</div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

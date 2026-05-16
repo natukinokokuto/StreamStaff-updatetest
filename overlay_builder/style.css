@@ -1,0 +1,37 @@
+
+body{
+  background:#111;
+  color:white;
+  font-family:sans-serif;
+  padding:20px;
+}
+.controls{
+  margin-bottom:20px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+#grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  grid-template-rows:repeat(3,160px);
+  gap:8px;
+}
+.cell{
+  border:2px solid #555;
+  background:#222;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  border-radius:12px;
+  font-size:20px;
+  transition:.2s;
+}
+.cell.selected{
+  border-color:#00d2ff;
+  background:#18313a;
+}
+.cell.hidden{
+  display:none;
+}
