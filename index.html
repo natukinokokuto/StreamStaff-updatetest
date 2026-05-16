@@ -2676,8 +2676,8 @@ function fitBrushText(text){
     <nav class="nav">
       <button class="active" data-screen="home">ホーム</button>
       <button data-screen="games">ゲーム</button>
-      <button data-screen="bonus">ログボ</button>
       <button data-screen="memo">常連</button><!-- v130 fix -->
+      <button data-screen="calendar">カレンダー</button>
       <button data-screen="tools">道具</button>
       <button data-screen="settings">設定</button>
     </nav>
@@ -3380,6 +3380,7 @@ function fitBrushText(text){
     <section id="memo" class="screen">
       <div class="regular-toolbar" id="regularMemoToolbar">
         <button class="btn primary" id="regularMemoAddListener" type="button">＋ 常連追加</button>
+        <button class="btn" id="regularMemoOpenLogbo" type="button">ログボ</button>
         <input id="regularMemoSearch" placeholder="常連検索" style="flex:1;min-width:180px">
         <select id="regularMemoSort">
           <option value="updated">最終更新日順</option>
@@ -9269,6 +9270,7 @@ const firebaseConfig = { ... }
       bar.className="regular-toolbar";
       bar.innerHTML=''
         + '<button class="btn primary" id="regularMemoAddListener" type="button">＋ 常連追加</button>'
+        + '<button class="btn" id="regularMemoOpenLogbo" type="button">ログボ</button>'
         + '<input id="regularMemoSearch" placeholder="常連検索" style="flex:1;min-width:180px">'
         + '<select id="regularMemoSort">'
         + '<option value="updated">最終更新日順</option>'
@@ -9280,8 +9282,15 @@ const firebaseConfig = { ... }
     }
 
     const addBtn=bar.querySelector("#regularMemoAddListener");
+    const logboBtn=bar.querySelector("#regularMemoOpenLogbo");
     const searchInput=bar.querySelector("#regularMemoSearch");
     const sortSelect=bar.querySelector("#regularMemoSort");
+
+    if(logboBtn){
+      logboBtn.onclick=function(){
+        if(typeof showScreen === "function") showScreen("bonus");
+      };
+    }
 
     if(addBtn){
       addBtn.onclick=function(){
