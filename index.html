@@ -4117,16 +4117,6 @@ function fitBrushText(text){
             </div>
           </div>
           <div>
-            <h3 style="margin-top:0">ざっくり見た目プレビュー</h3>
-            <div class="obs-preview-box" id="obsPreviewBox">
-              <div class="obs-preview-title" id="obsPreviewTitle">雑談配信中</div>
-              <div style="position:absolute;inset:74px 14px 56px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-                <div class="obs-preview-card" id="obsPreviewLeft">左側</div>
-                <div class="obs-preview-safe" id="obsPreviewCenter">中央</div>
-                <div class="obs-preview-card" id="obsPreviewRight">右側</div>
-              </div>
-              <div class="obs-preview-bottom" id="obsPreviewBottom">下帯テロップ</div>
-            </div>
             <div class="obs-mini-note" style="margin-top:12px">
               表示候補：幹・枝・葉 / お知らせ / カレンダー予定 / 今日の常連メモ / ルーレット結果 / カウントダウン / 枠のみ / キャラ安全地帯 / 時計。まずはOBSで映える「枠のみ」「幹」「お知らせ」が強い。
             </div>
@@ -10325,114 +10315,6 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 
 
 
-
-
-<script id="v172PreviewFallbackRepair">
-(function(){
-  function readObsData(){
-    try{
-      return JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || "{}");
-    }catch(e){
-      return {};
-    }
-  }
-
-  function getSlotValue(key){
-    const sel = document.querySelector('[data-obs-slot="'+key+'"]');
-    if(sel) return sel.value || "空白";
-    const data = readObsData();
-    return (data.slots && data.slots[key]) || "空白";
-  }
-
-  function labelFor(value){
-    if(!value || value === "空白") return "";
-    if(value === "タイトル"){
-      const t = document.getElementById("obsTitleText");
-      return (t && t.value) || localStorage.getItem("ss_obs_title_text") || "";
-    }
-    if(value === "テロップ文"){
-      const t = document.getElementById("obsTickerText");
-      return (t && t.value) || localStorage.getItem("ss_obs_ticker_text") || "";
-    }
-    if(value === "タイトル＋時計"){
-      const d = new Date();
-      const time = String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-      const t = document.getElementById("obsTitleText");
-      const title = (t && t.value) || localStorage.getItem("ss_obs_title_text") || "";
-      return title ? title+"　"+time : time;
-    }
-    if(value === "テロップ文＋時計"){
-      const d = new Date();
-      const time = String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-      const t = document.getElementById("obsTickerText");
-      const ticker = (t && t.value) || localStorage.getItem("ss_obs_ticker_text") || "";
-      return ticker ? ticker+"　"+time : time;
-    }
-    if(value === "枠のみ") return "";
-    return value;
-  }
-
-  function forcePreview(){
-    const grid = document.getElementById("obsPreviewGrid");
-    if(!grid) return;
-
-    // If existing renderer is working and has visible children, do not fight it.
-    const visibleText = (grid.textContent || "").trim();
-    if(grid.children.length >= 3 && visibleText) return;
-
-    const keys = [
-      "topLeft","topCenter","topRight",
-      "midLeft","midCenter","midRight",
-      "bottomLeft","bottomCenter","bottomRight"
-    ];
-
-    grid.innerHTML = "";
-    grid.style.display = "grid";
-    grid.style.gridTemplateColumns = "repeat(3, 1fr)";
-    grid.style.gridTemplateRows = "42px minmax(220px, 1fr) 42px";
-    grid.style.gap = "8px";
-
-    keys.forEach(function(key){
-      const value = getSlotValue(key);
-      const cell = document.createElement("div");
-      cell.className = "obs-preview-cell";
-      cell.style.border = value === "空白" ? "none" : "2px solid #555";
-      cell.style.background = value === "空白" ? "transparent" : "#222";
-      cell.style.color = "#fff";
-      cell.style.borderRadius = "12px";
-      cell.style.display = "flex";
-      cell.style.alignItems = "center";
-      cell.style.justifyContent = "center";
-      cell.style.overflow = "hidden";
-      cell.style.padding = "6px";
-      cell.textContent = labelFor(value);
-      grid.appendChild(cell);
-    });
-  }
-
-  function schedule(){
-    setTimeout(forcePreview, 50);
-    setTimeout(forcePreview, 250);
-  }
-
-  if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", schedule);
-  }else{
-    schedule();
-  }
-
-  document.addEventListener("change", function(e){
-    if(e.target && e.target.matches("[data-obs-slot], #obsTitleText, #obsTickerText, input[type='checkbox']")){
-      setTimeout(forcePreview, 50);
-    }
-  });
-  document.addEventListener("input", function(e){
-    if(e.target && e.target.matches("#obsTitleText, #obsTickerText")){
-      setTimeout(forcePreview, 50);
-    }
-  });
-})();
-</script>
 
 </body>
 </html>
