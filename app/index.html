@@ -9256,6 +9256,7 @@ const firebaseConfig = { ... }
     bar.id="regularMemoToolbar";
     bar.className="regular-toolbar";
     bar.innerHTML=''
+      + '<button class="btn primary" id="regularMemoAddListener" type="button">＋ 常連追加</button>'
       + '<input id="regularMemoSearch" placeholder="常連検索" style="flex:1;min-width:180px">'
       + '<select id="regularMemoSort">'
       + '<option value="updated">最終更新日順</option>'
@@ -9263,6 +9264,49 @@ const firebaseConfig = { ... }
       + '<option value="recent">最近追加</option>'
       + '<option value="birthday">誕生日近い順</option>'
       + '</select>';
+    const addBtn=document.getElementById("regularMemoAddListener");
+    if(addBtn){
+      addBtn.onclick=function(){
+        const raw=prompt("常連名", "新しい常連");
+        const name=String(raw||"").trim();
+        if(!name) return;
+        state.listeners=state.listeners||[];
+        const today=todayYmd();
+        const listener={
+          name:name,
+          days:[],
+          logboByMonth:{},
+          memo:"",
+          penalty:0,
+          registeredDate:today,
+          firstVisitDate:today,
+          birthday:"",
+          birthYear:"",
+          nickname:"",
+          searchYomi:"",
+          searchTags:"",
+          topicSeeds:[],
+          favorites:{},
+          updatedAt:new Date().toISOString()
+        };
+        if(state.logboMonth) listener.logboByMonth[state.logboMonth]=[];
+        state.listeners.push(listener);
+        const newIndex=state.listeners.length-1;
+        state.calendarEvents=state.calendarEvents||[];
+        state.calendarEvents.push({id:typeof uid==="function"?uid("cal"):("cal_"+Date.now()),date:today,listener:name,type:"登録日",item:"常連登録"});
+        if(state.roulette){
+          state.roulette.guestBetters=state.roulette.guestBetters||[];
+          if(!state.roulette.guestBetters.includes(name)) state.roulette.guestBetters.push(name);
+        }
+        try{ save(); }catch(e){}
+        try{ renderBonus(); }catch(e){}
+        try{ renderCalendar(); }catch(e){}
+        try{ renderRoulette(); }catch(e){}
+        window.__regularMemoSearch="";
+        try{ renderMemo(); }catch(e){}
+        if(typeof openListenerDetail==="function") openListenerDetail(newIndex);
+      };
+    }
     grid.parentNode.insertBefore(bar, grid);
     regularMemoSearch.value = window.__regularMemoSearch || "";
     regularMemoSearch.addEventListener("compositionstart", function(){ window.__regularMemoSearchComposing=true; });
