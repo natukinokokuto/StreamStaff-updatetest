@@ -44,8 +44,18 @@ html,body{
 .slot.ticker{
   font-size:20px;
   white-space:nowrap;
-  text-overflow:ellipsis;
-  justify-content:center;
+  justify-content:flex-start;
+  overflow:hidden;
+}
+.slot.ticker .ticker-scroll{
+  display:inline-block;
+  min-width:100%;
+  padding-left:100%;
+  animation: obsTickerScroll 16s linear infinite;
+}
+@keyframes obsTickerScroll{
+  from{ transform:translateX(0); }
+  to{ transform:translateX(-100%); }
 }
 .slot.comment{
   align-items:flex-start;
@@ -90,7 +100,6 @@ function labelFor(value,data){
  if(value==="タイトル＋時計") return (data.titleText ? data.titleText+"　" : "") + nowTime();
  if(value==="テロップ文") return data.tickerText || "";
  if(value==="テロップ文＋時計") return (data.tickerText ? data.tickerText+"　" : "") + nowTime();
- if(value==="コメント枠") return "コメント\\nコメント\\nコメント";
  if(value==="幹") return "雑談テーマ";
  if(value==="枠のみ") return "";
  return value;
@@ -158,9 +167,7 @@ function render(){
 
    if(item.row===1) div.classList.add("topbar");
    if(item.row===3) div.classList.add("ticker");
-   if(value==="コメント枠") div.classList.add("comment");
-
-   div.style.background = c.panel || "rgba(0,0,0,.35)";
+     div.style.background = c.panel || "rgba(0,0,0,.35)";
    div.style.border = "2px solid " + (c.frame || "#555");
    div.style.color = c.text || "#fff";
 
@@ -168,7 +175,17 @@ function render(){
      div.classList.add("empty");
    }
 
-   div.textContent = labelFor(value,data);
+   const text = labelFor(value,data);
+
+   if(item.row === 3 && value.indexOf("テロップ文") >= 0 && text){
+     const span = document.createElement("span");
+     span.className = "ticker-scroll";
+     span.textContent = text;
+     div.appendChild(span);
+   }else{
+     div.textContent = text;
+   }
+
    overlay.appendChild(div);
  });
 }
