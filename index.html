@@ -9968,9 +9968,9 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 
 <script id="obsNineSlotLayoutScript">
 (function(){
-  const topOptions = ["空白","タイトル","時計","タイトル＋時計","幹","お知らせ","枠のみ"];
-  const midOptions = ["空白","幹","枝","葉","常連メモ","カレンダー","ルーレット結果","枠のみ"];
-  const bottomOptions = ["空白","テロップ文","テロップ文＋時計","お知らせ","カウントダウン","枠のみ"];
+  const topOptions = ["空白","タイトル","時計","タイトル＋時計","配信メモ","幹","枝","葉","お知らせ","枠のみ"];
+  const midOptions = ["空白","配信メモ","幹","枝","葉","常連メモ","カレンダー","ルーレット結果","枠のみ"];
+  const bottomOptions = ["空白","テロップ文","テロップ文＋時計","配信メモ","幹","お知らせ","カウントダウン","枠のみ"];
 
   const slots = [
     ["topLeft", "左上", topOptions],
@@ -10007,7 +10007,7 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
       return v.map(textFromValue).filter(Boolean).slice(0,3).join(" / ");
     }
     if(typeof v === "object"){
-      const preferred = ["title","text","main","trunk","branch","leaf","theme","memo","content","name","label","value","body"];
+      const preferred = ["配信メモ","幹","枝","葉","title","text","main","trunk","branch","leaf","theme","memo","note","notes","content","name","label","value","body"];
       for(const k of preferred){
         const t = textFromValue(v[k]);
         if(t) return t;
@@ -10035,10 +10035,33 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     return fallback || "";
   }
 
+
   function syncedValue(kind){
-    if(kind === "幹") return findByKeys(["ss_current_trunk","currentTrunk","rescueTrunk","topicTrunk","streamstaff_trunk","ss_rescue_current","streamstaff_topics"], "雑談テーマ");
-    if(kind === "枝") return findByKeys(["ss_current_branch","currentBranch","rescueBranch","topicBranch","streamstaff_branch","streamstaff_topics"], "枝");
-    if(kind === "葉") return findByKeys(["ss_current_leaf","currentLeaf","rescueLeaf","topicLeaf","streamstaff_leaf","streamstaff_topics"], "葉");
+    if(kind === "配信メモ") return findByKeys([
+      "ss_stream_memo","streamMemo","homeStreamMemo","broadcastMemo",
+      "streamstaff_home_memo","streamstaff_memo","ss_home_memo",
+      "ss_cheat_sheet","cheatSheet","homeMemo","memo","notes",
+      "ss_main_memo","mainMemo","配信メモ"
+    ], "配信メモ");
+
+    if(kind === "幹") return findByKeys([
+      "ss_current_trunk","currentTrunk","rescueTrunk","topicTrunk",
+      "streamstaff_trunk","ss_rescue_current","streamstaff_topics",
+      "ss_home_trunk","homeTrunk","trunk","幹"
+    ], "雑談テーマ");
+
+    if(kind === "枝") return findByKeys([
+      "ss_current_branch","currentBranch","rescueBranch","topicBranch",
+      "streamstaff_branch","streamstaff_topics","ss_home_branch",
+      "homeBranch","branch","枝"
+    ], "枝");
+
+    if(kind === "葉") return findByKeys([
+      "ss_current_leaf","currentLeaf","rescueLeaf","topicLeaf",
+      "streamstaff_leaf","streamstaff_topics","ss_home_leaf",
+      "homeLeaf","leaf","葉"
+    ], "葉");
+
     if(kind === "お知らせ") return findByKeys(["ss_notice","notice","notices","calendarNotice","ss_calendar_notice","calendarEvents","events"], "お知らせ");
     if(kind === "常連メモ") return findByKeys(["ss_regulars","regulars","listeners","streamstaff_regulars"], "常連メモ");
     if(kind === "カレンダー") return findByKeys(["ss_calendar","calendar","calendarEvents","events"], "カレンダー");
@@ -10046,6 +10069,7 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     if(kind === "カウントダウン") return findByKeys(["ss_countdown","countdown","timerTarget"], "カウントダウン");
     return "";
   }
+
 
   function defaultData(){
     return {
