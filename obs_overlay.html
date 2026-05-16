@@ -38,6 +38,40 @@ padding:8px;
 text-align:center;
 }
 </style>
+
+<style id="obsNineSlotOverlayStyle">
+#ssObsNineSlotOverlay{
+  position:fixed;
+  inset:0;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  grid-template-rows:42px minmax(0,1fr) 42px;
+  gap:8px;
+  padding:16px;
+  box-sizing:border-box;
+  pointer-events:none;
+}
+.ssObsSlot{
+  border:2px solid var(--obs-frame,#555);
+  border-radius:14px;
+  background:var(--obs-panel,rgba(0,0,0,.35));
+  color:var(--obs-text,#fff);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:6px 10px;
+  font-size:22px;
+  font-weight:700;
+  overflow:hidden;
+  text-shadow:0 2px 6px rgba(0,0,0,.55);
+}
+.ssObsSlot.empty{
+  border-color:transparent !important;
+  background:transparent !important;
+}
+</style>
+
 </head>
 <body>
 <div class="overlay" id="overlay">
@@ -127,54 +161,70 @@ render();
 })();
 </script>
 
+
+
+
 <script id="obsNineSlotOverlayRenderer">
 (function(){
   const slotOrder = ["topLeft","topCenter","topRight","midLeft","midCenter","midRight","bottomLeft","bottomCenter","bottomRight"];
-  function load(){
-    try{return JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || '{"slots":{},"tickerText":""}');}
-    catch(e){return {slots:{},tickerText:""};}
+
+  function nowTime(){
+    const d = new Date();
+    return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
   }
+
+  function load(){
+    try{return JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || '{"slots":{},"titleText":"","tickerText":"","colors":{}}');}
+    catch(e){return {slots:{},titleText:"",tickerText:"",colors:{}};}
+  }
+
+  function labelFor(value,data){
+    if(!value || value === "空白") return "";
+    if(value === "タイトル") return data.titleText || "";
+    if(value === "時計") return nowTime();
+    if(value === "タイトル＋時計"){
+      const t = nowTime();
+      return data.titleText ? data.titleText + "　" + t : t;
+    }
+    if(value === "テロップ文") return data.tickerText || "";
+    if(value === "テロップ文＋時計"){
+      const t = nowTime();
+      return data.tickerText ? data.tickerText + "　" + t : t;
+    }
+    if(value === "枠のみ") return "";
+    return value;
+  }
+
   function render(){
     const data = load();
+    const c = data.colors || {};
+    document.body.style.background = c.bg || "transparent";
+
     let root = document.getElementById("ssObsNineSlotOverlay");
     if(!root){
       root = document.createElement("div");
       root.id = "ssObsNineSlotOverlay";
-      root.style.position = "fixed";
-      root.style.inset = "0";
-      root.style.display = "grid";
-      root.style.gridTemplateColumns = "repeat(3,1fr)";
-      root.style.gridTemplateRows = "repeat(3,1fr)";
-      root.style.gap = "8px";
-      root.style.padding = "16px";
-      root.style.boxSizing = "border-box";
       document.body.appendChild(root);
     }
+
     root.innerHTML = "";
     slotOrder.forEach(key=>{
       const value = (data.slots && data.slots[key]) || "空白";
       const cell = document.createElement("div");
-      cell.style.border = "1px solid rgba(255,255,255,.25)";
-      cell.style.borderRadius = "14px";
-      cell.style.display = "flex";
-      cell.style.alignItems = "center";
-      cell.style.justifyContent = "center";
-      cell.style.color = "#fff";
-      cell.style.background = "rgba(0,0,0,.35)";
-      cell.style.fontSize = "24px";
-      cell.style.textAlign = "center";
+      cell.className = "ssObsSlot";
+      cell.style.setProperty("--obs-frame", c.frame || "#555555");
+      cell.style.setProperty("--obs-panel", c.panel || "rgba(0,0,0,.35)");
+      cell.style.setProperty("--obs-text", c.text || "#ffffff");
       if(value === "空白"){
-        cell.style.opacity = ".15";
-        cell.textContent = "";
-      }else if(value.indexOf("テロップ文") >= 0){
-        cell.textContent = data.tickerText || "テロップ文";
-      }else{
-        cell.textContent = value;
+        cell.classList.add("empty");
       }
+      cell.textContent = labelFor(value,data);
       root.appendChild(cell);
     });
   }
+
   window.addEventListener("storage", render);
+  setInterval(render, 1000);
   render();
 })();
 </script>

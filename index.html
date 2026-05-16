@@ -2670,6 +2670,9 @@ function fitBrushText(text){
 
 
 
+
+
+
 <style id="obsNineSlotLayoutStyle">
 #obsNineSlotLayoutPanel{
   margin:16px 0;
@@ -2695,7 +2698,8 @@ function fitBrushText(text){
   font-weight:700;
 }
 .obs-nine-grid select,
-.obs-ticker-input{
+.obs-text-input,
+.obs-color-input{
   width:100%;
   box-sizing:border-box;
   padding:10px;
@@ -2704,6 +2708,7 @@ function fitBrushText(text){
   background:#111;
   color:#fff;
 }
+.obs-color-input{height:44px;padding:4px}
 .obs-row-merge-box{margin-top:12px;display:grid;gap:8px}
 .obs-row-merge{
   display:flex;
@@ -2715,30 +2720,46 @@ function fitBrushText(text){
   background:rgba(255,255,255,.05);
 }
 .obs-row-merge label{display:flex;align-items:center;gap:6px}
-.obs-ticker-box{
+.obs-input-box{
   margin-top:12px;
   padding:12px;
   border-radius:14px;
   background:rgba(255,255,255,.06);
+  display:grid;
+  gap:10px;
+}
+.obs-color-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
 }
 .obs-preview-grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
+  grid-template-rows:42px minmax(220px,1fr) 42px;
   gap:8px;
   margin-top:10px;
+  height:340px;
+  padding:10px;
+  border-radius:14px;
+  background:rgba(0,0,0,.25);
 }
 .obs-preview-cell{
-  min-height:72px;
-  background:#222;
-  border:2px solid #555;
+  background:var(--obs-panel-bg,#222);
+  border:2px solid var(--obs-frame-color,#555);
   border-radius:12px;
   display:flex;
   align-items:center;
   justify-content:center;
-  color:#fff;
+  color:var(--obs-text-color,#fff);
   padding:8px;
   text-align:center;
   font-size:14px;
+  overflow:hidden;
+}
+.obs-preview-cell.empty{
+  background:transparent;
+  border-color:transparent;
 }
 </style>
 
@@ -3894,7 +3915,7 @@ function fitBrushText(text){
 
 <section id="obsNineSlotLayoutPanel">
   <h3>OBS表示配置</h3>
-  <p class="obs-nine-help">上段はタイトル・時計系、下段はテロップ系として割り当てできます。</p>
+  <p class="obs-nine-help">上段・下段は一行帯、中段は残り高さで表示します。</p>
 
   <div class="obs-nine-grid">
     <label>左上<select id="obsSlotTopLeft" data-obs-slot="topLeft"></select></label>
@@ -3928,10 +3949,19 @@ function fitBrushText(text){
     </div>
   </div>
 
-  <div class="obs-ticker-box">
-    <label>テロップ文
-      <input id="obsTickerText" class="obs-ticker-input" type="text" placeholder="画面下に流す・表示するテロップ文">
+  <div class="obs-input-box">
+    <label>タイトル文
+      <input id="obsTitleText" class="obs-text-input" type="text" placeholder="例：雑談 / 作業配信 / 初見歓迎">
     </label>
+    <label>テロップ文
+      <input id="obsTickerText" class="obs-text-input" type="text" placeholder="画面下に表示するテロップ文">
+    </label>
+    <div class="obs-color-grid">
+      <label>背景色<input id="obsBgColor" class="obs-color-input" type="color" value="#000000"></label>
+      <label>枠色<input id="obsFrameColor" class="obs-color-input" type="color" value="#555555"></label>
+      <label>文字色<input id="obsTextColor" class="obs-color-input" type="color" value="#ffffff"></label>
+      <label>パネル色<input id="obsPanelColor" class="obs-color-input" type="color" value="#222222"></label>
+    </div>
   </div>
 
   <div id="obsPreviewWrap">
@@ -3939,6 +3969,10 @@ function fitBrushText(text){
     <div id="obsPreviewGrid" class="obs-preview-grid"></div>
   </div>
 </section>
+
+
+
+
 
 
 
@@ -9824,6 +9858,9 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 
 
 
+
+
+
 <script id="obsNineSlotLayoutScript">
 (function(){
   const topOptions = ["空白","タイトル","時計","タイトル＋時計","幹","お知らせ","枠のみ"];
@@ -9848,16 +9885,21 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     "obsMergeBottomLeft","obsMergeBottomRight"
   ];
 
+  function nowTime(){
+    const d = new Date();
+    return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  }
+
   function load(){
     try{
-      return JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || '{"slots":{},"merge":{},"tickerText":""}');
+      return JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || '{"slots":{},"merge":{},"titleText":"","tickerText":"","colors":{}}');
     }catch(e){
-      return {slots:{},merge:{},tickerText:""};
+      return {slots:{},merge:{},titleText:"",tickerText:"",colors:{}};
     }
   }
 
   function save(){
-    const data = {slots:{}, merge:{}, tickerText:""};
+    const data = {slots:{}, merge:{}, titleText:"", tickerText:"", colors:{}};
     slots.forEach(([key])=>{
       const el = document.querySelector('[data-obs-slot="'+key+'"]');
       data.slots[key] = el ? el.value : "空白";
@@ -9866,24 +9908,59 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
       const el = document.getElementById(id);
       data.merge[id] = !!(el && el.checked);
     });
-    const ticker = document.getElementById("obsTickerText");
-    data.tickerText = ticker ? ticker.value : "";
+    data.titleText = document.getElementById("obsTitleText")?.value || "";
+    data.tickerText = document.getElementById("obsTickerText")?.value || "";
+    data.colors = {
+      bg: document.getElementById("obsBgColor")?.value || "#000000",
+      frame: document.getElementById("obsFrameColor")?.value || "#555555",
+      text: document.getElementById("obsTextColor")?.value || "#ffffff",
+      panel: document.getElementById("obsPanelColor")?.value || "#222222"
+    };
     localStorage.setItem("ss_obs_9slot_layout", JSON.stringify(data));
     renderPreview(data);
+  }
+
+  function labelFor(value, data){
+    if(!value || value === "空白") return "";
+    if(value === "タイトル") return data.titleText || "";
+    if(value === "時計") return nowTime();
+    if(value === "タイトル＋時計"){
+      const title = data.titleText || "";
+      const t = nowTime();
+      return title ? title + "　" + t : t;
+    }
+    if(value === "テロップ文") return data.tickerText || "";
+    if(value === "テロップ文＋時計"){
+      const ticker = data.tickerText || "";
+      const t = nowTime();
+      return ticker ? ticker + "　" + t : t;
+    }
+    if(value === "枠のみ") return "";
+    return value;
+  }
+
+  function applyColors(el, data){
+    const c = data.colors || {};
+    el.style.setProperty("--obs-panel-bg", c.panel || "#222222");
+    el.style.setProperty("--obs-frame-color", c.frame || "#555555");
+    el.style.setProperty("--obs-text-color", c.text || "#ffffff");
   }
 
   function renderPreview(data){
     const grid = document.getElementById("obsPreviewGrid");
     if(!grid) return;
+    const c = data.colors || {};
+    grid.style.background = c.bg || "rgba(0,0,0,.25)";
     grid.innerHTML = "";
     slots.forEach(([key,label])=>{
+      const value = (data.slots && data.slots[key]) || "空白";
       const cell = document.createElement("div");
       cell.className = "obs-preview-cell";
-      const value = (data.slots && data.slots[key]) || "空白";
-      cell.textContent = label + "： " + value;
-      if(value.indexOf("テロップ文") >= 0 && data.tickerText){
-        cell.textContent += " / " + data.tickerText;
+      if(value === "空白"){
+        cell.classList.add("empty");
       }
+      applyColors(cell, data);
+      cell.textContent = labelFor(value, data);
       grid.appendChild(cell);
     });
   }
@@ -9907,13 +9984,20 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
       el.onchange = save;
     });
 
+    const title = document.getElementById("obsTitleText");
+    if(title){ title.value = data.titleText || ""; title.oninput = save; }
+
     const ticker = document.getElementById("obsTickerText");
-    if(ticker){
-      ticker.value = data.tickerText || "";
-      ticker.oninput = save;
-    }
+    if(ticker){ ticker.value = data.tickerText || ""; ticker.oninput = save; }
+
+    const colors = data.colors || {};
+    [["obsBgColor","bg","#000000"],["obsFrameColor","frame","#555555"],["obsTextColor","text","#ffffff"],["obsPanelColor","panel","#222222"]].forEach(([id,key,def])=>{
+      const el = document.getElementById(id);
+      if(el){ el.value = colors[key] || def; el.oninput = save; }
+    });
 
     save();
+    setInterval(()=>renderPreview(load()), 15000);
   }
 
   if(document.readyState === "loading"){
