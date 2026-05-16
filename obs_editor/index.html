@@ -3,33 +3,65 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<title>OBS 9スロットエディタ</title>
+<title>OBSセル結合レイアウトエディタ</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<h1>OBS 9スロットエディタ</h1>
 
-<div class="grid">
-<div class="slot">左上</div>
-<div class="slot">上中央</div>
-<div class="slot">右上</div>
-<div class="slot">左</div>
-<div class="slot">中央</div>
-<div class="slot">右</div>
-<div class="slot">左下</div>
-<div class="slot">下中央</div>
-<div class="slot">右下</div>
+<h1>OBSセル結合レイアウトエディタ v141</h1>
+
+<p class="notice">
+※ 既存StreamStaff本体を上書きしない追加型です
+</p>
+
+<div class="toolbar">
+<select id="contentType">
+<option>幹</option>
+<option>枝</option>
+<option>葉</option>
+<option>コメント</option>
+<option>時計</option>
+<option>カレンダー</option>
+<option>お知らせ</option>
+<option>常連メモ</option>
+<option>テロップ</option>
+<option>ルーレット結果</option>
+<option>枠のみ</option>
+<option>空白</option>
+</select>
+
+<button onclick="applyContent()">内容適用</button>
+<button onclick="mergeCells()">セル結合</button>
+<button onclick="hideCells()">非表示</button>
+<button onclick="resetLayout()">リセット</button>
 </div>
 
-<div class="buttons">
-<button>上段結合</button>
-<button>中段結合</button>
-<button>下段結合</button>
-<button>左列結合</button>
-<button>中央列結合</button>
-<button>右列結合</button>
-<button>全体表示</button>
+<div class="grid" id="grid">
+<div class="cell" data-id="1">1</div>
+<div class="cell" data-id="2">2</div>
+<div class="cell" data-id="3">3</div>
+<div class="cell" data-id="4">4</div>
+<div class="cell" data-id="5">5</div>
+<div class="cell" data-id="6">6</div>
+<div class="cell" data-id="7">7</div>
+<div class="cell" data-id="8">8</div>
+<div class="cell" data-id="9">9</div>
 </div>
 
+<div class="mergePanel">
+<h2>段・列結合</h2>
+
+<button onclick="mergePreset([1,2,3])">上段結合</button>
+<button onclick="mergePreset([4,5,6])">中段結合</button>
+<button onclick="mergePreset([7,8,9])">下段結合</button>
+
+<button onclick="mergePreset([1,4,7])">左列結合</button>
+<button onclick="mergePreset([2,5,8])">中央列結合</button>
+<button onclick="mergePreset([3,6,9])">右列結合</button>
+
+<button onclick="mergePreset([1,2,3,4,5,6,7,8,9])">全体表示</button>
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>
