@@ -126,5 +126,58 @@ window.addEventListener("storage", render);
 render();
 })();
 </script>
+
+<script id="obsNineSlotOverlayRenderer">
+(function(){
+  const slotOrder = ["topLeft","topCenter","topRight","midLeft","midCenter","midRight","bottomLeft","bottomCenter","bottomRight"];
+  function load(){
+    try{return JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || '{"slots":{},"tickerText":""}');}
+    catch(e){return {slots:{},tickerText:""};}
+  }
+  function render(){
+    const data = load();
+    let root = document.getElementById("ssObsNineSlotOverlay");
+    if(!root){
+      root = document.createElement("div");
+      root.id = "ssObsNineSlotOverlay";
+      root.style.position = "fixed";
+      root.style.inset = "0";
+      root.style.display = "grid";
+      root.style.gridTemplateColumns = "repeat(3,1fr)";
+      root.style.gridTemplateRows = "repeat(3,1fr)";
+      root.style.gap = "8px";
+      root.style.padding = "16px";
+      root.style.boxSizing = "border-box";
+      document.body.appendChild(root);
+    }
+    root.innerHTML = "";
+    slotOrder.forEach(key=>{
+      const value = (data.slots && data.slots[key]) || "空白";
+      const cell = document.createElement("div");
+      cell.style.border = "1px solid rgba(255,255,255,.25)";
+      cell.style.borderRadius = "14px";
+      cell.style.display = "flex";
+      cell.style.alignItems = "center";
+      cell.style.justifyContent = "center";
+      cell.style.color = "#fff";
+      cell.style.background = "rgba(0,0,0,.35)";
+      cell.style.fontSize = "24px";
+      cell.style.textAlign = "center";
+      if(value === "空白"){
+        cell.style.opacity = ".15";
+        cell.textContent = "";
+      }else if(value.indexOf("テロップ文") >= 0){
+        cell.textContent = data.tickerText || "テロップ文";
+      }else{
+        cell.textContent = value;
+      }
+      root.appendChild(cell);
+    });
+  }
+  window.addEventListener("storage", render);
+  render();
+})();
+</script>
+
 </body>
 </html>

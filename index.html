@@ -2667,16 +2667,19 @@ function fitBrushText(text){
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
 
+
+
+
 <style id="obsNineSlotLayoutStyle">
-.obs-nine-slot-layout{
+#obsNineSlotLayoutPanel{
   margin:16px 0;
   padding:16px;
   border-radius:18px;
-  background:rgba(20,20,24,.92);
+  background:rgba(20,20,24,.94);
   border:1px solid rgba(255,255,255,.12);
 }
-.obs-nine-slot-layout h3{margin:0 0 6px;font-size:20px}
-.obs-nine-help{margin:0 0 12px;opacity:.75}
+#obsNineSlotLayoutPanel h3{margin:0 0 8px;font-size:20px}
+.obs-nine-help{margin:0 0 12px;opacity:.78}
 .obs-nine-grid{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
@@ -2691,19 +2694,17 @@ function fitBrushText(text){
   background:rgba(255,255,255,.06);
   font-weight:700;
 }
-.obs-nine-grid select{
+.obs-nine-grid select,
+.obs-ticker-input{
   width:100%;
+  box-sizing:border-box;
   padding:10px;
   border-radius:10px;
   border:1px solid rgba(255,255,255,.18);
   background:#111;
   color:#fff;
 }
-.obs-row-merge-box{
-  margin-top:12px;
-  display:grid;
-  gap:8px;
-}
+.obs-row-merge-box{margin-top:12px;display:grid;gap:8px}
 .obs-row-merge{
   display:flex;
   flex-wrap:wrap;
@@ -2713,10 +2714,31 @@ function fitBrushText(text){
   border-radius:12px;
   background:rgba(255,255,255,.05);
 }
-.obs-row-merge label{
+.obs-row-merge label{display:flex;align-items:center;gap:6px}
+.obs-ticker-box{
+  margin-top:12px;
+  padding:12px;
+  border-radius:14px;
+  background:rgba(255,255,255,.06);
+}
+.obs-preview-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:10px;
+}
+.obs-preview-cell{
+  min-height:72px;
+  background:#222;
+  border:2px solid #555;
+  border-radius:12px;
   display:flex;
   align-items:center;
-  gap:6px;
+  justify-content:center;
+  color:#fff;
+  padding:8px;
+  text-align:center;
+  font-size:14px;
 }
 </style>
 
@@ -2784,10 +2806,7 @@ function fitBrushText(text){
 
 
 
-<div id="obsPreviewWrap" style="margin-top:20px">
-<h3>プレビュー</h3>
-<div id="obsPreviewGrid" class="obs-preview-grid"></div>
-</div>
+
 </section>
 
     <section id="games" class="screen">
@@ -3873,7 +3892,7 @@ function fitBrushText(text){
           <div>
             <h2 style="margin:0">🖥 OBSオーバーレイ設定</h2>
 
-<section id="obsNineSlotLayoutPanel" class="obs-nine-slot-layout">
+<section id="obsNineSlotLayoutPanel">
   <h3>OBS表示配置</h3>
   <p class="obs-nine-help">上段はタイトル・時計系、下段はテロップ系として割り当てできます。</p>
 
@@ -3908,7 +3927,22 @@ function fitBrushText(text){
       <label><input type="checkbox" id="obsMergeBottomRight"> 右を結合</label>
     </div>
   </div>
+
+  <div class="obs-ticker-box">
+    <label>テロップ文
+      <input id="obsTickerText" class="obs-ticker-input" type="text" placeholder="画面下に流す・表示するテロップ文">
+    </label>
+  </div>
+
+  <div id="obsPreviewWrap">
+    <h3>プレビュー</h3>
+    <div id="obsPreviewGrid" class="obs-preview-grid"></div>
+  </div>
 </section>
+
+
+
+
 
 
             <p class="muted">左・中央・右の3スロットへ、好きな表示パーツを割り当てる方式。キャラ位置やコメント欄に合わせて自由に組める。</p>
@@ -9785,70 +9819,110 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 
 
 
+
+
+
+
+
 <script id="obsNineSlotLayoutScript">
 (function(){
+  const topOptions = ["空白","タイトル","時計","タイトル＋時計","幹","お知らせ","枠のみ"];
+  const midOptions = ["空白","幹","枝","葉","コメント枠","常連メモ","カレンダー","ルーレット結果","枠のみ"];
+  const bottomOptions = ["空白","テロップ文","テロップ文＋時計","お知らせ","カウントダウン","枠のみ"];
 
-const slotNames = [
-"topLeft","topCenter","topRight",
-"midLeft","midCenter","midRight",
-"bottomLeft","bottomCenter","bottomRight"
-];
+  const slots = [
+    ["topLeft", "左上", topOptions],
+    ["topCenter", "上中央", topOptions],
+    ["topRight", "右上", topOptions],
+    ["midLeft", "左", midOptions],
+    ["midCenter", "中央", midOptions],
+    ["midRight", "右", midOptions],
+    ["bottomLeft", "左下", bottomOptions],
+    ["bottomCenter", "下中央", bottomOptions],
+    ["bottomRight", "右下", bottomOptions]
+  ];
 
-function renderPreview(data){
-  const grid = document.getElementById("obsPreviewGrid");
-  if(!grid) return;
+  const mergeIds = [
+    "obsMergeTopLeft","obsMergeTopRight",
+    "obsMergeMidLeft","obsMergeMidRight",
+    "obsMergeBottomLeft","obsMergeBottomRight"
+  ];
 
-  grid.innerHTML = "";
+  function load(){
+    try{
+      return JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || '{"slots":{},"merge":{},"tickerText":""}');
+    }catch(e){
+      return {slots:{},merge:{},tickerText:""};
+    }
+  }
 
-  slotNames.forEach(key=>{
-    const div = document.createElement("div");
-    div.className = "obs-preview-cell";
-    div.textContent = (data.slots && data.slots[key]) || "空白";
-    grid.appendChild(div);
-  });
-}
+  function save(){
+    const data = {slots:{}, merge:{}, tickerText:""};
+    slots.forEach(([key])=>{
+      const el = document.querySelector('[data-obs-slot="'+key+'"]');
+      data.slots[key] = el ? el.value : "空白";
+    });
+    mergeIds.forEach(id=>{
+      const el = document.getElementById(id);
+      data.merge[id] = !!(el && el.checked);
+    });
+    const ticker = document.getElementById("obsTickerText");
+    data.tickerText = ticker ? ticker.value : "";
+    localStorage.setItem("ss_obs_9slot_layout", JSON.stringify(data));
+    renderPreview(data);
+  }
 
-function save(){
-  const data = {slots:{}, merge:{}};
+  function renderPreview(data){
+    const grid = document.getElementById("obsPreviewGrid");
+    if(!grid) return;
+    grid.innerHTML = "";
+    slots.forEach(([key,label])=>{
+      const cell = document.createElement("div");
+      cell.className = "obs-preview-cell";
+      const value = (data.slots && data.slots[key]) || "空白";
+      cell.textContent = label + "： " + value;
+      if(value.indexOf("テロップ文") >= 0 && data.tickerText){
+        cell.textContent += " / " + data.tickerText;
+      }
+      grid.appendChild(cell);
+    });
+  }
 
-  document.querySelectorAll("[data-obs-slot]").forEach(sel=>{
-    data.slots[sel.dataset.obsSlot] = sel.value;
-  });
+  function init(){
+    const data = load();
 
-  document.querySelectorAll("input[type='checkbox'][id^='obsMerge']").forEach(ch=>{
-    data.merge[ch.id] = ch.checked;
-  });
+    slots.forEach(([key,label,options])=>{
+      const sel = document.querySelector('[data-obs-slot="'+key+'"]');
+      if(!sel) return;
+      sel.innerHTML = options.map(v=>'<option value="'+v+'">'+v+'</option>').join("");
+      const saved = data.slots && data.slots[key];
+      sel.value = options.includes(saved) ? saved : "空白";
+      sel.onchange = save;
+    });
 
-  localStorage.setItem("ss_obs_9slot_layout", JSON.stringify(data));
+    mergeIds.forEach(id=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.checked = !!(data.merge && data.merge[id]);
+      el.onchange = save;
+    });
 
-  renderPreview(data);
-}
+    const ticker = document.getElementById("obsTickerText");
+    if(ticker){
+      ticker.value = data.tickerText || "";
+      ticker.oninput = save;
+    }
 
-function init(){
-  document.querySelectorAll("[data-obs-slot]").forEach(sel=>{
-    sel.addEventListener("change", save);
-  });
+    save();
+  }
 
-  document.querySelectorAll("input[type='checkbox'][id^='obsMerge']").forEach(ch=>{
-    ch.addEventListener("change", save);
-  });
-
-  const current = JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || '{"slots":{}}');
-  renderPreview(current);
-
-  save();
-}
-
-if(document.readyState === "loading"){
- document.addEventListener("DOMContentLoaded", init);
-}else{
- init();
-}
-
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", init);
+  }else{
+    init();
+  }
 })();
 </script>
-
-
 
 </body>
 </html>
