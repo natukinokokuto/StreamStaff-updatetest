@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="ja">
 <head>
@@ -6,54 +5,62 @@
 <title>OBS Overlay</title>
 <style>
 html,body{
-margin:0;
-width:100%;
-height:100%;
-overflow:hidden;
-background:transparent;
-font-family:sans-serif;
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:transparent;
+  font-family:sans-serif;
 }
-
 #overlay{
-position:fixed;
-inset:0;
-display:grid;
-grid-template-columns:repeat(3,1fr);
-grid-template-rows:50px 1fr 50px;
-gap:8px;
-padding:12px;
-box-sizing:border-box;
+  position:fixed;
+  inset:0;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  grid-template-rows:50px minmax(0,1fr) 50px;
+  gap:8px;
+  padding:12px;
+  box-sizing:border-box;
 }
-
 .slot{
-border-radius:14px;
-display:flex;
-align-items:center;
-justify-content:center;
-text-align:center;
-padding:8px;
-font-weight:bold;
-font-size:24px;
-overflow:hidden;
-white-space:pre-line;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:8px 12px;
+  font-weight:bold;
+  font-size:24px;
+  overflow:hidden;
+  white-space:pre-line;
+  text-shadow:0 2px 6px rgba(0,0,0,.55);
+  box-sizing:border-box;
 }
-
-.empty{
-background:transparent !important;
-border:none !important;
+.slot.topbar{
+  font-size:22px;
+  white-space:nowrap;
+  text-overflow:ellipsis;
 }
-
-.comment{
-align-items:flex-start;
-justify-content:flex-start;
-padding:16px;
-font-size:18px;
-line-height:1.5;
+.slot.ticker{
+  font-size:20px;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  justify-content:center;
+}
+.slot.comment{
+  align-items:flex-start;
+  justify-content:flex-start;
+  padding:16px;
+  font-size:18px;
+  line-height:1.5;
+}
+.slot.empty{
+  background:transparent !important;
+  border:none !important;
 }
 </style>
 </head>
 <body>
-
 <div id="overlay"></div>
 
 <script>
@@ -70,48 +77,40 @@ function nowTime(){
 
 function load(){
  try{
-   return JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || '{"slots":{},"colors":{}}');
+   return JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || '{"slots":{},"merge":{},"colors":{},"titleText":"","tickerText":""}');
  }catch(e){
-   return {"slots":{},"colors":{}};
+   return {slots:{},merge:{},colors:{},titleText:"",tickerText:""};
  }
 }
 
-function renderLabel(value,data){
+function labelFor(value,data){
  if(!value || value==="空白") return "";
-
- if(value==="タイトル"){
-   return data.titleText || "";
- }
-
- if(value==="時計"){
-   return nowTime();
- }
-
- if(value==="タイトル＋時計"){
-   return (data.titleText || "") + " " + nowTime();
- }
-
- if(value==="テロップ文"){
-   return data.tickerText || "";
- }
-
- if(value==="テロップ文＋時計"){
-   return (data.tickerText || "") + " " + nowTime();
- }
-
- if(value==="コメント枠"){
-   return "コメント\nコメント\nコメント";
- }
-
- if(value==="幹"){
-   return "雑談テーマ";
- }
-
- if(value==="枠のみ"){
-   return "";
- }
-
+ if(value==="タイトル") return data.titleText || "";
+ if(value==="時計") return nowTime();
+ if(value==="タイトル＋時計") return (data.titleText ? data.titleText+"　" : "") + nowTime();
+ if(value==="テロップ文") return data.tickerText || "";
+ if(value==="テロップ文＋時計") return (data.tickerText ? data.tickerText+"　" : "") + nowTime();
+ if(value==="コメント枠") return "コメント\\nコメント\\nコメント";
+ if(value==="幹") return "雑談テーマ";
+ if(value==="枠のみ") return "";
  return value;
+}
+
+function layoutItems(data){
+ const m = data.merge || {};
+ return [
+  {key:"topLeft", row:1, col:1, colSpan:m.obsMergeTopLeft ? 2 : 1, hide:false},
+  {key:"topCenter", row:1, col:2, colSpan:1, hide:!!m.obsMergeTopLeft || !!m.obsMergeTopRight},
+  {key:"topRight", row:1, col:m.obsMergeTopRight ? 2 : 3, colSpan:m.obsMergeTopRight ? 2 : 1, hide:false},
+
+  {key:"midLeft", row:2, col:1, colSpan:m.obsMergeMidLeft ? 2 : 1, hide:false},
+  {key:"midCenter", row:2, col:2, colSpan:1, hide:!!m.obsMergeMidLeft || !!m.obsMergeMidRight},
+  {key:"midRight", row:2, col:m.obsMergeMidRight ? 2 : 3, colSpan:m.obsMergeMidRight ? 2 : 1, hide:false},
+
+  {key:"bottomLeft", row:3, col:1, colSpan:m.obsMergeBottomLeft ? 2 : 1, hide:false},
+  {key:"bottomCenter", row:3, col:2, colSpan:1, hide:!!m.obsMergeBottomLeft || !!m.obsMergeBottomRight},
+  {key:"bottomRight", row:3, col:m.obsMergeBottomRight ? 2 : 3, colSpan:m.obsMergeBottomRight ? 2 : 1, hide:false}
+ ].filter(x=>!x.hide);
 }
 
 function render(){
@@ -120,32 +119,29 @@ function render(){
  overlay.innerHTML = "";
 
  const c = data.colors || {};
+ document.body.style.background = c.bg || "transparent";
 
- slotOrder.forEach(key=>{
-   const value = (data.slots && data.slots[key]) || "空白";
-
+ layoutItems(data).forEach(item=>{
+   const value = (data.slots && data.slots[item.key]) || "空白";
    const div = document.createElement("div");
    div.className = "slot";
 
-   if(value==="空白"){
-      div.classList.add("empty");
-   }
+   div.style.gridRow = item.row;
+   div.style.gridColumn = item.col + " / span " + item.colSpan;
 
-   if(value==="コメント枠"){
-      div.classList.add("comment");
-   }
+   if(item.row===1) div.classList.add("topbar");
+   if(item.row===3) div.classList.add("ticker");
+   if(value==="コメント枠") div.classList.add("comment");
 
    div.style.background = c.panel || "rgba(0,0,0,.35)";
    div.style.border = "2px solid " + (c.frame || "#555");
    div.style.color = c.text || "#fff";
 
    if(value==="空白"){
-      div.style.background = "transparent";
-      div.style.border = "none";
+     div.classList.add("empty");
    }
 
-   div.textContent = renderLabel(value,data);
-
+   div.textContent = labelFor(value,data);
    overlay.appendChild(div);
  });
 }
@@ -154,6 +150,5 @@ window.addEventListener("storage", render);
 setInterval(render,1000);
 render();
 </script>
-
 </body>
 </html>

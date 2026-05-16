@@ -2763,6 +2763,42 @@ function fitBrushText(text){
 }
 </style>
 
+
+<style id="obsV150PatchStyle">
+.obs-preset-box{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+  padding:10px;
+  border-radius:12px;
+  background:rgba(255,255,255,.05);
+}
+.obs-preset-box button{
+  padding:8px 12px;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:10px;
+  background:#222;
+  color:#fff;
+  cursor:pointer;
+}
+.obs-preview-grid{
+  grid-template-rows:42px minmax(220px,1fr) 42px !important;
+}
+.obs-preview-cell.ticker{
+  font-size:13px;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.obs-preview-cell.topbar{
+  font-size:14px;
+  white-space:nowrap;
+}
+.obs-preview-cell.merged{
+  outline:2px solid rgba(255,255,255,.18);
+}
+</style>
+
 </head>
 <body>
   <div class="app">
@@ -3956,6 +3992,15 @@ function fitBrushText(text){
     <label>テロップ文
       <input id="obsTickerText" class="obs-text-input" type="text" placeholder="画面下に表示するテロップ文">
     </label>
+    
+<div class="obs-preset-box">
+  <strong>色プリセット</strong>
+  <button type="button" data-obs-preset="neon">ネオン</button>
+  <button type="button" data-obs-preset="radio">ラジオ</button>
+  <button type="button" data-obs-preset="simple">シンプル</button>
+  <button type="button" data-obs-preset="pink">恋バナ</button>
+</div>
+
     <div class="obs-color-grid">
       <label>背景色<input id="obsBgColor" class="obs-color-input" type="color" value="#000000"></label>
       <label>枠色<input id="obsFrameColor" class="obs-color-input" type="color" value="#555555"></label>
@@ -9861,6 +9906,7 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 
 
 
+
 <script id="obsNineSlotLayoutScript">
 (function(){
   const topOptions = ["空白","タイトル","時計","タイトル＋時計","幹","お知らせ","枠のみ"];
@@ -9868,15 +9914,15 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
   const bottomOptions = ["空白","テロップ文","テロップ文＋時計","お知らせ","カウントダウン","枠のみ"];
 
   const slots = [
-    ["topLeft", "左上", topOptions],
-    ["topCenter", "上中央", topOptions],
-    ["topRight", "右上", topOptions],
-    ["midLeft", "左", midOptions],
-    ["midCenter", "中央", midOptions],
-    ["midRight", "右", midOptions],
-    ["bottomLeft", "左下", bottomOptions],
-    ["bottomCenter", "下中央", bottomOptions],
-    ["bottomRight", "右下", bottomOptions]
+    ["topLeft", "左上", topOptions, 1, 1],
+    ["topCenter", "上中央", topOptions, 1, 2],
+    ["topRight", "右上", topOptions, 1, 3],
+    ["midLeft", "左", midOptions, 2, 1],
+    ["midCenter", "中央", midOptions, 2, 2],
+    ["midRight", "右", midOptions, 2, 3],
+    ["bottomLeft", "左下", bottomOptions, 3, 1],
+    ["bottomCenter", "下中央", bottomOptions, 3, 2],
+    ["bottomRight", "右下", bottomOptions, 3, 3]
   ];
 
   const mergeIds = [
@@ -9884,6 +9930,13 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     "obsMergeMidLeft","obsMergeMidRight",
     "obsMergeBottomLeft","obsMergeBottomRight"
   ];
+
+  const presets = {
+    neon:   { bg:"#050510", frame:"#00d2ff", text:"#ffffff", panel:"#111827" },
+    radio:  { bg:"#160f0a", frame:"#d9a441", text:"#fff2d6", panel:"#2a1c12" },
+    simple: { bg:"#000000", frame:"#555555", text:"#ffffff", panel:"#222222" },
+    pink:   { bg:"#160812", frame:"#ff5bc8", text:"#ffffff", panel:"#2a1024" }
+  };
 
   function nowTime(){
     const d = new Date();
@@ -9935,64 +9988,70 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
       const t = nowTime();
       return ticker ? ticker + "　" + t : t;
     }
+    if(value === "コメント枠") return "コメント\nコメント\nコメント";
+    if(value === "幹") return "雑談テーマ";
     if(value === "枠のみ") return "";
     return value;
   }
 
-  function applyColors(el, data){
-    const c = data.colors || {};
-    el.style.setProperty("--obs-panel-bg", c.panel || "#222222");
-    el.style.setProperty("--obs-frame-color", c.frame || "#555555");
-    el.style.setProperty("--obs-text-color", c.text || "#ffffff");
+  function buildLayout(data){
+    const m = data.merge || {};
+    const items = [
+      {key:"topLeft", row:1, col:1, rowSpan:1, colSpan:m.obsMergeTopLeft ? 2 : 1, hide:false},
+      {key:"topCenter", row:1, col:2, rowSpan:1, colSpan:1, hide:!!m.obsMergeTopLeft || !!m.obsMergeTopRight},
+      {key:"topRight", row:1, col:m.obsMergeTopRight ? 2 : 3, rowSpan:1, colSpan:m.obsMergeTopRight ? 2 : 1, hide:false},
+
+      {key:"midLeft", row:2, col:1, rowSpan:1, colSpan:m.obsMergeMidLeft ? 2 : 1, hide:false},
+      {key:"midCenter", row:2, col:2, rowSpan:1, colSpan:1, hide:!!m.obsMergeMidLeft || !!m.obsMergeMidRight},
+      {key:"midRight", row:2, col:m.obsMergeMidRight ? 2 : 3, rowSpan:1, colSpan:m.obsMergeMidRight ? 2 : 1, hide:false},
+
+      {key:"bottomLeft", row:3, col:1, rowSpan:1, colSpan:m.obsMergeBottomLeft ? 2 : 1, hide:false},
+      {key:"bottomCenter", row:3, col:2, rowSpan:1, colSpan:1, hide:!!m.obsMergeBottomLeft || !!m.obsMergeBottomRight},
+      {key:"bottomRight", row:3, col:m.obsMergeBottomRight ? 2 : 3, rowSpan:1, colSpan:m.obsMergeBottomRight ? 2 : 1, hide:false}
+    ];
+    return items.filter(x=>!x.hide);
   }
 
-  
-function renderPreview(data){
+  function applyColors(el, data){
+    const c = data.colors || {};
+    el.style.background = c.panel || "#222222";
+    el.style.borderColor = c.frame || "#555555";
+    el.style.color = c.text || "#ffffff";
+  }
+
+  function renderPreview(data){
     const grid = document.getElementById("obsPreviewGrid");
     if(!grid) return;
-
     const c = data.colors || {};
     grid.style.background = c.bg || "#000000";
     grid.innerHTML = "";
 
-    const slotMap = {
-      topLeft:"左上",topCenter:"上中央",topRight:"右上",
-      midLeft:"左",midCenter:"中央",midRight:"右",
-      bottomLeft:"左下",bottomCenter:"下中央",bottomRight:"右下"
-    };
-
-    slots.forEach(([key])=>{
-      const value = (data.slots && data.slots[key]) || "空白";
-
+    buildLayout(data).forEach(item=>{
+      const value = (data.slots && data.slots[item.key]) || "空白";
       const cell = document.createElement("div");
       cell.className = "obs-preview-cell";
+      cell.style.gridRow = item.row + " / span " + item.rowSpan;
+      cell.style.gridColumn = item.col + " / span " + item.colSpan;
+
+      if(item.colSpan > 1) cell.classList.add("merged");
+      if(item.row === 1) cell.classList.add("topbar");
+      if(item.row === 3) cell.classList.add("ticker");
 
       if(value === "空白"){
         cell.classList.add("empty");
-      }
-
-      applyColors(cell, data);
-
-      let display = labelFor(value, data);
-
-      if(value === "コメント枠"){
-        display = "コメント\nコメント\nコメント";
-      }
-
-      if(value === "幹"){
-        display = "雑談テーマ";
+        cell.textContent = "";
+      }else{
+        applyColors(cell, data);
+        cell.textContent = labelFor(value, data);
       }
 
       if(value === "枠のみ"){
-        display = "";
+        cell.textContent = "";
       }
-
-      cell.innerHTML = '<div style="white-space:pre-line">'+display+'</div>';
 
       grid.appendChild(cell);
     });
   }
-
 
   function init(){
     const data = load();
@@ -10025,8 +10084,20 @@ function renderPreview(data){
       if(el){ el.value = colors[key] || def; el.oninput = save; }
     });
 
+    document.querySelectorAll("[data-obs-preset]").forEach(btn=>{
+      btn.onclick = function(){
+        const p = presets[btn.dataset.obsPreset];
+        if(!p) return;
+        document.getElementById("obsBgColor").value = p.bg;
+        document.getElementById("obsFrameColor").value = p.frame;
+        document.getElementById("obsTextColor").value = p.text;
+        document.getElementById("obsPanelColor").value = p.panel;
+        save();
+      };
+    });
+
     save();
-    setInterval(()=>renderPreview(load()), 15000);
+    setInterval(()=>renderPreview(load()), 1000);
   }
 
   if(document.readyState === "loading"){
@@ -10036,6 +10107,7 @@ function renderPreview(data){
   }
 })();
 </script>
+
 
 </body>
 </html>
