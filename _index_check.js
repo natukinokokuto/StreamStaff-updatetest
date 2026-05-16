@@ -5643,8 +5643,10 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
         const text = labelFor(value, data);
 
         if(item.row === 3 && value.indexOf("テロップ文") >= 0 && text && data.tickerScroll){
-          globalTickerText = text;
-          cell.appendChild(makeMarquee(text));
+          const runner = document.createElement("span");
+          runner.className = "ticker-runner";
+          runner.textContent = text;
+          cell.appendChild(runner);
         }else{
           cell.textContent = text;
         }
@@ -5653,18 +5655,7 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
       if(value === "枠のみ") cell.textContent = "";
       grid.appendChild(cell);
     });
-
-    if(globalTickerText && data.tickerScroll){
-      const layer = document.createElement("div");
-      layer.className = "obs-preview-global-ticker";
-      const track = document.createElement("div");
-      track.className = "obs-preview-global-ticker-track";
-      track.textContent = globalTickerText;
-      track.style.color = (data.colors && data.colors.text) || "#ffffff";
-      layer.appendChild(track);
-      grid.appendChild(layer);
-    }
-  }
+}
 
 
   function init(){
