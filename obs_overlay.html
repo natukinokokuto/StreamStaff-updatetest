@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>StreamStaff OBS Overlay</title>
+<style>
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:transparent;
+  font-family:sans-serif;
+}
+#overlayGrid{
+  width:100vw;
+  height:100vh;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  grid-template-rows:48px 1fr 48px;
+  gap:10px;
+  padding:10px;
+  box-sizing:border-box;
+}
+.cell{
+  border:2px solid rgba(255,255,255,.45);
+  border-radius:16px;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.35);
+  backdrop-filter:blur(4px);
+  overflow:hidden;
+  position:relative;
+  font-weight:700;
+  text-shadow:0 2px 4px rgba(0,0,0,.7);
+}
+.empty{
+  border-color:transparent !important;
+  background:transparent !important;
+}
+.ticker{
+  justify-content:flex-start;
+  white-space:nowrap;
+  overflow:hidden;
+}
+.runner{
+  display:block;
+  white-space:nowrap;
+  color:inherit;
+  visibility:visible;
+  opacity:1;
+  position:relative;
+  transform:none;
+  padding-left:0;
+}
+  to{ left:0%; transform:translateX(-100%); }
+}
+
+
+  100%{ transform:translateX(-100%); }
+}
+
+
+@keyframes tickerLoop{
+  0%{ transform:translateX(100%); }
+  100%{ transform:translateX(-100%); }
+}
+</style>
+
+<style id="v184TickerLayerFix">
+.cell.ticker,
+.ticker{
+  position:relative !important;
+  z-index:50 !important;
+  overflow:hidden !important;
+  min-height:36px !important;
+  opacity:1 !important;
+  visibility:visible !important;
+}
+
+.cell.ticker .runner,
+.ticker .runner,
+.runner{
+  position:relative !important;
+  z-index:999 !important;
+  display:block !important;
+  color:#ffffff !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  text-shadow:0 2px 6px rgba(0,0,0,.9) !important;
+  background:transparent !important;
+  white-space:nowrap !important;
+  transform:none !important;
+  left:auto !important;
+  top:auto !important;
+}
+
+.cell.empty .runner,
+.empty .runner{
+  display:none !important;
+}
+</style>
+
+
+
+
+<style id="v189IndependentTickerLayer">
+#ssTickerLayer{
+  position:absolute;
+  left:10px;
+  right:10px;
+  bottom:10px;
+  height:48px;
+  overflow:hidden;
+  pointer-events:none;
+  z-index:9999;
+  display:none;
+  border:2px dashed red;
+  background:rgba(255,255,255,.08);
+  border-radius:14px;
+}
+
+#ssTickerTrack{
+  position:absolute;
+  left:0;
+  top:50%;
+  transform:translateY(-50%);
+  white-space:nowrap;
+  width:max-content;
+  min-width:max-content;
+  color:#fff;
+  font-size:28px;
+  font-weight:900;
+  text-shadow:0 2px 6px rgba(0,0,0,.9);
+  background:rgba(0,255,255,.18);
+  border:2px solid cyan;
+  padding:4px 24px;
+  animation:ssTickerMove 16s linear infinite;
+}
+
+@keyframes ssTickerMove{
+  0%{
+    transform:translate(100vw,-50%);
+  }
+  100%{
+    transform:translate(-100%,-50%);
+  }
+}
+</style>
+
+<style id="v203TickerLayerAlignPatch">
+#ssTickerLayer.is-static{
+  display:flex !important;
+  align-items:center;
+}
+#ssTickerLayer.is-static.align-left{
+  justify-content:flex-start;
+}
+#ssTickerLayer.is-static.align-center{
+  justify-content:center;
+}
+#ssTickerLayer.is-static.align-right{
+  justify-content:flex-end;
+}
+#ssTickerLayer.is-static #ssTickerTrack{
+  position:relative !important;
+  left:auto !important;
+  top:auto !important;
+  transform:none !important;
+  animation:none !important;
+}
+</style>
+
+
+<style id="v204TickerStaticAlignFix">
+#ssTickerLayer.is-static #ssTickerTrack{
+  animation:none !important;
+  position:absolute !important;
+  top:50% !important;
+  width:max-content !important;
+  min-width:max-content !important;
+}
+
+#ssTickerLayer.is-static.align-left #ssTickerTrack{
+  left:16px !important;
+  right:auto !important;
+  transform:translate(0,-50%) !important;
+}
+
+#ssTickerLayer.is-static.align-center #ssTickerTrack{
+  left:50% !important;
+  right:auto !important;
+  transform:translate(-50%,-50%) !important;
+}
+
+#ssTickerLayer.is-static.align-right #ssTickerTrack{
+  left:auto !important;
+  right:16px !important;
+  transform:translate(0,-50%) !important;
+}
+</style>
+
+
+<style id="v205TrunkBulletStyle">
+.cell .trunk-list{
+  width:100%;
+  height:100%;
+  box-sizing:border-box;
+  margin:0;
+  padding:8px 12px 8px 28px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:6px;
+  text-align:left;
+  line-height:1.25;
+}
+.cell .trunk-list li{
+  margin:0;
+  padding:0;
+  font-size:clamp(14px, 1.8vw, 26px);
+}
+</style>
+
+</head>
+<body>
+<div id="overlayGrid"></div>
+
+<script>
+(function(){
+
+const grid = document.getElementById("overlayGrid");
+
+function nowTime(){
+  const d = new Date();
+  return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+}
+
+function loadData(){
+  try{
+    return JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || "{}");
+  }catch(e){
+    return {};
+  }
+}
+
+
+function readAlignData(data){
+  let align = {};
+  try{ align = JSON.parse(localStorage.getItem("ss_obs_slot_align") || "{}"); }catch(e){}
+  if(data && data.align && typeof data.align === "object"){
+    align = Object.assign({}, align, data.align);
+  }
+  return align;
+}
+
+function applyCellAlign(cell, alignValue){
+  const v = alignValue || "center";
+  if(v === "left"){
+    cell.style.justifyContent = "flex-start";
+    cell.style.textAlign = "left";
+  }else if(v === "right"){
+    cell.style.justifyContent = "flex-end";
+    cell.style.textAlign = "right";
+  }else{
+    cell.style.justifyContent = "center";
+    cell.style.textAlign = "center";
+  }
+}
+
+
+function cleanTextValue(v){
+  if(v == null) return "";
+  if(typeof v === "string" || typeof v === "number") return String(v).trim();
+  if(Array.isArray(v)) return v.map(cleanTextValue).filter(Boolean).join(" / ");
+  if(typeof v === "object"){
+    const keys = ["title","text","memo","content","value","item","name","label","trunk","main","theme"];
+    for(const k of keys){
+      const hit = cleanTextValue(v[k]);
+      if(hit) return hit;
+    }
+  }
+  return "";
+}
+
+function readMainState(){
+  try{return JSON.parse(localStorage.getItem("stream_manager_integrated_v1") || "{}");}
+  catch(e){return {};}
+}
+
+
+function getTrunkItems(){
+  const items = [];
+
+  function add(v){
+    const t = cleanTextValue(v);
+    if(t && !items.includes(t)) items.push(t);
+  }
+
+  // 1) ホーム側が裏で保存する5件同期データを最優先で読む
+  try{
+    const synced = JSON.parse(localStorage.getItem("ss_trunk_items_5") || "[]");
+    if(Array.isArray(synced)) synced.forEach(add);
+  }catch(e){}
+
+  // 2) 本体保存データから拾う
+  const state = readMainState();
+
+  if(state.tree){
+    if(Array.isArray(state.tree.trunk)){
+      state.tree.trunk.forEach(add);
+    }else{
+      add(state.tree.trunk);
+    }
+  }
+
+  ["trunks","trunkList","topics","topicList","rescueTopics","homeTopics","memos","logs"].forEach(key=>{
+    const v = state[key];
+    if(Array.isArray(v)){
+      v.forEach(x=>{
+        if(typeof x === "object"){
+          add(x.trunk || x.main || x.theme || x.title || x.text || x.memo || x.content || x.item || x);
+        }else{
+          add(x);
+        }
+      });
+    }
+  });
+
+  // 3) 旧キー/単体キーも読む
+  ["ss_current_trunk","currentTrunk","rescueTrunk","topicTrunk","streamstaff_trunk","ss_home_trunk","homeTrunk","trunk","幹"].forEach(key=>{
+    const raw = localStorage.getItem(key);
+    if(!raw) return;
+    try{
+      const parsed = JSON.parse(raw);
+      if(Array.isArray(parsed)) parsed.forEach(add);
+      else add(parsed);
+    }catch(e){
+      add(raw);
+    }
+  });
+
+  return items.filter(Boolean).slice(0,5);
+}
+
+
+function renderTrunkList(cell){
+  const items = getTrunkItems();
+  const ul = document.createElement("ul");
+  ul.className = "trunk-list";
+
+  const shown = items.length ? items : ["幹が未設定です"];
+  shown.slice(0,5).forEach(t=>{
+    const li = document.createElement("li");
+    li.textContent = t;
+    ul.appendChild(li);
+  });
+
+  cell.appendChild(ul);
+}
+
+function textFor(value){
+  const title = localStorage.getItem("ss_obs_title_text") || "タイトル";
+  const ticker = localStorage.getItem("ss_obs_ticker_text") || "テロップ文";
+
+  if(!value || value === "空白") return "";
+  if(value === "タイトル") return title;
+  if(value === "時計") return nowTime();
+  if(value === "タイトル＋時計") return title + "　" + nowTime();
+  if(value === "テロップ文") return ticker || "テロップ文";
+  if(value === "テロップ文＋時計") return (ticker || "テロップ文") + "　" + nowTime();
+  if(value === "枠のみ") return "";
+  return value;
+}
+
+function mergeRows(data){
+  const m = (data.merge || {});
+  function row(prefix,rowNum){
+    const cap = prefix.charAt(0).toUpperCase()+prefix.slice(1);
+    const left = prefix+"Left";
+    const center = prefix+"Center";
+    const right = prefix+"Right";
+
+    const mergeLeft = !!m["obsMerge"+cap+"Left"];
+    const mergeRight = !!m["obsMerge"+cap+"Right"];
+
+    if(mergeLeft && mergeRight){
+      return [{key:left,row:rowNum,col:1,span:3}];
+    }
+    if(mergeLeft){
+      return [
+        {key:left,row:rowNum,col:1,span:2},
+        {key:right,row:rowNum,col:3,span:1}
+      ];
+    }
+    if(mergeRight){
+      return [
+        {key:left,row:rowNum,col:1,span:1},
+        {key:center,row:rowNum,col:2,span:2}
+      ];
+    }
+
+    return [
+      {key:left,row:rowNum,col:1,span:1},
+      {key:center,row:rowNum,col:2,span:1},
+      {key:right,row:rowNum,col:3,span:1}
+    ];
+  }
+
+  return [
+    ...row("top",1),
+    ...row("mid",2),
+    ...row("bottom",3)
+  ];
+}
+
+
+let lastRenderSignature = "";
+
+function render(force){
+
+  const data = loadData();
+  const signature = JSON.stringify(data) + "|" + (localStorage.getItem("ss_trunk_items_5") || "") + "|" + (localStorage.getItem("ss_trunk_sync_ping") || "");
+  if(!force && signature === lastRenderSignature) return;
+  lastRenderSignature = signature;
+
+  const slots = data.slots || {};
+  const alignMap = readAlignData(data);
+
+  grid.innerHTML = "";
+
+  mergeRows(data).forEach(item=>{
+
+    const value = slots[item.key] || "空白";
+
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    applyCellAlign(cell, alignMap[item.key]);
+
+    cell.style.gridRow = item.row;
+    cell.style.gridColumn = item.col + " / span " + item.span;
+
+    if(value === "空白"){
+      cell.classList.add("empty");
+    }else if(item.row === 3 && value.indexOf("テロップ") >= 0){
+
+      // テロップは独立レイヤー #ssTickerLayer だけで表示する。
+      // 3x3グリッド側に旧テロップを出すと重複するため、ここは空セルにする。
+      cell.classList.add("empty");
+
+    }else{
+      if(value === "幹"){
+      renderTrunkList(cell);
+    }else{
+      cell.textContent = textFor(value);
+    }
+    }
+
+    grid.appendChild(cell);
+  });
+}
+
+render(true);
+
+window.addEventListener("storage", ()=>render(true));
+window.addEventListener("message", function(ev){ if(ev && ev.data && (ev.data.type === "ssAlignChanged" || ev.data.type === "ssTrunkChanged")) render(true); });
+setInterval(()=>render(false),1000);
+
+})();
+</script>
+
+
+
+
+
+
+<div id="ssTickerLayer">
+  <div id="ssTickerTrack">テロップ確認中</div>
+</div>
+
+
+<script id="v203TickerLayerScript">
+(function(){
+  function readJson(key, fallback){
+    try{return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));}
+    catch(e){return fallback;}
+  }
+
+  function bottomTickerSlot(slots){
+    if(slots.bottomLeft === "テロップ文" || slots.bottomLeft === "テロップ文＋時計") return "bottomLeft";
+    if(slots.bottomCenter === "テロップ文" || slots.bottomCenter === "テロップ文＋時計") return "bottomCenter";
+    if(slots.bottomRight === "テロップ文" || slots.bottomRight === "テロップ文＋時計") return "bottomRight";
+    return "";
+  }
+
+  function alignClassFor(slotKey, layout){
+    const align = Object.assign(
+      {},
+      readJson("ss_obs_slot_align", {}),
+      (layout && layout.align) || {}
+    );
+    const v = align[slotKey] || "center";
+    if(v === "left") return "align-left";
+    if(v === "right") return "align-right";
+    return "align-center";
+  }
+
+  function tickerText(layout){
+    return localStorage.getItem("ss_obs_ticker_text") ||
+      (layout && layout.tickerText) ||
+      "テロップ文";
+  }
+
+  function updateTickerLayer(){
+    const layer = document.getElementById("ssTickerLayer");
+    const track = document.getElementById("ssTickerTrack");
+    if(!layer || !track) return;
+
+    const layout = readJson("ss_obs_9slot_layout", {});
+    const slots = layout.slots || {};
+    const slotKey = bottomTickerSlot(slots);
+
+    if(!slotKey){
+      layer.style.display = "none";
+      return;
+    }
+
+    layer.style.display = "block";
+    track.textContent = tickerText(layout);
+
+    const scrollEnabled = localStorage.getItem("ss_obs_ticker_scroll") !== "false";
+    const alignClass = alignClassFor(slotKey, layout);
+
+    layer.classList.remove("is-static", "align-left", "align-center", "align-right");
+    layer.classList.add(alignClass);
+
+    if(scrollEnabled){
+      layer.classList.remove("is-static");
+      track.style.animation = "ssTickerMove 16s linear infinite";
+      track.style.left = "0";
+      track.style.right = "";
+      track.style.top = "50%";
+      track.style.transform = "";
+    }else{
+      layer.classList.add("is-static");
+      track.style.animation = "none";
+      track.style.left = "";
+      track.style.right = "";
+      track.style.top = "";
+      track.style.transform = "";
+    }
+  }
+
+  updateTickerLayer();
+  window.addEventListener("storage", updateTickerLayer);
+  window.addEventListener("message", function(ev){
+    if(ev && ev.data && (
+      ev.data.type === "ssTickerScrollChanged" ||
+      ev.data.type === "ssAlignChanged"
+    )){
+      updateTickerLayer();
+    }
+  });
+  setInterval(updateTickerLayer, 1000);
+})();
+</script>
+
+
+
+
+
+<script id="v209TrunkOverlayWatcher">
+(function(){
+  let last = "";
+
+  function forceRender(){
+    try{
+      if(typeof render === "function") render(true);
+    }catch(e){}
+  }
+
+  function tick(){
+    const now = (localStorage.getItem("ss_trunk_items_5") || "") + "|" + (localStorage.getItem("ss_trunk_sync_ping") || "");
+    if(now !== last){
+      last = now;
+      forceRender();
+    }
+  }
+
+  window.addEventListener("storage", tick);
+
+  window.addEventListener("message", function(ev){
+    if(ev && ev.data && ev.data.type === "ssTrunkChanged"){
+      if(Array.isArray(ev.data.trunks)){
+        try{ localStorage.setItem("ss_trunk_items_5", JSON.stringify(ev.data.trunks)); }catch(e){}
+      }
+      forceRender();
+    }
+  });
+
+  setInterval(tick, 500);
+  tick();
+})();
+</script>
+
+</body>
+</html>
