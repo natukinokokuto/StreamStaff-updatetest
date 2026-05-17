@@ -4,180 +4,236 @@
 <meta charset="utf-8">
 <title>OBS Overlay</title>
 <style>
-html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  background:transparent;
-  font-family:sans-serif;
-}
-#overlay{
-  position:fixed;
-  inset:0;
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  grid-template-rows:50px minmax(0,1fr) 50px;
-  gap:8px;
-  padding:12px;
-  box-sizing:border-box;
-}
-.slot{
-  border-radius:14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  padding:8px 12px;
-  font-weight:bold;
-  font-size:24px;
-  overflow:hidden;
-  white-space:pre-line;
-  text-shadow:0 2px 6px rgba(0,0,0,.55);
-  box-sizing:border-box;
-}
-.slot.topbar{
-  font-size:22px;
-  white-space:nowrap;
-  text-overflow:ellipsis;
-}
-.slot.ticker{
-  font-size:20px;
-  white-space:nowrap;
-  text-overflow:ellipsis;
-  justify-content:center;
-}
-.slot.comment{
-  align-items:flex-start;
-  justify-content:flex-start;
-  padding:16px;
-  font-size:18px;
-  line-height:1.5;
-}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;font-family:sans-serif}
+#overlay{position:fixed;inset:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:50px minmax(0,1fr) 50px;gap:8px;padding:12px;box-sizing:border-box}
+.slot{border-radius:14px;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px 12px;font-weight:bold;font-size:24px;overflow:hidden;white-space:pre-line;text-shadow:0 2px 6px rgba(0,0,0,.55);box-sizing:border-box}
+.slot.topbar{font-size:22px;white-space:nowrap;text-overflow:ellipsis}
+.slot.ticker{font-size:20px;white-space:nowrap;justify-content:flex-start;overflow:hidden;position:relative}
+.ticker-runner{position:absolute;top:50%;left:0;white-space:nowrap;display:inline-block;transform:translate(0,-50%);will-change:transform}100%{left:0%;transform:translate(-100%,-50%)}}to{left:0%;transform:translate(-100%,-50%)}}
+.slot.empty{background:transparent!important;border:none!important}
+</style>
+
+<style id="obsBlankHideOnlyFixStyle">
+.obs-preview-cell.empty,
 .slot.empty{
   background:transparent !important;
+  border-color:transparent !important;
   border:none !important;
+  box-shadow:none !important;
+  color:transparent !important;
 }
 </style>
+
 </head>
 <body>
 <div id="overlay"></div>
-
 <script>
-const slotOrder = [
-"topLeft","topCenter","topRight",
-"midLeft","midCenter","midRight",
-"bottomLeft","bottomCenter","bottomRight"
-];
+const APP_STATE_KEY = "stream_manager_integrated_v1";
 
 function nowTime(){
  const d = new Date();
  return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
 }
-
-function load(){
- try{
-   return JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || '{"slots":{},"merge":{},"colors":{},"titleText":"","tickerText":""}');
- }catch(e){
-   return {slots:{},merge:{},colors:{},titleText:"",tickerText:""};
- }
+function readJson(key, fallback){
+ try{return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));}
+ catch(e){return fallback;}
 }
-
+function readAppState(){
+ try{return JSON.parse(localStorage.getItem(APP_STATE_KEY) || "{}") || {};}
+ catch(e){return {};}
+}
+function cleanText(v){
+ if(v == null) return "";
+ if(typeof v === "string" || typeof v === "number") return String(v).trim();
+ if(Array.isArray(v)) return v.map(cleanText).filter(Boolean).slice(0,4).join(" / ");
+ if(typeof v === "object"){
+   const keys = ["title","text","memo","body","content","value","item","name","label","trunk","branch","leaf","main"];
+   for(const k of keys){ const hit = cleanText(v[k]); if(hit) return hit; }
+ }
+ return "";
+}
+function findDeepByKey(obj, keyRegex){
+ if(!obj || typeof obj !== "object") return "";
+ if(Array.isArray(obj)){
+   for(const x of obj){ const hit = findDeepByKey(x, keyRegex); if(hit) return hit; }
+   return "";
+ }
+ for(const [k,v] of Object.entries(obj)){
+   if(keyRegex.test(k)){
+     const hit = cleanText(v);
+     if(hit) return hit;
+   }
+ }
+ for(const v of Object.values(obj)){
+   const hit = findDeepByKey(v, keyRegex);
+   if(hit) return hit;
+ }
+ return "";
+}
+function latestStreamMemo(state){
+ let direct = findDeepByKey(state, /(streamMemo|homeMemo|broadcastMemo|deliveryMemo|配信メモ|memoText|mainMemo)/i);
+ if(direct) return direct;
+ const logs = Array.isArray(state.logs) ? state.logs : [];
+ const titled = logs.find(x => cleanText(x && (x.title || x.name || x.label)).includes("配信メモ"));
+ if(titled){
+   const hit = cleanText(titled.text || titled.memo || titled.body || titled.content || titled.value || titled.item);
+   if(hit) return hit;
+ }
+ for(const x of logs){
+   const hit = cleanText(x && (x.text || x.memo || x.body || x.content || x.value || x.item));
+   if(hit) return hit;
+ }
+ return "";
+}
+function syncedValue(kind){
+ const state = readAppState();
+ const tree = state.tree || {};
+ if(kind === "配信メモ") return latestStreamMemo(state) || "配信メモ";
+ if(kind === "幹") return cleanText(tree.trunk) || findDeepByKey(state, /trunk|幹|mainTheme|theme/i) || "今日のメインテーマ";
+ if(kind === "枝") return cleanText(tree.branch) || findDeepByKey(state, /branch|枝|subTheme/i) || "枝";
+ if(kind === "葉") return cleanText(tree.leaf) || findDeepByKey(state, /leaf|葉|listenerPoint/i) || "葉";
+ if(kind === "お知らせ"){
+   const ev = Array.isArray(state.calendarEvents) ? state.calendarEvents[0] : null;
+   return cleanText(ev && (ev.item || ev.title || ev.type || ev.text)) || findDeepByKey(state, /notice|お知らせ/i) || "お知らせ";
+ }
+ if(kind === "常連メモ"){
+   const l = Array.isArray(state.listeners) ? state.listeners[0] : null;
+   return l ? [l.name, l.memo].map(cleanText).filter(Boolean).join("：") : (findDeepByKey(state, /regular|listener|常連/i) || "常連メモ");
+ }
+ if(kind === "カレンダー"){
+   const ev = Array.isArray(state.calendarEvents) ? state.calendarEvents[0] : null;
+   return ev ? [ev.date, ev.item || ev.title || ev.type].map(cleanText).filter(Boolean).join(" ") : (findDeepByKey(state, /calendar|event|予定/i) || "カレンダー");
+ }
+ if(kind === "ルーレット結果"){
+   const h = state.roulette && Array.isArray(state.roulette.history) ? state.roulette.history[0] : null;
+   return cleanText(h) || findDeepByKey(state, /roulette|ルーレット/i) || "ルーレット結果";
+ }
+ if(kind === "カウントダウン"){
+   const cd = Array.isArray(state.countdowns) ? state.countdowns[0] : null;
+   return cd ? [cd.title, cd.target].map(cleanText).filter(Boolean).join(" ") : (findDeepByKey(state, /countdown|timer|カウント/i) || "カウントダウン");
+ }
+ return "";
+}
+function defaultData(){
+ return {slots:{},merge:{},titleText:"",tickerText:"",tickerScroll:true,colors:{bg:"transparent",frame:"#555555",text:"#ffffff",panel:"rgba(0,0,0,.35)"}};
+}
+function load(){
+ const d = Object.assign(defaultData(), readJson("ss_obs_9slot_layout", defaultData()));
+ d.slots = d.slots || {};
+ d.merge = d.merge || {};
+ d.colors = Object.assign(defaultData().colors, d.colors || {});
+ if(!d.titleText) d.titleText = localStorage.getItem("ss_obs_title_text") || "";
+ if(!d.tickerText) d.tickerText = localStorage.getItem("ss_obs_ticker_text") || "";
+ if(localStorage.getItem("ss_obs_ticker_scroll") === "0") d.tickerScroll = false;
+ return d;
+}
 function labelFor(value,data){
  if(!value || value==="空白") return "";
- if(value==="タイトル") return data.titleText || "";
+ if(value==="タイトル") return data.titleText || localStorage.getItem("ss_obs_title_text") || "";
  if(value==="時計") return nowTime();
- if(value==="タイトル＋時計") return (data.titleText ? data.titleText+"　" : "") + nowTime();
- if(value==="テロップ文") return data.tickerText || "";
- if(value==="テロップ文＋時計") return (data.tickerText ? data.tickerText+"　" : "") + nowTime();
- if(value==="コメント枠") return "コメント\\nコメント\\nコメント";
- if(value==="幹") return "雑談テーマ";
+ if(value==="タイトル＋時計"){
+   const title = data.titleText || localStorage.getItem("ss_obs_title_text") || "";
+   return title ? title+"　"+nowTime() : nowTime();
+ }
+ if(value==="テロップ文") return data.tickerText || localStorage.getItem("ss_obs_ticker_text") || "";
+ if(value==="テロップ文＋時計"){
+   const ticker = data.tickerText || localStorage.getItem("ss_obs_ticker_text") || "";
+   return ticker ? ticker+"　"+nowTime() : nowTime();
+ }
  if(value==="枠のみ") return "";
- return value;
+ return syncedValue(value) || value;
 }
-
 function layoutItems(data){
  const m = data.merge || {};
-
  function row(prefix,rowNum){
-   const leftKey = prefix+"Left";
-   const centerKey = prefix+"Center";
-   const rightKey = prefix+"Right";
-
-   const cap = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+   const cap = prefix.charAt(0).toUpperCase()+prefix.slice(1);
+   const leftKey = prefix+"Left", centerKey = prefix+"Center", rightKey = prefix+"Right";
    const mergeLeft = !!m["obsMerge"+cap+"Left"];
    const mergeRight = !!m["obsMerge"+cap+"Right"];
-
-   if(mergeLeft && mergeRight){
-     return [{key:leftKey,row:rowNum,col:1,colSpan:3}];
-   }
-
-   if(mergeLeft){
-     return [
-       {key:leftKey,row:rowNum,col:1,colSpan:2},
-       {key:rightKey,row:rowNum,col:3,colSpan:1}
-     ];
-   }
-
-   if(mergeRight){
-     return [
-       {key:leftKey,row:rowNum,col:1,colSpan:1},
-       {key:centerKey,row:rowNum,col:2,colSpan:2}
-     ];
-   }
-
-   return [
-     {key:leftKey,row:rowNum,col:1,colSpan:1},
-     {key:centerKey,row:rowNum,col:2,colSpan:1},
-     {key:rightKey,row:rowNum,col:3,colSpan:1}
-   ];
+   if(mergeLeft && mergeRight) return [{key:leftKey,row:rowNum,col:1,colSpan:3}];
+   if(mergeLeft) return [{key:leftKey,row:rowNum,col:1,colSpan:2},{key:rightKey,row:rowNum,col:3,colSpan:1}];
+   if(mergeRight) return [{key:leftKey,row:rowNum,col:1,colSpan:1},{key:centerKey,row:rowNum,col:2,colSpan:2}];
+   return [{key:leftKey,row:rowNum,col:1,colSpan:1},{key:centerKey,row:rowNum,col:2,colSpan:1},{key:rightKey,row:rowNum,col:3,colSpan:1}];
  }
-
- return [
-   ...row("top",1),
-   ...row("mid",2),
-   ...row("bottom",3)
- ];
+ return [...row("top",1),...row("mid",2),...row("bottom",3)];
 }
 
-function render(){
- const data = load();
+
+function startTickerRunner(runner, container, speedPxPerSec){
+ if(runner.dataset.started === "1") return;
+ runner.dataset.started = "1";
+ requestAnimationFrame(()=>{
+   const boxW = container.clientWidth || 0;
+   const textW = runner.scrollWidth || 0;
+   if(!boxW || !textW) return;
+   const distance = boxW + textW;
+   const duration = Math.max(6, distance / (speedPxPerSec || 80));
+   runner.style.transform = "translate(" + boxW + "px,-50%)";
+   runner.animate(
+     [
+       { transform: "translate(" + boxW + "px,-50%)" },
+       { transform: "translate(-" + textW + "px,-50%)" }
+     ],
+     { duration: duration * 1000, iterations: Infinity, easing: "linear" }
+   );
+ });
+}
+
+
+let __lastObsRenderSignature = "";
+
+function render(force){
+ const __dataForSig = load();
+ const __sig = JSON.stringify({
+   slots: __dataForSig.slots,
+   merge: __dataForSig.merge,
+   titleText: __dataForSig.titleText,
+   tickerText: __dataForSig.tickerText,
+   tickerScroll: __dataForSig.tickerScroll,
+   colors: __dataForSig.colors
+ });
+ if(!force && __sig === __lastObsRenderSignature) return;
+ __lastObsRenderSignature = __sig;
+ const data = __dataForSig;
  const overlay = document.getElementById("overlay");
  overlay.innerHTML = "";
-
  const c = data.colors || {};
  document.body.style.background = c.bg || "transparent";
-
  layoutItems(data).forEach(item=>{
    const value = (data.slots && data.slots[item.key]) || "空白";
    const div = document.createElement("div");
    div.className = "slot";
-
    div.style.gridRow = item.row;
    div.style.gridColumn = item.col + " / span " + item.colSpan;
-
    if(item.row===1) div.classList.add("topbar");
    if(item.row===3) div.classList.add("ticker");
-   if(value==="コメント枠") div.classList.add("comment");
-
    div.style.background = c.panel || "rgba(0,0,0,.35)";
    div.style.border = "2px solid " + (c.frame || "#555");
    div.style.color = c.text || "#fff";
-
    if(value==="空白"){
      div.classList.add("empty");
+     div.textContent = "";
+     overlay.appendChild(div);
+     return;
    }
-
-   div.textContent = labelFor(value,data);
+   const text = labelFor(value,data);
+   if(item.row === 3 && value.indexOf("テロップ文") >= 0 && text && data.tickerScroll !== false){
+     const runner = document.createElement("span");
+     runner.className = "ticker-runner";
+     runner.textContent = text;
+     div.appendChild(runner);
+     startTickerRunner(runner, div, 80);
+   }else{
+     div.textContent = text;
+   }
    overlay.appendChild(div);
  });
 }
-
-window.addEventListener("storage", render);
-window.addEventListener("focus", render);
-document.addEventListener("visibilitychange", render);
-setInterval(render,500);
-render();
+window.addEventListener("storage", ()=>render(true));
+window.addEventListener("focus", ()=>render(true));
+document.addEventListener("visibilitychange", ()=>render(true));
+setInterval(()=>render(false),1000);
+render(true);
 </script>
 </body>
 </html>
