@@ -1,5 +1,0 @@
-OBSセル結合エディタ起動:
-
-obs_editor/index.html
-
-既存本体はそのまま残しています。
