@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>StreamStaff OBS Overlay</title>
+<style>
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:transparent;
+  font-family:sans-serif;
+}
+#overlayGrid{
+  width:100vw;
+  height:100vh;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  grid-template-rows:48px 1fr 48px;
+  gap:10px;
+  padding:10px;
+  box-sizing:border-box;
+}
+.cell{
+  border:2px solid rgba(255,255,255,.45);
+  border-radius:16px;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.35);
+  backdrop-filter:blur(4px);
+  overflow:hidden;
+  position:relative;
+  font-weight:700;
+  text-shadow:0 2px 4px rgba(0,0,0,.7);
+}
+.empty{
+  border-color:transparent !important;
+  background:transparent !important;
+}
+.ticker{
+  justify-content:flex-start;
+  white-space:nowrap;
+  overflow:hidden;
+}
+.runner{
+  display:inline-block;
+  white-space:nowrap;
+  padding-left:100%;
+  animation:tickerLoop 18s linear infinite;
+  will-change:transform;
+}
+  to{ left:0%; transform:translateX(-100%); }
+}
+
+@keyframes tickerLoop{
+  0%{ transform:translateX(0); }
+  100%{ transform:translateX(-100%); }
+}
+
+</style>
+</head>
+<body>
+<div id="overlayGrid"></div>
+
+<script>
+(function(){
+
+const grid = document.getElementById("overlayGrid");
+
+function nowTime(){
+  const d = new Date();
+  return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+}
+
+function loadData(){
+  try{
+    return JSON.parse(localStorage.getItem("ss_obs_9slot_layout") || "{}");
+  }catch(e){
+    return {};
+  }
+}
+
+function textFor(value){
+  const title = localStorage.getItem("ss_obs_title_text") || "タイトル";
+  const ticker = localStorage.getItem("ss_obs_ticker_text") || "テロップ文";
+
+  if(!value || value === "空白") return "";
+  if(value === "タイトル") return title;
+  if(value === "時計") return nowTime();
+  if(value === "タイトル＋時計") return title + "　" + nowTime();
+  if(value === "テロップ文") return ticker;
+  if(value === "テロップ文＋時計") return ticker + "　" + nowTime();
+  if(value === "枠のみ") return "";
+  return value;
+}
+
+function mergeRows(data){
+  const m = (data.merge || {});
+  function row(prefix,rowNum){
+    const cap = prefix.charAt(0).toUpperCase()+prefix.slice(1);
+    const left = prefix+"Left";
+    const center = prefix+"Center";
+    const right = prefix+"Right";
+
+    const mergeLeft = !!m["obsMerge"+cap+"Left"];
+    const mergeRight = !!m["obsMerge"+cap+"Right"];
+
+    if(mergeLeft && mergeRight){
+      return [{key:left,row:rowNum,col:1,span:3}];
+    }
+    if(mergeLeft){
+      return [
+        {key:left,row:rowNum,col:1,span:2},
+        {key:right,row:rowNum,col:3,span:1}
+      ];
+    }
+    if(mergeRight){
+      return [
+        {key:left,row:rowNum,col:1,span:1},
+        {key:center,row:rowNum,col:2,span:2}
+      ];
+    }
+
+    return [
+      {key:left,row:rowNum,col:1,span:1},
+      {key:center,row:rowNum,col:2,span:1},
+      {key:right,row:rowNum,col:3,span:1}
+    ];
+  }
+
+  return [
+    ...row("top",1),
+    ...row("mid",2),
+    ...row("bottom",3)
+  ];
+}
+
+
+let lastRenderSignature = "";
+
+function render(force){
+
+  const data = loadData();
+  const signature = JSON.stringify(data);
+  if(!force && signature === lastRenderSignature) return;
+  lastRenderSignature = signature;
+
+  const slots = data.slots || {};
+
+  grid.innerHTML = "";
+
+  mergeRows(data).forEach(item=>{
+
+    const value = slots[item.key] || "空白";
+
+    const cell = document.createElement("div");
+    cell.className = "cell";
+
+    cell.style.gridRow = item.row;
+    cell.style.gridColumn = item.col + " / span " + item.span;
+
+    if(value === "空白"){
+      cell.classList.add("empty");
+    }else if(item.row === 3 && value.indexOf("テロップ") >= 0){
+
+      cell.classList.add("ticker");
+
+      const runner = document.createElement("div");
+      runner.className = "runner";
+      runner.textContent = textFor(value);
+
+      cell.appendChild(runner);
+
+    }else{
+      cell.textContent = textFor(value);
+    }
+
+    grid.appendChild(cell);
+  });
+}
+
+render(true);
+
+window.addEventListener("storage", ()=>render(true));
+setInterval(()=>render(false),1000);
+
+})();
+</script>
+</body>
+</html>
