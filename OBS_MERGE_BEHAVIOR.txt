@@ -1,0 +1,5 @@
+OBS結合仕様:
+- 左を結合: 左+中央を1個にする
+- 右を結合: 中央+右を1個にする
+- 左/右 両方ON: その段を全部1個にする
+- プレビューと obs_overlay.html は同じ localStorage(ss_obs_9slot_layout) を読む
