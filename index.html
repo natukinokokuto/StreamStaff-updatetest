@@ -11395,8 +11395,8 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 <script id="v235_38StreamStaffProjectorMode">
 (function(){
   // v235.38: OBSブラウザソース同期ではなく、別窓プロジェクターをOBSのウィンドウキャプチャで映す運用を追加。
-  const PROJECTOR_URL = "ss_projector.html?projector=1";
-  const PROJECTOR_NAME = "StreamStaff_Projector";
+  const PROJECTOR_URL = "ss_projector.html?projector=1&v=23546";
+  const PROJECTOR_NAME = "StreamStaff_Projector_v23546";
   let projectorWindow = null;
   let projectorChannel = null;
   try{ if("BroadcastChannel" in window) projectorChannel = new BroadcastChannel("streamstaff_projector_v235"); }catch(e){ projectorChannel = null; }
@@ -11409,7 +11409,7 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     if(!obsState){
       try{ obsState = JSON.parse(localStorage.getItem("ss_obs_unified_state_v235_30") || "null"); }catch(e){}
     }
-    return { type:"ss_projector_state", version:"v235.41", reason:reason||"update", ts:Date.now(), obsState:obsState };
+    return { type:"ss_projector_state", version:"v235.46", reason:reason||"update", ts:Date.now(), obsState:obsState };
   }
 
   function sendToProjector(reason){
@@ -11424,7 +11424,9 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 
   function openProjector(){
     try{ if(typeof window.ssPublishUnifiedObsState === "function") window.ssPublishUnifiedObsState("projector-open"); }catch(e){}
-    const url = new URL(PROJECTOR_URL, location.href).href;
+    const u = new URL(PROJECTOR_URL, location.href);
+    u.searchParams.set("cache", String(Date.now()));
+    const url = u.href;
     const features = [
       "popup=yes",
       "width=1280",
@@ -11440,7 +11442,7 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     ].join(",");
     projectorWindow = window.open(url, PROJECTOR_NAME, features);
     const status = document.getElementById("obsBrowserSourceCopyStatus");
-    if(status) status.textContent = projectorWindow ? "プロジェクター窓を開きました。OBSはこの窓をウィンドウキャプチャしてください。（内部1920×1080固定）" : "ポップアップがブロックされたかも。ブラウザの許可を確認してください。";
+    if(status) status.textContent = projectorWindow ? "プロジェクター窓を開きました。v235.46 / OBSはこの窓をウィンドウキャプチャしてください。（内部1920×1080固定）" : "ポップアップがブロックされたかも。ブラウザの許可を確認してください。";
     // 開いた直後は読み込み待ちがあるため数回送る。常時0.5秒更新ではないのでスクロールは荒らさない。
     [120, 450, 900, 1500].forEach(ms => setTimeout(() => sendToProjector("projector-open"), ms));
   }

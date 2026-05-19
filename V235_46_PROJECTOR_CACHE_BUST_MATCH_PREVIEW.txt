@@ -1,0 +1,4 @@
+v235.46
+- プロジェクター窓のURLへcache bustを追加
+- window nameをv23546に変更し、古いプロジェクター窓再利用を避ける
+- プロジェクター側テーマ文字サイズはpreview/overlayと同じCSS sizingへ統一

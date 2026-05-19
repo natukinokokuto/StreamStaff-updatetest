@@ -188,9 +188,6 @@ html,body{
   font-size:clamp(12px, 1.35vw, 20px);
   line-height:1.18;
 }
-.cell .theme-block .trunk-list li{
-  white-space:normal;
-}
 </style>
 
 
@@ -810,8 +807,7 @@ function makeThemeSection(title, items, fallback){
 // v235.43: メイン/サブの箇条書きは「一番長い文」を基準に、枠内へ入る最大サイズまで拡大する。
 // 行ごとにサイズを変えず、同じグループ内は全行同じ文字サイズ。枠サイズは変更しない。
 function fitThemeBlockTextToLongest(wrap, cell){
-  // v235.45: projector should match preview/overlay sizing.
-  // Do not calculate per-text max-fit here; leave sizing to shared CSS clamp rules.
+  // v235.46: preview/overlayと同じサイズ感に固定。fit計算は行わずCSSに任せる。
   try{
     if(!wrap) return;
     Array.from(wrap.querySelectorAll(".trunk-list li")).forEach(li=>{
