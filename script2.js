@@ -2073,7 +2073,22 @@ function showJsonBackupFallback(json, filename){
     setTimeout(()=>URL.revokeObjectURL(url), 60000);
   };
 }
+function setJsonBackupStatus(msg, kind){
+  const status=document.getElementById("jsonBackupStatus");
+  if(status){
+    status.textContent=msg;
+    status.style.fontWeight="800";
+    status.style.color=kind==="error"?"#dc2626":(kind==="ok"?"#16a34a":"#2563eb");
+  }
+  const btn=document.getElementById("exportJsonBackup");
+  if(btn){
+    btn.dataset.lastJsonBackupStatus=msg;
+    btn.style.boxShadow="0 0 0 3px rgba(37,99,235,.25)";
+    setTimeout(()=>{ try{ btn.style.boxShadow=""; }catch(e){} }, 700);
+  }
+}
 async function exportJsonBackupFile(){
+  setJsonBackupStatus("JSONバックアップ：ボタン押せた！保存データを作成中…", "work");
   const json=JSON.stringify(buildStreamStaffBackup(), null, 2);
   const filename=backupFileName();
   const blob=new Blob([json], {type:"application/json;charset=utf-8"});
@@ -2088,11 +2103,11 @@ async function exportJsonBackupFile(){
       const writable=await handle.createWritable();
       await writable.write(blob);
       await writable.close();
-      if(window.jsonBackupStatus) jsonBackupStatus.textContent="JSONバックアップを保存した！";
+      setJsonBackupStatus("JSONバックアップ：保存完了！", "ok");
       showJsonBackupFallback(json, filename);
       return;
     }catch(e){
-      if(e && e.name==="AbortError") return;
+      if(e && e.name==="AbortError"){ setJsonBackupStatus("JSONバックアップ：保存をキャンセルした", "error"); showJsonBackupFallback(json, filename); return; }
       // 失敗したら下の通常ダウンロードへ落とす
     }
   }
@@ -2108,15 +2123,24 @@ async function exportJsonBackupFile(){
     document.body.appendChild(a);
     a.click();
     setTimeout(()=>{ try{ a.remove(); URL.revokeObjectURL(url); }catch(e){} }, 1500);
-    if(window.jsonBackupStatus) jsonBackupStatus.textContent="JSONバックアップを書き出した！保存が出ない時は下の保険欄を使ってね。";
+    setJsonBackupStatus("JSONバックアップ：書き出し処理は実行した！保存が出ない時は下の保険欄を使ってね。", "ok");
     showJsonBackupFallback(json, filename);
   }catch(e){
     showJsonBackupFallback(json, filename);
-    if(window.jsonBackupStatus) jsonBackupStatus.textContent="自動ダウンロードできなかったので、下の保険欄からコピーして保存してね。";
+    setJsonBackupStatus("JSONバックアップ：自動ダウンロード失敗。下の保険欄からコピーして保存してね。", "error");
   }
 }
 if(window.exportJsonBackup) exportJsonBackup.onclick=()=>{
-  exportJsonBackupFile().catch(()=>alert("JSONバックアップの作成に失敗した"));
+  const btn=document.getElementById("exportJsonBackup");
+  const oldText=btn?btn.textContent:"";
+  if(btn){ btn.textContent="JSON作成中…"; btn.disabled=true; }
+  setJsonBackupStatus("JSONバックアップ：ボタン押下確認。作成開始！", "work");
+  exportJsonBackupFile().catch((e)=>{
+    setJsonBackupStatus("JSONバックアップ：作成に失敗。下の保険欄が出ていなければ再試行してね。", "error");
+    alert("JSONバックアップの作成に失敗した");
+  }).finally(()=>{
+    if(btn){ btn.disabled=false; btn.textContent=oldText||"JSONバックアップを書き出す"; }
+  });
 };
 if(window.importJsonBackupBtn) importJsonBackupBtn.onclick=()=>{
   const input=document.getElementById("importJsonBackupFile");
