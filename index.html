@@ -2653,26 +2653,6 @@ function fitBrushText(text){
 /* v135 OBS Overlay Settings */
 .obs-settings-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.obs-preview-box{position:relative;min-height:320px;border-radius:22px;border:1px solid rgba(125,211,252,.25);background:radial-gradient(circle at 50% 20%,rgba(56,189,248,.18),rgba(15,23,42,.96) 58%);overflow:hidden}.obs-preview-title{position:absolute;top:18px;left:18px;font-size:22px;font-weight:950;padding:10px 14px;border-radius:16px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12)}.obs-preview-card{position:absolute;right:18px;top:82px;width:42%;padding:12px;border-radius:18px;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.14);box-shadow:0 12px 30px rgba(0,0,0,.28)}.obs-preview-safe{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:34%;height:75%;border:2px dashed rgba(255,255,255,.28);border-radius:28px 28px 0 0;display:flex;align-items:center;justify-content:center;text-align:center;color:rgba(255,255,255,.54);font-weight:900}.obs-preview-bottom{position:absolute;left:18px;right:18px;bottom:18px;padding:12px 14px;border-radius:18px;background:rgba(0,0,0,.38);border:1px solid rgba(255,255,255,.12);font-weight:900}.obs-urlbox{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;word-break:break-all;line-height:1.5;background:#020617;border:1px solid rgba(148,163,184,.22);border-radius:14px;padding:12px;color:#e0f2fe}.obs-mini-note{font-size:12px;color:#cbd5e1;line-height:1.7}@media(max-width:850px){.obs-settings-grid{grid-template-columns:1fr}.obs-preview-card{width:auto;left:18px;right:18px}.obs-preview-safe{width:48%}}
 
-
-
-    /* v236: JASRAC / NexTone copyright manager */
-    .cr-tool-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
-    .cr-status-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
-    .cr-chip{border:1px solid var(--line);border-radius:16px;padding:12px;background:#0b0d13}
-    .cr-chip b{display:block;font-size:18px;margin-bottom:4px}
-    .cr-chip.safe{border-color:#22c55e;background:#062315}.cr-chip.warn{border-color:#f59e0b;background:#261804}.cr-chip.danger{border-color:#ef4444;background:#2a090d}.cr-chip.info{border-color:#38bdf8;background:#061927}
-    .cr-song-list{display:grid;gap:10px;max-height:520px;overflow:auto;padding-right:4px}
-    .cr-song{border:1px solid var(--line);border-radius:16px;background:#0b0d13;padding:12px;display:grid;gap:8px}
-    .cr-song.active{outline:3px solid #21d4fd55;border-color:#21d4fd}
-    .cr-song-title{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
-    .cr-song-title b{font-size:18px}.cr-mini{font-size:12px;color:var(--muted)}
-    .cr-badges{display:flex;flex-wrap:wrap;gap:6px}.cr-badge{font-size:12px;border-radius:999px;padding:5px 8px;border:1px solid var(--line);background:#111827;color:#dbeafe}.cr-badge.safe{background:#052e1a;color:#86efac;border-color:#22c55e}.cr-badge.warn{background:#2b1b05;color:#fcd34d;border-color:#f59e0b}.cr-badge.danger{background:#3a0b10;color:#fca5a5;border-color:#ef4444}
-    .cr-alert{border:1px solid var(--line);border-radius:18px;background:#0b0d13;padding:14px;margin-top:10px}.cr-alert h3{margin:0 0 8px}.cr-alert ul{margin:8px 0 0;padding-left:20px}.cr-alert li{margin:5px 0}
-    .cr-alert.safe{border-color:#22c55e;background:#062315}.cr-alert.warn{border-color:#f59e0b;background:#261804}.cr-alert.danger{border-color:#ef4444;background:#2a090d}.cr-alert.info{border-color:#38bdf8;background:#061927}
-    .cr-hero-result{font-size:clamp(22px,4vw,36px);font-weight:950;line-height:1.25;border:1px solid var(--line);border-radius:20px;padding:16px;background:#080a10;margin-top:12px}
-    .cr-help-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.cr-help-grid .cr-alert{margin:0}
-    @media(max-width:760px){.cr-status-grid,.cr-help-grid{grid-template-columns:1fr}.cr-tool-head{display:block}}
-
 </style>
 
 <link rel="icon" type="image/png" href="icon_streamstaff_final.png">
@@ -3880,13 +3860,15 @@ function fitBrushText(text){
           </div>
         </div>
 
-<div class="tool-item" style="margin-bottom:12px;background:#101827;border-color:#facc15">
+
+
+<div class="tool-item" style="margin-bottom:12px;background:#101827;border-color:#38bdf8">
   <div class="row" style="justify-content:space-between">
     <div>
       <div class="tool-title">🎤 JASRAC / NexTone 著作権管理</div>
-      <div class="muted">歌枠の曲登録・配信前チェック・注意理由と行動メモ</div>
+      <div class="muted">歌枠の曲登録・管理番号・配信注意点をまとめて確認。</div>
     </div>
-    <button class="btn primary" onclick="showScreen('copyrightTool')" type="button">開く</button>
+    <button class="btn primary" onclick="showScreen('copyrightTool'); if(window.renderCopyrightTool) renderCopyrightTool();" type="button">開く</button>
   </div>
 </div>
 
@@ -4024,63 +4006,85 @@ function fitBrushText(text){
 
 <section id="copyrightTool" class="screen">
   <div class="card"><div class="inner">
-    <div class="cr-tool-head">
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
       <div>
         <h2 style="margin:0">🎤 JASRAC / NexTone 著作権管理</h2>
-        <p class="muted">曲を登録して、歌枠前に「何に注意するか」「どう動くか」まで確認する配信用メモ。※公式DBの自動検索ではなく、枠主が確認した情報を保存する道具。</p>
+        <p class="muted">曲名・アーティスト・タグを軽く登録。必要な曲だけJASRAC/NexTone詳細を開いて管理する歌枠用の土台。</p>
       </div>
       <button class="btn" onclick="showScreen('tools')" type="button">道具へ戻る</button>
     </div>
 
-    <div class="cr-status-grid" id="crSummary"></div>
-
-    <div class="grid" style="align-items:start">
+    <div class="grid two" style="margin-top:14px">
       <div class="card"><div class="inner">
-        <h3>曲登録 / 編集</h3>
-        <input id="crEditId" type="hidden">
-        <label>曲名</label><input id="crTitle" placeholder="例：小さな恋のうた">
-        <label>歌手 / 作曲者メモ</label><input id="crArtist" placeholder="例：MONGOL800">
-        <div class="grid2">
-          <div><label>JASRAC作品コード</label><input id="crJasrac" placeholder="例：123-4567-8 / 未確認なら空欄"></div>
-          <div><label>NexTone作品コード</label><input id="crNextone" placeholder="例：N01234567 / 未確認なら空欄"></div>
-        </div>
-        <div class="grid2">
-          <div><label>音源・歌い方</label><select id="crSource"><option value="karaoke">カラオケ音源</option><option value="self">自作演奏 / 弾き語り</option><option value="acapella">アカペラ</option><option value="official">CD・配信音源・公式MV</option><option value="unknown">未確認</option></select></div>
-          <div><label>主な配信先</label><select id="crPlatform"><option value="youtube">YouTube</option><option value="twitch">Twitch</option><option value="twicas">ツイキャス</option><option value="other">その他</option></select></div>
-        </div>
-        <div class="grid2">
-          <label style="display:flex;align-items:center;gap:8px;margin-top:12px"><input id="crArchive" type="checkbox" style="width:auto">アーカイブを残す予定</label>
-          <label style="display:flex;align-items:center;gap:8px;margin-top:12px"><input id="crMonetize" type="checkbox" style="width:auto">収益化あり / 投げ銭あり</label>
-        </div>
-        <label>タグ</label><input id="crTags" placeholder="例：アニソン, 深夜曲, 盛り上げ, 喉休め">
-        <label>自分用メモ</label><textarea id="crMemo" placeholder="例：キー+2 / 歌詞表示注意 / カラオケ音源の利用条件確認済み"></textarea>
-        <div class="row" style="margin-top:12px">
-          <button class="btn primary" id="crSaveBtn" type="button">曲を保存</button>
+        <h3 style="margin-top:0">曲を登録 / 編集</h3>
+        <input id="crSongId" type="hidden">
+        <label>曲名</label>
+        <input id="crTitle" placeholder="例：小さな恋のうた">
+        <label style="margin-top:10px">アーティスト</label>
+        <input id="crArtist" placeholder="例：MONGOL800">
+        <label style="margin-top:10px">タグ</label>
+        <input id="crTags" placeholder="例：J-POP, 盛り上げ, 深夜曲">
+        <label style="margin-top:10px">キー / メモ</label>
+        <input id="crKeyMemo" placeholder="例：-2 / サビ高め / 練習中">
+
+        <details style="margin-top:14px;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px;background:rgba(0,0,0,.18)">
+          <summary style="cursor:pointer;font-weight:900">詳細設定：JASRAC / NexTone</summary>
+          <div class="grid two" style="margin-top:12px">
+            <div>
+              <label>JASRAC作品コード</label>
+              <input id="crJasracCode" placeholder="例：123-4567-8">
+            </div>
+            <div>
+              <label>NexTone作品コード</label>
+              <input id="crNextoneCode" placeholder="例：N00000000">
+            </div>
+          </div>
+          <div class="row" style="margin-top:12px;align-items:center">
+            <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crJasracManaged" type="checkbox">JASRAC管理あり</label>
+            <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crNextoneManaged" type="checkbox">NexTone管理あり</label>
+            <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crNoRightsInfo" type="checkbox">未確認</label>
+          </div>
+        </details>
+
+        <details style="margin-top:12px;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px;background:rgba(0,0,0,.18)" open>
+          <summary style="cursor:pointer;font-weight:900">配信チェック</summary>
+          <div class="row" style="margin-top:12px;align-items:center">
+            <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crYoutube" type="checkbox" checked>YouTube</label>
+            <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crTwitch" type="checkbox">Twitch</label>
+            <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crTwitcast" type="checkbox">ツイキャス</label>
+          </div>
+          <div class="row" style="margin-top:10px;align-items:center">
+            <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crArchive" type="checkbox">アーカイブに残す</label>
+            <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crMonetize" type="checkbox">収益化する</label>
+            <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crUseOriginal" type="checkbox">CD/配信音源を使う</label>
+            <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crUseKaraoke" type="checkbox">カラオケ音源</label>
+            <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crSelfPlay" type="checkbox">弾き語り/自作伴奏</label>
+          </div>
+        </details>
+
+        <div class="row" style="margin-top:14px">
+          <button class="btn primary" id="crSaveBtn" type="button">保存</button>
           <button class="btn" id="crClearBtn" type="button">入力クリア</button>
-          <button class="btn danger" id="crDeleteBtn" type="button">削除</button>
         </div>
       </div></div>
 
       <div class="card"><div class="inner">
-        <div class="row" style="justify-content:space-between"><h3 style="margin:0">登録曲一覧</h3><button class="btn mini-btn" id="crRouletteBtn" type="button">安全寄りから1曲</button></div>
-        <div class="row" style="margin:10px 0"><input id="crSearch" placeholder="曲名・歌手・タグで検索"><select id="crFilter" style="max-width:180px"><option value="all">全部</option><option value="safe">安全寄り</option><option value="warn">注意あり</option><option value="danger">危険強め</option></select></div>
-        <div id="crSongList" class="cr-song-list"></div>
+        <h3 style="margin-top:0">注意の見え方</h3>
+        <div id="crLiveAdvice" class="tool-item" style="background:#0b1220;border-color:#38bdf8"></div>
+        <p class="muted" style="margin-top:12px">「注意」だけで終わらせず、配信者が次に何をすればいいかまで出す。ここはまだラフ土台。</p>
       </div></div>
     </div>
 
     <div class="card" style="margin-top:14px"><div class="inner">
-      <h3>配信前チェック</h3>
-      <div id="crCurrentCheck" class="cr-hero-result">曲を選ぶと、ここに「注意すること」と「おすすめ行動」が出ます。</div>
-      <div id="crAdviceList"></div>
-    </div></div>
-
-    <div class="card" style="margin-top:14px"><div class="inner">
-      <h3>初心者向けメモ</h3>
-      <div class="cr-help-grid">
-        <div class="cr-alert info"><h3>作品コード</h3><p class="muted">JASRAC/NexToneで管理される「曲そのもの」の確認メモ。空欄なら“未確認”として扱う。</p></div>
-        <div class="cr-alert warn"><h3>原盤</h3><p class="muted">CD・配信音源・公式MVは、曲とは別の権利が絡む可能性が高いので強めに警告。</p></div>
-        <div class="cr-alert warn"><h3>注意表示</h3><p class="muted">SSでは「注意」だけで終わらせず、アーカイブ分け・VOD設定・音源変更など行動まで出す。</p></div>
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h3 style="margin:0">登録曲一覧</h3>
+        <div class="row">
+          <input id="crSearch" placeholder="曲名・アーティスト・タグ検索" style="min-width:240px">
+          <button class="btn" id="crPickSafeBtn" type="button">安全寄りで1曲選ぶ</button>
+        </div>
       </div>
+      <div id="crPickResult" style="margin-top:10px;font-size:22px;font-weight:950"></div>
+      <div id="crSongList" style="margin-top:12px;display:grid;gap:10px"></div>
     </div></div>
   </div></div>
 </section>
@@ -5975,6 +5979,7 @@ function showScreen(id){
   if(id==="enduranceTool") renderEnduranceTool();
   if(id==="kujiTool") renderKujiTool();
   if(id==="tileTool") renderTileTool();
+  if(id==="copyrightTool" && window.renderCopyrightTool) renderCopyrightTool();
   if(id==="chinchiro"){ renderChinMode(); startChinBgm(); }
 }
 document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>showScreen(b.dataset.screen)));
@@ -12003,70 +12008,99 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
   setTimeout(bind, 1200);
   window.ssHardImportJsonBackup = openImportPicker;
 })();
-</script>
 
-<script>
+
+// v236: JASRAC / NexTone copyright manager base
 (function(){
-  const KEY='ss_copyright_manager_v1';
-  const $=id=>document.getElementById(id);
-  const esc=s=>String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const uid=()=> 'cr_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);
-  let songs=[]; let selectedId='';
-  function load(){try{songs=JSON.parse(localStorage.getItem(KEY)||'[]')||[]}catch(e){songs=[]}}
-  function save(){localStorage.setItem(KEY,JSON.stringify(songs));}
-  function getForm(){return {id:$('crEditId').value||uid(),title:$('crTitle').value.trim(),artist:$('crArtist').value.trim(),jasrac:$('crJasrac').value.trim(),nextone:$('crNextone').value.trim(),source:$('crSource').value,platform:$('crPlatform').value,archive:$('crArchive').checked,monetize:$('crMonetize').checked,tags:$('crTags').value.trim(),memo:$('crMemo').value.trim(),updated:new Date().toISOString()};}
-  function setForm(s){$('crEditId').value=s?.id||'';$('crTitle').value=s?.title||'';$('crArtist').value=s?.artist||'';$('crJasrac').value=s?.jasrac||'';$('crNextone').value=s?.nextone||'';$('crSource').value=s?.source||'karaoke';$('crPlatform').value=s?.platform||'youtube';$('crArchive').checked=!!s?.archive;$('crMonetize').checked=!!s?.monetize;$('crTags').value=s?.tags||'';$('crMemo').value=s?.memo||'';}
-  function judge(song){
-    const issues=[]; let score=0;
-    if(!song.jasrac && !song.nextone){score+=2;issues.push({lv:'warn',title:'作品コード未確認',why:'JASRAC/NexToneの管理状況が未入力です。',actions:['公式検索で曲名・権利者・作品コードを確認する','確認できるまで「未確認曲」としてセットリストの後ろに回す']});}
-    if(song.source==='official'){score+=4;issues.push({lv:'danger',title:'原盤使用が危険',why:'CD・配信音源・公式MVは「曲そのもの」と別の権利が絡む可能性があります。',actions:['カラオケ音源・自作演奏・アカペラへ切り替える','公式音源をBGMとして流さない']});}
-    if(song.source==='unknown'){score+=2;issues.push({lv:'warn',title:'音源の利用条件が未確認',why:'使う音源の規約や許可範囲が未入力です。',actions:['配信利用OKの音源か確認する','不明ならアカペラ/弾き語りへ変更する']});}
-    if(song.source==='karaoke'){score+=1;issues.push({lv:'warn',title:'カラオケ音源の条件確認',why:'カラオケ音源はサービスごとに配信利用・収益化・アーカイブ条件が違う場合があります。',actions:['使う音源サービスの配信利用条件を確認する','音源名やURLをメモに残す']});}
-    if(song.platform==='twitch'){score+=3;issues.push({lv:'danger',title:'Twitch VOD/クリップ注意',why:'生配信中よりもVOD・クリップ側で問題化しやすい運用です。',actions:['VODを残さない設定にする','歌枠中のクリップを制限する','歌枠後にアーカイブを確認/削除する']});}
-    if(song.archive){score+=1;issues.push({lv:'warn',title:'アーカイブ確認が必要',why:'生配信は通っても、後から自動検出・ミュート・収益化制限が出る場合があります。',actions:['歌枠だけ別アーカイブにする','公開前にミュート/制限を確認する']});}
-    if(song.monetize){score+=1;issues.push({lv:'warn',title:'収益化まわり注意',why:'広告・投げ銭・メン限など、お金が絡むと確認項目が増えます。',actions:['収益化ありの配信で使ってよい音源か確認する','不安な曲は非収益枠へ分ける']});}
-    if(song.source==='self'||song.source==='acapella'){issues.push({lv:'safe',title:'音源面は安全寄り',why:'自作演奏・アカペラは原盤リスクを避けやすい形です。',actions:['作品コードの確認は別途メモする','歌詞表示やアーカイブ設定も確認する']});}
-    const rank=score>=4?'danger':score>=1?'warn':'safe';
-    return {rank,score,issues};
+  const CR_KEY = "ss_copyright_songs_v1";
+  const $ = (id)=>document.getElementById(id);
+  const esc = (v)=>String(v==null?"":v).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+  function loadSongs(){ try{ const a=JSON.parse(localStorage.getItem(CR_KEY)||"[]"); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+  function saveSongs(a){ localStorage.setItem(CR_KEY, JSON.stringify(a||[])); }
+  function checkbox(id){ const el=$(id); return !!(el&&el.checked); }
+  function value(id){ const el=$(id); return el ? el.value.trim() : ""; }
+  function tagsFromText(t){ return String(t||"").split(/[、,]/).map(x=>x.trim()).filter(Boolean); }
+  function currentDraft(){
+    return {
+      id: value('crSongId') || ('cr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)),
+      title: value('crTitle'), artist: value('crArtist'), tags: tagsFromText(value('crTags')), keyMemo: value('crKeyMemo'),
+      jasracCode: value('crJasracCode'), nextoneCode: value('crNextoneCode'),
+      jasracManaged: checkbox('crJasracManaged'), nextoneManaged: checkbox('crNextoneManaged'), noRightsInfo: checkbox('crNoRightsInfo'),
+      platforms: {youtube: checkbox('crYoutube'), twitch: checkbox('crTwitch'), twitcast: checkbox('crTwitcast')},
+      archive: checkbox('crArchive'), monetize: checkbox('crMonetize'), useOriginal: checkbox('crUseOriginal'), useKaraoke: checkbox('crUseKaraoke'), selfPlay: checkbox('crSelfPlay'),
+      updatedAt: new Date().toISOString()
+    };
   }
-  function rankLabel(r){return r==='danger'?'危険強め':r==='warn'?'注意あり':'安全寄り'}
-  function renderSummary(){
-    const counts={safe:0,warn:0,danger:0,all:songs.length};songs.forEach(s=>counts[judge(s).rank]++);
-    const el=$('crSummary'); if(!el) return;
-    el.innerHTML=`<div class="cr-chip info"><b>${counts.all}</b><span class="muted">登録曲</span></div><div class="cr-chip safe"><b>${counts.safe}</b><span class="muted">安全寄り</span></div><div class="cr-chip warn"><b>${counts.warn}</b><span class="muted">注意あり</span></div><div class="cr-chip danger"><b>${counts.danger}</b><span class="muted">危険強め</span></div>`;
+  function analyze(song){
+    const warnings=[]; const actions=[];
+    if(song.noRightsInfo || (!song.jasracManaged && !song.nextoneManaged && !song.jasracCode && !song.nextoneCode)){
+      warnings.push('権利情報が未確認'); actions.push('JASRAC/NexTone検索で作品情報を確認してから歌枠に入れる');
+    }
+    if(song.useOriginal){ warnings.push('原盤/CD・配信音源の使用注意'); actions.push('カラオケ音源・弾き語り・自作伴奏に切り替える'); }
+    if(song.platforms && song.platforms.twitch){ warnings.push('TwitchはVOD/クリップ注意'); actions.push('VOD保存OFF、または歌枠後にアーカイブ確認'); }
+    if(song.archive){ warnings.push('アーカイブ注意'); actions.push('歌枠アーカイブを分ける／公開前にミュートや制限を確認'); }
+    if(song.monetize){ warnings.push('収益化チェック必要'); actions.push('収益化ONのまま残す前に各配信サービスの管理画面で制限を確認'); }
+    if(song.useKaraoke){ actions.push('カラオケ音源の利用条件を確認する'); }
+    if(song.selfPlay){ actions.push('弾き語り/自作伴奏なら原盤リスクは下がるが、曲の管理状況は確認する'); }
+    const safeish = warnings.length===0 || (warnings.length===1 && warnings[0].includes('アーカイブ'));
+    return {level: warnings.length===0?'safe':(warnings.length<=2?'caution':'danger'), warnings, actions:[...new Set(actions)], safeish};
+  }
+  function renderAdvice(song){
+    const box=$('crLiveAdvice'); if(!box) return;
+    const a=analyze(song||currentDraft());
+    const label=a.level==='safe'?'🟢 安全寄り':a.level==='caution'?'🟡 注意あり':'🔴 強め注意';
+    box.innerHTML = `<div style="font-size:26px;font-weight:950">${label}</div>`+
+      `<div class="muted" style="margin-top:6px">${a.warnings.length?esc(a.warnings.join(' / ')):'現時点のチェックでは大きな注意は少なめ。'}</div>`+
+      `<div style="margin-top:12px;font-weight:900">おすすめ行動</div>`+
+      `<ul style="margin:8px 0 0 18px;padding:0">${(a.actions.length?a.actions:['登録内容を保存して、配信前にサービス側の表示を確認']).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+  }
+  function clearForm(){
+    ['crSongId','crTitle','crArtist','crTags','crKeyMemo','crJasracCode','crNextoneCode'].forEach(id=>{const el=$(id); if(el) el.value='';});
+    ['crJasracManaged','crNextoneManaged','crNoRightsInfo','crTwitch','crTwitcast','crArchive','crMonetize','crUseOriginal','crUseKaraoke','crSelfPlay'].forEach(id=>{const el=$(id); if(el) el.checked=false;});
+    const yt=$('crYoutube'); if(yt) yt.checked=true;
+    renderAdvice();
+  }
+  function fillForm(song){
+    if(!song) return;
+    $('crSongId').value=song.id||''; $('crTitle').value=song.title||''; $('crArtist').value=song.artist||''; $('crTags').value=(song.tags||[]).join(', '); $('crKeyMemo').value=song.keyMemo||'';
+    $('crJasracCode').value=song.jasracCode||''; $('crNextoneCode').value=song.nextoneCode||'';
+    ['jasracManaged','nextoneManaged','noRightsInfo','archive','monetize','useOriginal','useKaraoke','selfPlay'].forEach(k=>{const el=$('cr'+k.charAt(0).toUpperCase()+k.slice(1)); if(el) el.checked=!!song[k];});
+    const p=song.platforms||{}; const yt=$('crYoutube'), tw=$('crTwitch'), tc=$('crTwitcast'); if(yt) yt.checked=!!p.youtube; if(tw) tw.checked=!!p.twitch; if(tc) tc.checked=!!p.twitcast;
+    renderAdvice(song);
+    window.scrollTo({top:0,behavior:'smooth'});
   }
   function renderList(){
-    const box=$('crSongList'); if(!box) return;
-    const q=($('crSearch')?.value||'').toLowerCase(); const f=$('crFilter')?.value||'all';
-    const arr=songs.filter(s=>{const j=judge(s);const hay=[s.title,s.artist,s.tags,s.jasrac,s.nextone].join(' ').toLowerCase();return (!q||hay.includes(q))&&(f==='all'||j.rank===f);});
-    box.innerHTML=arr.map(s=>{const j=judge(s);return `<div class="cr-song ${s.id===selectedId?'active':''}" data-cr-id="${esc(s.id)}"><div class="cr-song-title"><div><b>${esc(s.title||'無題の曲')}</b><div class="cr-mini">${esc(s.artist||'歌手未入力')}</div></div><span class="cr-badge ${j.rank}">${rankLabel(j.rank)}</span></div><div class="cr-badges"><span class="cr-badge">JASRAC: ${esc(s.jasrac||'未確認')}</span><span class="cr-badge">NexTone: ${esc(s.nextone||'未確認')}</span><span class="cr-badge">${esc(sourceLabel(s.source))}</span><span class="cr-badge">${esc(platformLabel(s.platform))}</span></div>${s.tags?`<div class="cr-mini">🏷️ ${esc(s.tags)}</div>`:''}</div>`}).join('')||'<div class="cr-alert info">登録曲なし。まず1曲追加してみて。</div>';
-    box.querySelectorAll('[data-cr-id]').forEach(card=>card.onclick=()=>selectSong(card.dataset.crId));
+    const list=$('crSongList'); if(!list) return;
+    const q=(value('crSearch')||'').toLowerCase();
+    const songs=loadSongs().filter(s=>!q || [s.title,s.artist,(s.tags||[]).join(' '),s.keyMemo].join(' ').toLowerCase().includes(q));
+    if(!songs.length){ list.innerHTML='<div class="muted">まだ曲が登録されてない。まず1曲入れてみよう。</div>'; return; }
+    list.innerHTML=songs.map(s=>{const a=analyze(s); const badge=a.level==='safe'?'🟢':a.level==='caution'?'🟡':'🔴'; return `
+      <div class="tool-item" style="background:#0b1220;border-color:${a.level==='danger'?'#ef4444':a.level==='caution'?'#f59e0b':'#22c55e'}">
+        <div class="row" style="justify-content:space-between;align-items:flex-start">
+          <div><div style="font-size:20px;font-weight:950">${badge} ${esc(s.title||'無題')}</div><div class="muted">${esc(s.artist||'アーティスト未入力')} / ${(s.tags||[]).map(t=>`#${esc(t)}`).join(' ')}</div><div class="muted">JASRAC: ${esc(s.jasracCode|| (s.jasracManaged?'管理あり':'未入力'))} / NexTone: ${esc(s.nextoneCode|| (s.nextoneManaged?'管理あり':'未入力'))}</div><div style="margin-top:6px">${a.warnings.length?esc(a.warnings.join(' / ')):'大きな注意なし'}</div></div>
+          <div class="row"><button class="btn mini-btn" data-cr-edit="${esc(s.id)}" type="button">編集</button><button class="btn danger mini-btn" data-cr-del="${esc(s.id)}" type="button">削除</button></div>
+        </div>
+      </div>`}).join('');
   }
-  function sourceLabel(v){return {karaoke:'カラオケ音源',self:'自作演奏/弾き語り',acapella:'アカペラ',official:'CD/配信音源/公式MV',unknown:'音源未確認'}[v]||v}
-  function platformLabel(v){return {youtube:'YouTube',twitch:'Twitch',twicas:'ツイキャス',other:'その他'}[v]||v}
-  function selectSong(id){const s=songs.find(x=>x.id===id); if(!s)return; selectedId=id; setForm(s); renderCheck(s); renderList();}
-  function renderCheck(song){
-    const current=$('crCurrentCheck'), list=$('crAdviceList'); if(!current||!list)return;
-    if(!song){current.textContent='曲を選ぶと、ここに「注意すること」と「おすすめ行動」が出ます。';list.innerHTML='';return;}
-    const j=judge(song); current.className='cr-hero-result'; current.innerHTML=`${j.rank==='danger'?'🔴':j.rank==='warn'?'🟡':'🟢'} ${esc(song.title||'無題の曲')}：${rankLabel(j.rank)}<div class="cr-mini" style="margin-top:6px">注意は“禁止断定”ではなく、配信前に確認するための実用メモです。</div>`;
-    list.innerHTML=j.issues.map(i=>`<div class="cr-alert ${i.lv}"><h3>${i.lv==='danger'?'🔴':i.lv==='warn'?'🟡':i.lv==='safe'?'🟢':'🔵'} ${esc(i.title)}</h3><p>${esc(i.why)}</p><b>おすすめ行動</b><ul>${i.actions.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>`).join('');
-  }
-  function renderAll(){renderSummary();renderList(); const s=songs.find(x=>x.id===selectedId); renderCheck(s);}
-  function bind(){
-    if(!$('crSaveBtn')) return;
-    $('crSaveBtn').onclick=()=>{const data=getForm(); if(!data.title){alert('曲名は入れておこう！');return;} const i=songs.findIndex(s=>s.id===data.id); if(i>=0)songs[i]=data; else songs.unshift(data); selectedId=data.id; save(); renderAll();};
-    $('crClearBtn').onclick=()=>{selectedId='';setForm(null);renderAll();};
-    $('crDeleteBtn').onclick=()=>{const id=$('crEditId').value; if(!id)return alert('削除する曲を選んでね'); const s=songs.find(x=>x.id===id); if(confirm((s?.title||'この曲')+' を削除する？')){songs=songs.filter(x=>x.id!==id);selectedId='';setForm(null);save();renderAll();}};
-    $('crSearch').oninput=renderList; $('crFilter').onchange=renderList;
-    $('crRouletteBtn').onclick=()=>{const pool=songs.filter(s=>judge(s).rank!=='danger'); if(!pool.length)return alert('安全寄り/注意ありの曲がまだないよ'); selectSong(pool[Math.floor(Math.random()*pool.length)].id);};
-  }
-  document.addEventListener('DOMContentLoaded',()=>{load();bind();renderAll();});
-  window.renderCopyrightTool=function(){load();renderAll();};
-  const oldShow=window.showScreen;
-  if(typeof oldShow==='function'){
-    window.showScreen=function(id){oldShow(id); if(id==='copyrightTool') setTimeout(()=>{load();bind();renderAll();},0);};
-  }
+  window.renderCopyrightTool=function(){ renderAdvice(); renderList(); };
+  document.addEventListener('input', function(e){ if(e.target && e.target.id && e.target.id.startsWith('cr')){ renderAdvice(); if(e.target.id==='crSearch') renderList(); } });
+  document.addEventListener('change', function(e){ if(e.target && e.target.id && e.target.id.startsWith('cr')) renderAdvice(); });
+  document.addEventListener('click', function(e){
+    const t=e.target; if(!t) return;
+    if(t.id==='crClearBtn') clearForm();
+    if(t.id==='crSaveBtn'){
+      const song=currentDraft(); if(!song.title){ alert('曲名だけは入れてくれ！'); return; }
+      const songs=loadSongs(); const i=songs.findIndex(x=>x.id===song.id); if(i>=0) songs[i]=song; else songs.unshift(song); saveSongs(songs); clearForm(); renderList(); alert('曲を保存した！');
+    }
+    if(t.dataset && t.dataset.crEdit){ const s=loadSongs().find(x=>x.id===t.dataset.crEdit); fillForm(s); }
+    if(t.dataset && t.dataset.crDel){ if(confirm('この曲を削除する？')){ saveSongs(loadSongs().filter(x=>x.id!==t.dataset.crDel)); renderList(); } }
+    if(t.id==='crPickSafeBtn'){
+      const pool=loadSongs().filter(s=>analyze(s).safeish); const target=pool[Math.floor(Math.random()*pool.length)]; const out=$('crPickResult');
+      if(out) out.textContent=target ? `🎲 ${target.title} / ${target.artist||'アーティスト未入力'}` : '安全寄り候補がまだない。曲を登録してチェックを調整してね。';
+    }
+  });
 })();
+
 </script>
 
 </body>
