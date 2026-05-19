@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>StreamStaff Projector v235.44</title>
+<title>StreamStaff Projector v235.51</title>
 <style>
 html,body{
   margin:0;
@@ -611,7 +611,9 @@ function ssApplyUnifiedObsState(obsState){
     noticeHoldSeconds: layout.noticeHoldSeconds || 3,
     countdownTargetId: layout.countdownId || "",
     countdownDecimalMode: layout.countdownDecimalMode || "lastHour",
-    clockWeekdayMode: layout.clockWeekdayMode || "jpShort"
+    clockWeekdayMode: layout.clockWeekdayMode || "jpShort",
+    projectorBgMode: layout.projectorBgMode || "normal",
+    projectorChromaColor: layout.projectorChromaColor || "#00ff00"
   };
   try{ localStorage.setItem("ss_obs_9slot_layout", JSON.stringify(legacyLayout)); }catch(e){}
   try{ localStorage.setItem("ss_obs_slot_align", JSON.stringify(legacyLayout.align || {})); }catch(e){}
@@ -714,7 +716,9 @@ function loadData(){
         noticeHoldSeconds: l.noticeHoldSeconds || 3,
         countdownTargetId: l.countdownId || "",
         countdownDecimalMode: l.countdownDecimalMode || "lastHour",
-        clockWeekdayMode: l.clockWeekdayMode || "jpShort"
+        clockWeekdayMode: l.clockWeekdayMode || "jpShort",
+        projectorBgMode: l.projectorBgMode || "normal",
+        projectorChromaColor: l.projectorChromaColor || "#00ff00"
       });
     }
     const raw = localStorage.getItem("ss_obs_9slot_layout");
@@ -1358,6 +1362,23 @@ function mergeRows(data){
 }
 
 
+function ssApplyProjectorBackgroundMode(data){
+  const mode = (data && data.projectorBgMode) || "normal";
+  const chroma = (data && data.projectorChromaColor) || "#00ff00";
+  const bg = ((data && data.colors && data.colors.bg) || "#050816");
+  const bodyBg = mode === "chroma" ? chroma : (mode === "transparent" ? "transparent" : (bg === "#000000" ? "#050816" : bg));
+  try{ document.documentElement.style.background = bodyBg; }catch(e){}
+  try{ document.body.style.background = bodyBg; }catch(e){}
+  const viewport = document.getElementById("projectorViewport");
+  if(viewport) viewport.style.background = bodyBg;
+  const stage = document.getElementById("projectorStage");
+  if(stage) stage.style.background = mode === "transparent" ? "transparent" : "transparent";
+  if(grid){
+    grid.dataset.bgMode = mode;
+    grid.dataset.chromaColor = chroma;
+  }
+}
+
 function applyOverlayColors(data){
   const c = (data && data.colors) || {};
   const bg = c.bg || "transparent";
@@ -1366,7 +1387,8 @@ function applyOverlayColors(data){
   const panel = c.panel || "rgba(0,0,0,.35)";
 
   if(grid){
-    grid.style.background = bg === "#000000" ? "transparent" : bg;
+    const mode = (data && data.projectorBgMode) || "normal";
+    grid.style.background = (mode === "chroma" || mode === "transparent") ? "transparent" : (bg === "#000000" ? "transparent" : bg);
   }
 
   document.querySelectorAll("#overlayGrid .cell").forEach(cell=>{
@@ -1481,6 +1503,7 @@ function render(force){
     grid.appendChild(cell);
   });
 
+  ssApplyProjectorBackgroundMode(data);
   applyOverlayColors(data);
   ssProjectorFitStage();
   ssProjectorFitAllThemeBlocks();

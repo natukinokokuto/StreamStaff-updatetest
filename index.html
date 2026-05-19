@@ -3041,6 +3041,15 @@ function fitBrushText(text){
 }
 </style>
 
+
+<style id="v235_51ChromaCandidateStyle">
+.obs-chroma-box{margin-top:12px;padding:12px;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:rgba(15,23,42,.55)}
+.ss-chroma-candidates{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ss-chroma-candidate{display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:7px 10px;background:rgba(0,0,0,.22);color:inherit;cursor:pointer;font-weight:700}
+.ss-chroma-candidate:hover{filter:brightness(1.15)}
+.ss-chroma-swatch{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.7);box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+.ss-chroma-score{font-size:12px;opacity:.9}
+</style>
 </head>
 <body>
   <div class="app">
@@ -4330,6 +4339,24 @@ function fitBrushText(text){
       <label>枠色<input id="obsFrameColor" class="obs-color-input" type="color" value="#555555"></label>
       <label>文字色<input id="obsTextColor" class="obs-color-input" type="color" value="#ffffff"></label>
       <label>パネル色<input id="obsPanelColor" class="obs-color-input" type="color" value="#222222"></label>
+    </div>
+
+    <div class="obs-chroma-box" id="ssProjectorChromaBox">
+      <strong>プロジェクター背景 / クロマキー</strong>
+      <p class="obs-mini-note">OBSのウィンドウキャプチャで背景を抜く時用。現在の枠・文字・パネル・お知らせ絵文字に近い色は避けて候補を出します。</p>
+      <div class="row">
+        <label>背景モード
+          <select id="ssProjectorBgMode" style="max-width:180px">
+            <option value="normal">通常</option>
+            <option value="chroma">クロマキー</option>
+            <option value="transparent">透明実験</option>
+          </select>
+        </label>
+        <label>クロマキー色<input id="ssProjectorChromaColor" class="obs-color-input" type="color" value="#00ff00"></label>
+        <button class="btn" id="ssRefreshChromaCandidates" type="button">安全候補を更新</button>
+      </div>
+      <div id="ssChromaCandidateList" class="ss-chroma-candidates"></div>
+      <div id="ssChromaCandidateNote" class="obs-copy-status" aria-live="polite"></div>
     </div>
   </div>
 
@@ -10485,7 +10512,9 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
       countdownTargetId:"",
       countdownDecimalMode:"lastHour",
       clockWeekdayMode:"jpShort",
-      colors:{bg:"#000000",frame:"#555555",text:"#ffffff",panel:"#222222"}
+      colors:{bg:"#000000",frame:"#555555",text:"#ffffff",panel:"#222222"},
+      projectorBgMode:"normal",
+      projectorChromaColor:"#00ff00"
     };
   }
 
@@ -10525,6 +10554,8 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
       text: document.getElementById("obsTextColor")?.value || "#ffffff",
       panel: document.getElementById("obsPanelColor")?.value || "#222222"
     };
+    data.projectorBgMode = document.getElementById("ssProjectorBgMode")?.value || data.projectorBgMode || "normal";
+    data.projectorChromaColor = document.getElementById("ssProjectorChromaColor")?.value || data.projectorChromaColor || "#00ff00";
 
     localStorage.setItem("ss_obs_9slot_layout", JSON.stringify(data));
 
@@ -10537,6 +10568,8 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     localStorage.setItem("ss_obs_countdown_id", data.countdownTargetId || "");
     localStorage.setItem("ss_obs_countdown_decimal_mode", data.countdownDecimalMode || "lastHour");
     localStorage.setItem("ss_obs_clock_weekday_mode", data.clockWeekdayMode || "jpShort");
+    localStorage.setItem("ss_projector_bg_mode", data.projectorBgMode || "normal");
+    localStorage.setItem("ss_projector_chroma_color", data.projectorChromaColor || "#00ff00");
     try{ if(typeof window.ssScheduleUnifiedObsStatePublish === "function") window.ssScheduleUnifiedObsStatePublish("obs-settings-save"); }catch(e){}
 
     window.dispatchEvent(new StorageEvent("storage", {key:"ss_obs_9slot_layout"}));
@@ -10708,8 +10741,105 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     const colors = data.colors || {};
     [["obsBgColor","bg","#000000"],["obsFrameColor","frame","#555555"],["obsTextColor","text","#ffffff"],["obsPanelColor","panel","#222222"]].forEach(([id,key,def])=>{
       const el = document.getElementById(id);
-      if(el){ el.value = colors[key] || def; el.oninput = save; }
+      if(el){ el.value = colors[key] || def; el.oninput = function(){ save(); try{ ssRenderChromaCandidates(); }catch(e){} }; }
     });
+
+    function ssHexToRgb(hex){
+      const h = String(hex || "").trim().replace("#","");
+      if(!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+      return {r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)};
+    }
+    function ssRgbDistance(a,b){
+      if(!a || !b) return 999;
+      const dr=a.r-b.r,dg=a.g-b.g,db=a.b-b.b;
+      return Math.sqrt(dr*dr+dg*dg+db*db);
+    }
+    function ssNormHex(hex){
+      const rgb = ssHexToRgb(hex);
+      if(!rgb) return "#000000";
+      return "#"+[rgb.r,rgb.g,rgb.b].map(v=>v.toString(16).padStart(2,"0")).join("").toUpperCase();
+    }
+    function ssNoticeEmojiRiskColors(){
+      let text = "";
+      try{
+        const s = JSON.parse(localStorage.getItem("stream_manager_integrated_v1") || "{}");
+        if(Array.isArray(s.notices)) text += " " + s.notices.map(n => (n && (n.title || n.text || n.memo || n.label)) || n || "").join(" ");
+        if(s.noticeText) text += " " + s.noticeText;
+      }catch(e){}
+      try{ text += " " + (localStorage.getItem("ss_notice") || ""); }catch(e){}
+      const map = [
+        [/🔴|❤️|❤|❌|🍎|🍓|🌹/g,"#FF0000","赤系絵文字"],
+        [/🟡|⚠|⭐|🌟|✨|🍋|🌙/g,"#FFFF00","黄系絵文字"],
+        [/🟢|✅|🍀|🌿|🌱|💚/g,"#00FF00","緑系絵文字"],
+        [/🔵|💙|🌊|💧|☔/g,"#0000FF","青系絵文字"],
+        [/🟣|💜|🍇/g,"#8000FF","紫系絵文字"],
+        [/🟠|🔥|🍊|🎃/g,"#FF7F00","橙系絵文字"],
+        [/⚫|🖤/g,"#000000","黒系絵文字"],
+        [/⚪|🤍/g,"#FFFFFF","白系絵文字"],
+        [/🎂|🌸|💗|💕|🎀/g,"#FF66CC","ピンク系絵文字"]
+      ];
+      const out=[];
+      map.forEach(([re,hex,label])=>{ if(re.test(text)) out.push({hex,label}); });
+      return out;
+    }
+    function ssUsedProjectorColors(){
+      const out=[];
+      const add=(hex,label)=>{ const rgb=ssHexToRgb(hex); if(rgb) out.push({hex:ssNormHex(hex),rgb,label}); };
+      add(document.getElementById("obsBgColor")?.value || "#000000", "背景色");
+      add(document.getElementById("obsFrameColor")?.value || "#555555", "枠色");
+      add(document.getElementById("obsTextColor")?.value || "#ffffff", "文字色");
+      add(document.getElementById("obsPanelColor")?.value || "#222222", "パネル色");
+      ssNoticeEmojiRiskColors().forEach(x=>add(x.hex, x.label));
+      return out;
+    }
+    function ssChromaCandidates(){
+      const palette = [
+        ["#00FF00","緑"],["#00FFFF","シアン"],["#FF00FF","マゼンタ"],["#0000FF","青"],["#7FFF00","黄緑"],
+        ["#FF7F00","オレンジ"],["#8000FF","紫"],["#FF1493","濃いピンク"],["#FFFF00","黄"],["#00AEEF","水色"]
+      ];
+      const used = ssUsedProjectorColors();
+      return palette.map(([hex,name])=>{
+        const rgb = ssHexToRgb(hex);
+        let min = 999, reasons=[];
+        used.forEach(u=>{
+          const d = ssRgbDistance(rgb,u.rgb);
+          if(d < min) min = d;
+          if(d < 95) reasons.push(u.label + "に近い");
+        });
+        let rank = min >= 190 ? "◎" : (min >= 130 ? "○" : (min >= 95 ? "△" : "×"));
+        let note = reasons.length ? reasons.slice(0,2).join(" / ") : "現在色と離れてます";
+        return {hex,name,rank,min,note};
+      }).sort((a,b)=>{
+        const order={"◎":0,"○":1,"△":2,"×":3};
+        return (order[a.rank]-order[b.rank]) || (b.min-a.min);
+      }).slice(0,5);
+    }
+    function ssRenderChromaCandidates(){
+      const box = document.getElementById("ssChromaCandidateList");
+      const note = document.getElementById("ssChromaCandidateNote");
+      if(!box) return;
+      const list = ssChromaCandidates();
+      box.innerHTML = list.map(c => '<button class="ss-chroma-candidate" type="button" data-chroma="'+c.hex+'"><span class="ss-chroma-swatch" style="background:'+c.hex+'"></span><span>'+c.hex+' '+c.name+'</span><span class="ss-chroma-score">'+c.rank+' '+c.note+'</span></button>').join("");
+      box.querySelectorAll("[data-chroma]").forEach(btn=>{
+        btn.addEventListener("click", function(){
+          const input = document.getElementById("ssProjectorChromaColor");
+          const mode = document.getElementById("ssProjectorBgMode");
+          if(input) input.value = this.dataset.chroma;
+          if(mode) mode.value = "chroma";
+          save();
+          ssRenderChromaCandidates();
+        });
+      });
+      if(note) note.textContent = "候補は現在の枠・文字・背景・パネル・お知らせ絵文字を避けて上位5件を表示。OBS側はこの色でクロマキーを設定。";
+    }
+
+    const projectorBgMode = document.getElementById("ssProjectorBgMode");
+    if(projectorBgMode){ projectorBgMode.value = data.projectorBgMode || "normal"; projectorBgMode.onchange = function(){ save(); ssRenderChromaCandidates(); }; }
+    const projectorChromaColor = document.getElementById("ssProjectorChromaColor");
+    if(projectorChromaColor){ projectorChromaColor.value = data.projectorChromaColor || "#00ff00"; projectorChromaColor.oninput = function(){ save(); ssRenderChromaCandidates(); }; }
+    const refreshChroma = document.getElementById("ssRefreshChromaCandidates");
+    if(refreshChroma) refreshChroma.onclick = function(ev){ ev.preventDefault(); ssRenderChromaCandidates(); };
+    ssRenderChromaCandidates();
 
     const colorPresets = {
       neon:{bg:"#030712",frame:"#22d3ee",text:"#ffffff",panel:"#0f172a"},
@@ -11225,7 +11355,9 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
         noticeHoldSeconds: Number(localStorage.getItem("ss_obs_notice_hold_seconds") || layout.noticeHoldSeconds || 3),
         countdownId: localStorage.getItem("ss_obs_countdown_id") || layout.countdownTargetId || "",
         countdownDecimalMode: localStorage.getItem("ss_obs_countdown_decimal_mode") || layout.countdownDecimalMode || "lastHour",
-        clockWeekdayMode: localStorage.getItem("ss_obs_clock_weekday_mode") || layout.clockWeekdayMode || "jpShort"
+        clockWeekdayMode: localStorage.getItem("ss_obs_clock_weekday_mode") || layout.clockWeekdayMode || "jpShort",
+        projectorBgMode: layout.projectorBgMode || localStorage.getItem("ss_projector_bg_mode") || "normal",
+        projectorChromaColor: layout.projectorChromaColor || localStorage.getItem("ss_projector_chroma_color") || "#00ff00"
       },
       content: collectContent()
     };
@@ -11395,7 +11527,7 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 <script id="v235_38StreamStaffProjectorMode">
 (function(){
   // v235.38: OBSブラウザソース同期ではなく、別窓プロジェクターをOBSのウィンドウキャプチャで映す運用を追加。
-  const PROJECTOR_URL = "ss_projector.html?projector=1&v=23546";
+  const PROJECTOR_URL = "ss_projector.html?projector=1&v=23551";
   const PROJECTOR_NAME = "StreamStaff_Projector_v23546";
   let projectorWindow = null;
   let projectorChannel = null;
@@ -11409,7 +11541,7 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     if(!obsState){
       try{ obsState = JSON.parse(localStorage.getItem("ss_obs_unified_state_v235_30") || "null"); }catch(e){}
     }
-    return { type:"ss_projector_state", version:"v235.46", reason:reason||"update", ts:Date.now(), obsState:obsState };
+    return { type:"ss_projector_state", version:"v235.51", reason:reason||"update", ts:Date.now(), obsState:obsState };
   }
 
   function sendToProjector(reason){
@@ -11442,7 +11574,7 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     ].join(",");
     projectorWindow = window.open(url, PROJECTOR_NAME, features);
     const status = document.getElementById("obsBrowserSourceCopyStatus");
-    if(status) status.textContent = projectorWindow ? "プロジェクター窓を開きました。v235.46 / OBSはこの窓をウィンドウキャプチャしてください。（内部1920×1080固定）" : "ポップアップがブロックされたかも。ブラウザの許可を確認してください。";
+    if(status) status.textContent = projectorWindow ? "プロジェクター窓を開きました。v235.51 / OBSはこの窓をウィンドウキャプチャしてください。（内部1920×1080固定）" : "ポップアップがブロックされたかも。ブラウザの許可を確認してください。";
     // 開いた直後は読み込み待ちがあるため数回送る。常時0.5秒更新ではないのでスクロールは荒らさない。
     [120, 450, 900, 1500].forEach(ms => setTimeout(() => sendToProjector("projector-open"), ms));
   }
