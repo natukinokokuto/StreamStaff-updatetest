@@ -2032,22 +2032,91 @@ if(window.importDataCode) importDataCode.onclick=()=>{
     alert("読み込み失敗：保存文字列が違うか壊れてるかも");
   }
 };
-if(window.exportJsonBackup) exportJsonBackup.onclick=()=>{
-  try{
-    const json=JSON.stringify(buildStreamStaffBackup(), null, 2);
+function ensureJsonBackupFallbackPanel(){
+  let panel=document.getElementById("jsonBackupFallbackPanel");
+  if(panel) return panel;
+  panel=document.createElement("div");
+  panel.id="jsonBackupFallbackPanel";
+  panel.style.cssText="display:none;margin-top:12px;padding:12px;border:1px solid #d1d5db;border-radius:12px;background:#f9fafb";
+  panel.innerHTML=`
+    <div style="font-weight:800;margin-bottom:6px">ダウンロードできない時の保険</div>
+    <p class="muted" style="margin:0 0 8px">スマホや一部ブラウザで保存が出ない場合は、下のJSONをコピーしてメモ等に保存してね。</p>
+    <textarea id="jsonBackupFallbackText" readonly style="width:100%;min-height:180px;border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;font-size:12px;box-sizing:border-box"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="copyJsonBackupFallback" type="button">JSONをコピー</button>
+      <button class="btn" id="openJsonBackupFallback" type="button">新しいタブで開く</button>
+    </div>
+    <p class="muted" id="jsonBackupFallbackName" style="margin:8px 0 0"></p>
+  `;
+  const status=document.getElementById("jsonBackupStatus");
+  if(status && status.parentElement) status.parentElement.insertBefore(panel, status.nextSibling);
+  else document.body.appendChild(panel);
+  return panel;
+}
+function showJsonBackupFallback(json, filename){
+  const panel=ensureJsonBackupFallbackPanel();
+  const ta=document.getElementById("jsonBackupFallbackText");
+  const name=document.getElementById("jsonBackupFallbackName");
+  if(ta) ta.value=json;
+  if(name) name.textContent="保存ファイル名："+filename;
+  panel.style.display="block";
+  const copyBtn=document.getElementById("copyJsonBackupFallback");
+  if(copyBtn) copyBtn.onclick=async()=>{
+    try{ await navigator.clipboard.writeText(json); alert("JSONをコピーした！"); }
+    catch(e){ if(ta){ ta.focus(); ta.select(); document.execCommand("copy"); } alert("コピーした！たぶん！"); }
+  };
+  const openBtn=document.getElementById("openJsonBackupFallback");
+  if(openBtn) openBtn.onclick=()=>{
     const blob=new Blob([json], {type:"application/json;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    setTimeout(()=>URL.revokeObjectURL(url), 60000);
+  };
+}
+async function exportJsonBackupFile(){
+  const json=JSON.stringify(buildStreamStaffBackup(), null, 2);
+  const filename=backupFileName();
+  const blob=new Blob([json], {type:"application/json;charset=utf-8"});
+
+  // PC版Chrome/Edge向け：保存先を選べる方式。a.downloadが無視される環境でも強い。
+  if(window.showSaveFilePicker && window.isSecureContext){
+    try{
+      const handle=await window.showSaveFilePicker({
+        suggestedName: filename,
+        types:[{description:"StreamStaff JSON backup", accept:{"application/json":[".json"]}}]
+      });
+      const writable=await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      if(window.jsonBackupStatus) jsonBackupStatus.textContent="JSONバックアップを保存した！";
+      showJsonBackupFallback(json, filename);
+      return;
+    }catch(e){
+      if(e && e.name==="AbortError") return;
+      // 失敗したら下の通常ダウンロードへ落とす
+    }
+  }
+
+  // 通常ブラウザ向け：download属性。
+  try{
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
     a.href=url;
-    a.download=backupFileName();
+    a.download=filename;
+    a.rel="noopener";
+    a.style.display="none";
     document.body.appendChild(a);
     a.click();
-    a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url), 1000);
-    if(window.jsonBackupStatus) jsonBackupStatus.textContent="JSONバックアップを書き出した！";
+    setTimeout(()=>{ try{ a.remove(); URL.revokeObjectURL(url); }catch(e){} }, 1500);
+    if(window.jsonBackupStatus) jsonBackupStatus.textContent="JSONバックアップを書き出した！保存が出ない時は下の保険欄を使ってね。";
+    showJsonBackupFallback(json, filename);
   }catch(e){
-    alert("JSONバックアップの作成に失敗した");
+    showJsonBackupFallback(json, filename);
+    if(window.jsonBackupStatus) jsonBackupStatus.textContent="自動ダウンロードできなかったので、下の保険欄からコピーして保存してね。";
   }
+}
+if(window.exportJsonBackup) exportJsonBackup.onclick=()=>{
+  exportJsonBackupFile().catch(()=>alert("JSONバックアップの作成に失敗した"));
 };
 if(window.importJsonBackupBtn) importJsonBackupBtn.onclick=()=>{
   const input=document.getElementById("importJsonBackupFile");
