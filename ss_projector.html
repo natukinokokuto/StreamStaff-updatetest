@@ -146,7 +146,7 @@ html,body{
 .cell .trunk-list li{
   margin:0;
   padding:0;
-  font-size:26px;
+  font-size:clamp(14px, 1.8vw, 26px);
 }
 .cell .theme-block{
   width:100%;
@@ -169,7 +169,7 @@ html,body{
   gap:4px;
 }
 .cell .theme-heading{
-  font-size:18px;
+  font-size:clamp(12px, 1.25vw, 18px);
   line-height:1;
   font-weight:800;
   letter-spacing:.08em;
@@ -185,11 +185,11 @@ html,body{
   gap:4px;
 }
 .cell .theme-block.combo .trunk-list li{
-  font-size:20px;
+  font-size:clamp(12px, 1.35vw, 20px);
   line-height:1.18;
 }
 .cell .theme-block .trunk-list li{
-  white-space:nowrap;
+  white-space:normal;
 }
 </style>
 
@@ -810,73 +810,17 @@ function makeThemeSection(title, items, fallback){
 // v235.43: メイン/サブの箇条書きは「一番長い文」を基準に、枠内へ入る最大サイズまで拡大する。
 // 行ごとにサイズを変えず、同じグループ内は全行同じ文字サイズ。枠サイズは変更しない。
 function fitThemeBlockTextToLongest(wrap, cell){
-  if(!wrap) return;
-  const box = cell || wrap.closest(".cell") || wrap;
-  requestAnimationFrame(()=>{
-    try{
-      const lis = Array.from(wrap.querySelectorAll(".trunk-list li"));
-      if(!lis.length) return;
-
-      const isCombo = wrap.classList.contains("combo");
-      const minSize = isCombo ? 14 : 18;
-      const hardMax = isCombo ? 132 : 172;
-      const safety = 10;
-
-      lis.forEach(li=>{
-        li.style.whiteSpace = "nowrap";
-        li.style.lineHeight = isCombo ? "1.06" : "1.08";
-        li.style.overflow = "visible";
-      });
-
-      const lists = Array.from(wrap.querySelectorAll(".trunk-list"));
-      const contentWidths = lists.map(ul=>{
-        const cs = getComputedStyle(ul);
-        return Math.max(40, ul.clientWidth - (parseFloat(cs.paddingLeft)||0) - (parseFloat(cs.paddingRight)||0) - safety);
-      });
-      const maxTextWidth = Math.max(40, Math.min.apply(null, contentWidths.length ? contentWidths : [box.clientWidth || 600]));
-
-      const boxHeight = Math.max(40, box.clientHeight || box.getBoundingClientRect().height || 300);
-      const headingsHeight = Array.from(wrap.querySelectorAll(".theme-heading")).reduce((sum, h)=>sum + (h.getBoundingClientRect().height || h.offsetHeight || 0), 0);
-      const verticalLimit = Math.max(40, boxHeight - headingsHeight - 34);
-
-      function apply(px){
-        lis.forEach(li=>{ li.style.fontSize = px + "px"; });
-      }
-      function fits(px){
-        apply(px);
-        const horizontalOk = lis.every(li => (li.scrollWidth || li.getBoundingClientRect().width || 0) <= maxTextWidth + 1);
-        const verticalOk = wrap.scrollHeight <= boxHeight - 8 && lis.reduce((sum, li)=>sum + (li.getBoundingClientRect().height || li.offsetHeight || 0), 0) <= verticalLimit + 40;
-        return horizontalOk && verticalOk;
-      }
-
-      // その枠内に入る最大文字サイズを二分探索する。
-      let lo = minSize;
-      let hi = hardMax;
-      let best = minSize;
-      while(lo <= hi){
-        const mid = Math.floor((lo + hi) / 2);
-        if(fits(mid)){
-          best = mid;
-          lo = mid + 1;
-        }else{
-          hi = mid - 1;
-        }
-      }
-      apply(best);
-
-      // 念のため最終ガード。全行同じサイズは維持する。
-      let guard = 0;
-      while(guard++ < 60 && best > minSize && lis.some(li => (li.scrollWidth || 0) > maxTextWidth + 2)){
-        best -= 1;
-        apply(best);
-      }
-      guard = 0;
-      while(guard++ < 60 && best > minSize && wrap.scrollHeight > boxHeight - 6){
-        best -= 1;
-        apply(best);
-      }
-    }catch(e){}
-  });
+  // v235.45: projector should match preview/overlay sizing.
+  // Do not calculate per-text max-fit here; leave sizing to shared CSS clamp rules.
+  try{
+    if(!wrap) return;
+    Array.from(wrap.querySelectorAll(".trunk-list li")).forEach(li=>{
+      li.style.fontSize = "";
+      li.style.lineHeight = "";
+      li.style.whiteSpace = "";
+      li.style.overflow = "";
+    });
+  }catch(e){}
 }
 
 function ssProjectorFitAllThemeBlocks(){
