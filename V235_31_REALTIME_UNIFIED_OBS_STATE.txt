@@ -1,0 +1,15 @@
+SS_v235_31_realtime_unified_obsState_push
+
+目的:
+- OBS URL更新は最初の1回だけ
+- 以後はSSホーム側の変更を unified obsState として継続送信
+- OBS側は受け取った obsState だけを正として描画
+
+主な変更:
+- ホーム側: 配信メモ/テーマ/お知らせ/カウントダウン/OBSレイアウト保存を検知してobsStateを再生成
+- BroadcastChannel + postMessage + snapshot保存へ送信
+- localStorage.setItem監視で保存経由の更新も拾う
+- OBS側: 同一状態の再描画を抑制してチラつき・スクロールリセットを減らす
+
+注意:
+- OBS本体とChrome間でBroadcastChannelが完全に共有されない環境では、次段階としてFirebase等の外部中継が必要。

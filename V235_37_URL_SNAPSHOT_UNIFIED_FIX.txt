@@ -1,0 +1,1 @@
+v235.37: OBS overlay now writes ol=v2 URL snapshot into unified obsState, preventing stale unified localStorage from overriding newly pasted URLs.
