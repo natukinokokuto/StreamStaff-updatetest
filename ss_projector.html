@@ -134,6 +134,46 @@ html,body{
   padding:0;
   font-size:clamp(14px, 1.8vw, 26px);
 }
+.cell .theme-block{
+  width:100%;
+  height:100%;
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:8px;
+  padding:8px 10px;
+}
+.cell .theme-block.combo{
+  gap:10px;
+}
+.cell .theme-section{
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:4px;
+}
+.cell .theme-heading{
+  font-size:clamp(12px, 1.25vw, 18px);
+  line-height:1;
+  font-weight:800;
+  letter-spacing:.08em;
+  opacity:.9;
+  text-align:left;
+  padding-left:4px;
+}
+.cell .theme-block .trunk-list{
+  height:auto;
+  flex:0 1 auto;
+  justify-content:flex-start;
+  padding:0 8px 0 26px;
+  gap:4px;
+}
+.cell .theme-block.combo .trunk-list li{
+  font-size:clamp(12px, 1.35vw, 20px);
+  line-height:1.18;
+}
 </style>
 
 
@@ -448,7 +488,7 @@ function applyCompactObsLayoutFromUrl(){
     const parts = String(raw).split(".");
     if((parts[0] !== "v1" && parts[0] !== "v2") || parts.length < 9) return;
 
-    const slotMap = {"0":"空白","1":"タイトル","2":"時計","3":"タイトル＋時計","4":"お知らせ","5":"カウントダウン","6":"配信メモ","7":"メインテーマ","8":"サブテーマ","9":"テロップ文","a":"テロップ文＋時計"};
+    const slotMap = {"0":"空白","1":"タイトル","2":"時計","3":"タイトル＋時計","4":"お知らせ","5":"カウントダウン","6":"配信メモ","7":"メインテーマ","8":"サブテーマ","b":"メイン+サブテーマ","9":"テロップ文","a":"テロップ文＋時計"};
     const alignMap = {"0":"left","1":"center","2":"right"};
     const weekMap = {"e":"en","l":"jpLong","s":"jpShort"};
     const slotOrder = ["topLeft","topCenter","topRight","midLeft","midCenter","midRight","bottomLeft","bottomCenter","bottomRight"];
@@ -714,18 +754,34 @@ function getObsTrunks5(){
   return out.slice(0,5);
 }
 
-function renderTrunkList(cell){
-  const items = getObsTrunks5();
+function makeThemeList(items, fallback){
   const ul = document.createElement("ul");
   ul.className = "trunk-list";
-
-  (items.length ? items : ["幹が未設定です"]).slice(0,5).forEach(t=>{
+  (items.length ? items : [fallback]).slice(0,5).forEach(t=>{
     const li = document.createElement("li");
     li.textContent = t;
     ul.appendChild(li);
   });
+  return ul;
+}
 
-  cell.appendChild(ul);
+function makeThemeSection(title, items, fallback){
+  const section = document.createElement("div");
+  section.className = "theme-section";
+  const heading = document.createElement("div");
+  heading.className = "theme-heading";
+  heading.textContent = title;
+  section.appendChild(heading);
+  section.appendChild(makeThemeList(items, fallback));
+  return section;
+}
+
+function renderTrunkList(cell){
+  const items = getObsTrunks5();
+  const wrap = document.createElement("div");
+  wrap.className = "theme-block single main-theme-block";
+  wrap.appendChild(makeThemeSection("メインテーマ", items, "メインテーマが未設定です"));
+  cell.appendChild(wrap);
 }
 
 function getObsBranches5(){
@@ -760,16 +816,18 @@ function getObsBranches5(){
 
 function renderBranchList(cell){
   const items = getObsBranches5();
-  const ul = document.createElement("ul");
-  ul.className = "trunk-list";
+  const wrap = document.createElement("div");
+  wrap.className = "theme-block single sub-theme-block";
+  wrap.appendChild(makeThemeSection("サブテーマ", items, "サブテーマが未設定です"));
+  cell.appendChild(wrap);
+}
 
-  (items.length ? items : ["サブテーマが未設定です"]).slice(0,5).forEach(t=>{
-    const li = document.createElement("li");
-    li.textContent = t;
-    ul.appendChild(li);
-  });
-
-  cell.appendChild(ul);
+function renderMainSubThemeList(cell){
+  const wrap = document.createElement("div");
+  wrap.className = "theme-block combo main-sub-theme-block";
+  wrap.appendChild(makeThemeSection("メインテーマ", getObsTrunks5(), "メインテーマが未設定です"));
+  wrap.appendChild(makeThemeSection("サブテーマ", getObsBranches5(), "サブテーマが未設定です"));
+  cell.appendChild(wrap);
 }
 
 function getObsStreamMemo(){
@@ -1350,6 +1408,8 @@ function render(force){
       // v235.2: ドロップダウン表示名「サブテーマ」も、旧内部名「枝」と同じく5件リスト表示にする。
       }else if(value === "サブテーマ" || value === "枝"){
         renderBranchList(cell);
+      }else if(value === "メイン+サブテーマ"){
+        renderMainSubThemeList(cell);
       }else if(value === "配信メモ"){
         renderStreamMemo(cell);
       }else if(value === "お知らせ"){

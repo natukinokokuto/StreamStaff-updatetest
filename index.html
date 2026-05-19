@@ -10349,7 +10349,7 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 (function(){
   const topOptions = ["空白","タイトル","時計","タイトル＋時計","お知らせ","カウントダウン"];
   // v235.18: OBS表示のドロップダウンからカレンダーを除外（ホーム側カレンダー機能は維持）
-  const midOptions = ["空白","配信メモ","メインテーマ","サブテーマ"];
+  const midOptions = ["空白","配信メモ","メインテーマ","サブテーマ","メイン+サブテーマ"];
   const bottomOptions = ["空白","テロップ文","テロップ文＋時計","メインテーマ","お知らせ","カウントダウン"];
 
   const slots = [
@@ -11024,7 +11024,7 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
   const SLOT_ORDER = ["topLeft","topCenter","topRight","midLeft","midCenter","midRight","bottomLeft","bottomCenter","bottomRight"];
   const MERGE_ORDER = ["obsMergeTopLeft","obsMergeTopRight","obsMergeMidLeft","obsMergeMidRight","obsMergeBottomLeft","obsMergeBottomRight"];
   const ALIGN_ORDER = SLOT_ORDER;
-  const SLOT_CODE = {"空白":"0","タイトル":"1","時計":"2","タイトル＋時計":"3","お知らせ":"4","カウントダウン":"5","配信メモ":"6","メインテーマ":"7","幹":"7","サブテーマ":"8","枝":"8","テロップ文":"9","テロップ文＋時計":"a"};
+  const SLOT_CODE = {"空白":"0","タイトル":"1","時計":"2","タイトル＋時計":"3","お知らせ":"4","カウントダウン":"5","配信メモ":"6","メインテーマ":"7","幹":"7","サブテーマ":"8","枝":"8","メイン+サブテーマ":"b","テロップ文":"9","テロップ文＋時計":"a"};
   const ALIGN_CODE = {left:"0", center:"1", right:"2"};
   const WEEK_CODE = {en:"e", jpLong:"l", jpShort:"s"};
 
