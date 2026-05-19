@@ -1,1 +1,0 @@
-v235.49 JSONバックアップボタンのクリック到達を強化。通常onclickに加えてcapture click/pointerdownで押下確認、保険欄を必ず表示。
