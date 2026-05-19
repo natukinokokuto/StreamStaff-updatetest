@@ -1,1 +1,0 @@
-v235.28: Fixed obs_overlay compact URL parser to accept v2, so main theme, sub theme, memo, notices, and countdown content snapshot loads in OBS.

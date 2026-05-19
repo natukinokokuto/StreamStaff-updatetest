@@ -1,5 +1,0 @@
-SS_v235_41_projector_fixed_canvas
-- Projector internal canvas fixed to 1920x1080 and scaled as a whole to window size.
-- Exposed projector render/apply hooks so projector window can apply live obsState directly.
-- Projector receiver ignores ts/reason-only updates to avoid scroll reset when operating the main SS window.
-- Keeps v235_40 main+sub theme display changes.
