@@ -1,0 +1,6 @@
+StreamStaff v236_09
+
+・「生歌だけ配信」→「自分で歌う配信」
+・JASRAC/NexTone公式寄せUI維持
+・初心者向け翻訳UI維持
+・GitHub危険ファイル除外

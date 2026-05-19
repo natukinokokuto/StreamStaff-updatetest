@@ -4079,9 +4079,9 @@ function fitBrushText(text){
             <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crTwitcast" type="checkbox">ツイキャス</label>
           </div>
           <div class="row" style="margin-top:10px;align-items:center">
-            <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crArchive" type="checkbox">配信をあとで見返せるように残す</label>
+            <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crArchive" type="checkbox">アーカイブに残す</label>
             <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crMonetize" type="checkbox">収益化する</label>
-            <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crUseOriginal" type="checkbox">CDの音をそのまま流す</label>
+            <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crUseOriginal" type="checkbox">CD/配信音源を使う</label>
             <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crUseKaraoke" type="checkbox">カラオケ音源</label>
             <label style="display:flex;gap:6px;align-items:center;margin:0"><input id="crSelfPlay" type="checkbox">弾き語り/自作伴奏</label>
           </div>
@@ -12153,86 +12153,27 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     return rows.some(r=>(r.rights||{})[field]===status);
   }
   function analyze(song){
+    const warnings=[]; const actions=[]; const positives=[];
     const hasRights = song.jasracManaged || song.nextoneManaged || (song.jasrac&&song.jasrac.code) || (song.nextone&&song.nextone.code) || song.jasracCode || song.nextoneCode;
+    if(song.noRightsInfo || !hasRights){ warnings.push('権利情報が未確認'); actions.push('JASRAC/NexTone検索で作品情報を確認してから歌枠に入れる'); }
     const jPerf=getJasracStatus(song,'演奏','演奏会等');
     const jDist=getJasracStatus(song,'複合','配信');
     const jRec=getJasracStatus(song,'複製','録音');
-    const jVideo=getJasracStatus(song,'複製','ビデオ') || getJasracStatus(song,'広告','ビデオ') || getJasracStatus(song,'ゲーム','ビデオ');
     const nxDistO=anyNextone(song,'配信','○');
     const nxDistX=anyNextone(song,'配信','×');
     const nxAudioX=anyNextone(song,'オーディオ','×');
-    const nxVideoX=anyNextone(song,'ビデオ','×');
-    const distOk = jDist==='○' || nxDistO;
-    const distBad = jDist==='×' || nxDistX;
-    const distWarn = jDist==='△';
-    const recBad = jRec==='×' || nxAudioX;
-    const recWarn = jRec==='△' || !jRec;
-    const videoBad = jVideo==='×' || nxVideoX;
-    const videoWarn = jVideo==='△' || !jVideo;
-
-    const rows=[];
-    function add(icon, title, mark, text, sub){
-      rows.push({icon, title, mark, text, sub:sub||''});
-    }
-
-    if(song.noRightsInfo || !hasRights){
-      add('🔎','まず作品情報を確認','△','まだ判断しない','JASRAC/NexToneで曲名を検索して、公式画面の○△×を入力してから使う。');
-    }
-
-    if(distBad){
-      add('🎤','生歌だけ配信','❌','やめた方が安全','配信のところに×があるので、この配信先では歌わない方が安全。');
-    }else if(distWarn){
-      add('🎤','生歌だけ配信','△','確認してから','配信のところが△なので、配信先のルールや申請画面を確認してから。');
-    }else if(distOk || jPerf==='○'){
-      add('🎤','生歌だけ配信','○','OK寄り','チェックした配信先で、歌うだけなら使いやすい曲。');
-    }else{
-      add('🎤','生歌だけ配信','△','未確認','公式画面の「配信」や「演奏」の○△×を入力すると判断しやすい。');
-    }
-
-    if(song.archive || (song.platforms && (song.platforms.youtube || song.platforms.twitch || song.platforms.twitcast))){
-      if(recBad){
-        add('📼','配信をあとで見返せるように残す','❌','残さない方が安全','録音/保存に関係するところが×。配信後に残す使い方は避ける。');
-      }else if(recWarn){
-        add('📼','配信をあとで見返せるように残す','△','音が消えることあり','配信後に音が消えたり、確認が必要になることがある。残す前提なら要チェック。');
-      }else{
-        add('📼','配信をあとで見返せるように残す','○','残しやすい','録音/保存に関係するところが○。ただし配信先の表示は最後に確認。');
-      }
-    }
-
-    if(videoBad){
-      add('✂','ショート・切り抜き動画','❌','やめた方が安全','動画にして投稿する使い方は危ない。歌った部分を切り抜いて投稿しない方が安全。');
-    }else if(videoWarn || recWarn){
-      add('✂','ショート・切り抜き動画','△','確認してから','動画として残す使い方なので、投稿前に公式画面と配信先の表示を確認。');
-    }else{
-      add('✂','ショート・切り抜き動画','○','投稿しやすい','動画に関係するところが○。投稿前に配信先の表示だけ確認。');
-    }
-
-    if(song.useOriginal){
-      add('💿','CDの音をそのまま流す','❌','やめた方が安全','CDや配信サービスの音をそのまま流すのは危ない。カラオケ音源や自分の演奏に変える。');
-    }
-    if(song.useKaraoke){
-      add('🎵','カラオケ音源で歌う','△','音源の説明を確認','使うカラオケ音源のページに「配信で使っていい」と書いてあるか確認。');
-    }
-    if(song.selfPlay){
-      add('🎸','弾き語り・自分で作った伴奏','○','OK寄り','CDの音を流さない形なので使いやすい。曲の○△×はこの画面で確認。');
-    }
-    if(song.platforms && song.platforms.twitch){
-      add('🟣','Twitchで配信を残す','△','あとで音が消えることあり','配信中は歌えても、あとで見返す動画では音が消えることがある。');
-    }
-    if(song.monetize){
-      add('💰','収益化した配信で使う','△','配信先の表示を確認','収益化ONで残す前に、YouTubeなどの管理画面に注意表示が出ていないか見る。');
-    }
-
-    if(!rows.length){
-      add('✅','この曲の使い方','○','大きな注意は少なめ','登録内容を見る限り、強い注意は少なめ。配信前に配信先の表示だけ確認。');
-    }
-
-    const strongBad = rows.some(r=>r.mark==='❌');
-    const hasWarn = rows.some(r=>r.mark==='△');
-    const level = strongBad ? 'danger' : hasWarn ? 'caution' : 'safe';
-    const positives = rows.filter(r=>r.mark==='○').map(r=>`${r.title}：${r.text}`);
-    const warnings = rows.filter(r=>r.mark!=='○').map(r=>`${r.title}：${r.text}`);
-    return {level, rows, warnings:[...new Set(warnings)], actions:[], positives:[...new Set(positives)], safeish: level!=='danger'};
+    if(jPerf==='○') positives.push('JASRAC演奏：○');
+    if(jDist==='○' || nxDistO) positives.push('配信：○あり');
+    if(jDist==='△') { warnings.push('JASRAC配信：△'); actions.push('配信条件を確認して、申請やサービス規約の確認を優先'); }
+    if(jDist==='×' || nxDistX){ warnings.push('配信：×あり'); actions.push('その団体側では配信が非管理/不可の可能性。別団体管理や利用可否を確認'); }
+    if(song.archive && (jRec==='△' || jRec==='×' || nxAudioX || !jRec)){ warnings.push('アーカイブ/録音注意'); actions.push('アーカイブを分ける、公開前にミュート/制限を確認、VOD OFFも検討'); }
+    if(song.useOriginal){ warnings.push('原盤/CD・配信音源の使用注意'); actions.push('カラオケ音源・弾き語り・自作伴奏に切り替える'); }
+    if(song.platforms && song.platforms.twitch){ warnings.push('TwitchはVOD/クリップ注意'); actions.push('VOD保存OFF、または歌枠後にアーカイブ確認'); }
+    if(song.monetize){ warnings.push('収益化チェック必要'); actions.push('収益化ONのまま残す前に各配信サービスの管理画面で制限を確認'); }
+    if(song.useKaraoke){ actions.push('カラオケ音源の利用条件を確認する'); }
+    if(song.selfPlay){ actions.push('弾き語り/自作伴奏なら原盤リスクは下がるが、曲の管理状況は確認する'); }
+    const level = warnings.some(w=>w.includes('×')||w.includes('原盤')) ? 'danger' : warnings.length ? 'caution' : 'safe';
+    return {level, warnings:[...new Set(warnings)], actions:[...new Set(actions)], positives:[...new Set(positives)], safeish: level!=='danger'};
   }
   function buildCopyText(song){
     const j=song.jasrac||{}, n=song.nextone||{};
@@ -12251,21 +12192,11 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
     const draft=song||currentDraft();
     const box=$('crLiveAdvice'); if(!box) return;
     const a=analyze(draft);
-    const label=a.level==='safe'?'🟢 使いやすい':a.level==='caution'?'🟡 確認して使う':'🔴 やめた方が安全な使い方あり';
-    const rowHtml=(a.rows||[]).map(r=>{
-      const cls = r.mark==='○' ? 'color:#86efac' : r.mark==='△' ? 'color:#fde68a' : 'color:#fca5a5';
-      return `<div style="border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px;margin-top:8px;background:rgba(0,0,0,.18)">
-        <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
-          <div style="font-weight:950">${esc(r.icon)} ${esc(r.title)}</div>
-          <div style="font-size:20px;font-weight:950;${cls}">${esc(r.mark)} ${esc(r.text)}</div>
-        </div>
-        ${r.sub?`<div class="muted" style="margin-top:6px;line-height:1.55">${esc(r.sub)}</div>`:''}
-      </div>`;
-    }).join('');
+    const label=a.level==='safe'?'🟢 安全寄り':a.level==='caution'?'🟡 注意あり':'🔴 強め注意';
     box.innerHTML = `<div style="font-size:26px;font-weight:950">${label}</div>`+
-      `<p class="muted" style="margin:8px 0 0;line-height:1.6">公式の○△×を、配信者が実際にやる行動ごとに翻訳しています。</p>`+
-      rowHtml+
-      `<p class="muted" style="margin-top:10px;line-height:1.55">※迷ったら「生歌だけ」「配信を残さない」「CDの音を流さない」が安全寄り。</p>`;
+      `<div class="muted" style="margin-top:6px">${a.positives.length?esc(a.positives.join(' / ')):'公式項目の○がまだ少ない/未入力'}</div>`+
+      `<div style="margin-top:10px;font-weight:900">注意</div><ul style="margin:8px 0 0 18px;padding:0">${(a.warnings.length?a.warnings:['現時点のチェックでは大きな注意は少なめ。']).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`+
+      `<div style="margin-top:12px;font-weight:900">おすすめ行動</div><ul style="margin:8px 0 0 18px;padding:0">${(a.actions.length?a.actions:['登録内容を保存して、配信前にサービス側の表示を確認']).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
     const cb=$('crCopyBox'); if(cb) cb.value=buildCopyText(draft);
   }
   function clearForm(){
