@@ -11591,5 +11591,152 @@ document.addEventListener('DOMContentLoaded',function(){const b=(id,fn)=>{const 
 })();
 </script>
 
+
+
+<script id="v235_50JsonImportHardening">
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function setStatus(msg, kind){
+    var st=$('jsonBackupStatus');
+    if(st){
+      st.textContent=msg;
+      st.style.fontWeight='900';
+      st.style.color=kind==='error'?'#dc2626':(kind==='ok'?'#16a34a':'#2563eb');
+    }
+  }
+  function ensureImportPanel(){
+    var panel=$('jsonImportEmergencyPanel');
+    if(panel) return panel;
+    panel=document.createElement('div');
+    panel.id='jsonImportEmergencyPanel';
+    panel.style.cssText='display:none;margin-top:12px;padding:12px;border:2px solid #f59e0b;border-radius:14px;background:#fffbeb;color:#111827;position:relative;z-index:999999;';
+    panel.innerHTML='<b>JSON読み込み保険欄</b><p class="muted" style="margin:6px 0">ファイル選択が開かない時は、JSONバックアップの中身をここに貼って「貼り付けJSONを読み込む」を押してね。</p><textarea id="jsonImportEmergencyText" style="width:100%;height:180px;border-radius:12px;padding:10px;font-family:monospace;font-size:12px" placeholder="ここにJSONを貼り付け"></textarea><div class="row" style="margin-top:8px"><button class="btn danger" id="jsonImportEmergencyApply" type="button">貼り付けJSONを読み込む</button><button class="btn" id="jsonImportEmergencyClose" type="button">閉じる</button></div>';
+    var st=$('jsonBackupStatus');
+    if(st && st.parentElement) st.parentElement.insertBefore(panel, st.nextSibling); else document.body.appendChild(panel);
+    var close=$('jsonImportEmergencyClose');
+    if(close) close.onclick=function(){ panel.style.display='none'; };
+    var apply=$('jsonImportEmergencyApply');
+    if(apply) apply.onclick=function(ev){ hardImportFromText(($('jsonImportEmergencyText')||{}).value||'', ev); };
+    return panel;
+  }
+  function normalizeBackupObject(parsed){
+    if(typeof window.readStreamStaffBackup==='function' && typeof window.normalizeLoadedState==='function'){
+      return window.normalizeLoadedState(window.readStreamStaffBackup(parsed));
+    }
+    if(typeof readStreamStaffBackup==='function' && typeof normalizeLoadedState==='function'){
+      return normalizeLoadedState(readStreamStaffBackup(parsed));
+    }
+    if(parsed && parsed.data) return parsed.data;
+    if(parsed && parsed.state) return parsed.state;
+    return parsed;
+  }
+  function applyLoadedState(next){
+    if(!next || typeof next !== 'object') throw new Error('empty-state');
+    window.state = next;
+    try{ state = next; }catch(e){}
+    try{ localStorage.setItem('stream_manager_integrated_v1', JSON.stringify(next)); }catch(e){}
+    try{ if(typeof save==='function') save(); }catch(e){}
+    try{ if(typeof window.ssPublishUnifiedObsState==='function') window.ssPublishUnifiedObsState('json-import'); }catch(e){}
+    try{ if(typeof window.ssSendProjectorState==='function') window.ssSendProjectorState('json-import'); }catch(e){}
+    try{ if(typeof refreshAll==='function') refreshAll(); }catch(e){
+      try{ renderHome();renderGames();renderBonus();renderMemo();renderCalendar();renderChLog();renderChinMode();renderSettings();renderTools();renderPolls();renderRoulette();renderCountdowns(); }catch(e2){}
+    }
+  }
+  function hardImportParsed(parsed){
+    var next=normalizeBackupObject(parsed);
+    if(!confirm('JSONバックアップを読み込む？\n今のデータは上書きされるよ。')){
+      setStatus('JSON読み込み：キャンセルした。','error');
+      return false;
+    }
+    applyLoadedState(next);
+    setStatus('JSON読み込み：完了！画面へ反映した。','ok');
+    alert('JSONバックアップを読み込んだ！');
+    return true;
+  }
+  function hardImportFromText(text, ev){
+    if(ev){ try{ ev.preventDefault(); ev.stopPropagation(); ev.stopImmediatePropagation(); }catch(e){} }
+    try{
+      setStatus('JSON読み込み：貼り付けデータ解析中…','work');
+      if(!String(text||'').trim()) throw new Error('empty-json');
+      var parsed=JSON.parse(text);
+      hardImportParsed(parsed);
+    }catch(e){
+      setStatus('JSON読み込み失敗：JSONが違うか壊れてるかも。','error');
+      alert('読み込み失敗：JSONファイル/貼り付け内容が違うか壊れてるかも');
+    }
+  }
+  function openImportPicker(ev){
+    if(ev){ try{ ev.preventDefault(); ev.stopPropagation(); ev.stopImmediatePropagation(); }catch(e){} }
+    setStatus('JSON読み込み：押せた！ファイル選択を開く…','work');
+    var input=$('importJsonBackupFile');
+    if(!input){
+      input=document.createElement('input');
+      input.id='importJsonBackupFile';
+      input.type='file';
+      input.accept='.json,application/json,text/json,text/plain';
+      input.style.display='none';
+      document.body.appendChild(input);
+    }
+    input.onchange=function(e){
+      var file=e.target.files && e.target.files[0];
+      if(!file){ setStatus('JSON読み込み：ファイル未選択。','error'); return; }
+      setStatus('JSON読み込み：ファイル読込中… '+file.name,'work');
+      var reader=new FileReader();
+      reader.onload=function(){
+        try{
+          var text=String(reader.result||'');
+          var parsed=JSON.parse(text);
+          hardImportParsed(parsed);
+        }catch(err){
+          setStatus('JSON読み込み失敗：JSONファイルが違うか壊れてるかも。','error');
+          alert('読み込み失敗：JSONファイルが違うか壊れてるかも');
+          ensureImportPanel().style.display='block';
+        }finally{ try{ input.value=''; }catch(e){} }
+      };
+      reader.onerror=function(){
+        setStatus('JSON読み込み失敗：ファイルを読めなかった。保険欄を使って。','error');
+        ensureImportPanel().style.display='block';
+        try{ input.value=''; }catch(e){}
+      };
+      reader.readAsText(file, 'utf-8');
+    };
+    try{ input.value=''; }catch(e){}
+    try{ input.click(); }catch(e){
+      setStatus('JSON読み込み：ファイル選択が開けない。保険欄を表示した。','error');
+      ensureImportPanel().style.display='block';
+    }
+    // スマホ/一部環境でファイル選択が無反応に見える時の保険。
+    setTimeout(function(){
+      setStatus('JSON読み込み：ファイル選択が出ない時は下の保険欄に貼り付けてね。','work');
+      ensureImportPanel().style.display='block';
+    }, 900);
+  }
+  function bind(){
+    var btn=$('importJsonBackupBtn');
+    if(btn){
+      btn.style.pointerEvents='auto';
+      btn.style.position='relative';
+      btn.style.zIndex='999999';
+      btn.removeAttribute('disabled');
+      btn.onclick=openImportPicker;
+      btn.addEventListener('pointerdown', function(){ setStatus('JSON読み込み：押下反応あり！','work'); }, true);
+      btn.addEventListener('click', openImportPicker, true);
+    }
+    var input=$('importJsonBackupFile');
+    if(input){
+      input.accept='.json,application/json,text/json,text/plain';
+    }
+  }
+  document.addEventListener('click', function(ev){
+    var t=ev.target;
+    if(t && (t.id==='importJsonBackupBtn' || (t.closest && t.closest('#importJsonBackupBtn')))) openImportPicker(ev);
+  }, true);
+  document.addEventListener('DOMContentLoaded', bind);
+  setTimeout(bind, 300);
+  setTimeout(bind, 1200);
+  window.ssHardImportJsonBackup = openImportPicker;
+})();
+</script>
+
 </body>
 </html>
