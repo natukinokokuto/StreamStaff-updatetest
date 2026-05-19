@@ -5942,6 +5942,35 @@ function makeObsBranches5(mainBranch){
   return list.slice(0,5);
 }
 
+function makeObsLeaves5(mainLeaf){
+  const list = [];
+  function add(v){
+    const t = String(v || "").replace(/^・/, "").trim();
+    if(t && !list.includes(t)) list.push(t);
+  }
+
+  String(mainLeaf || "").split(/\n+/).forEach(add);
+
+  const pool = Array.isArray(leaves) ? leaves.slice() : [];
+  for(let i = pool.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
+  pool.forEach(add);
+  return list.slice(0,5);
+}
+
+function renderTreeList(target, items, fallback){
+  if(!target) return;
+  const list = (Array.isArray(items) ? items : String(items || "").split(/\n+/))
+    .map(x => String(x || "").replace(/^・/, "").trim())
+    .filter(Boolean);
+  target.innerHTML = list.length
+    ? `<ul class="branch-list">${list.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>`
+    : escapeHtml(fallback || "");
+}
+
 function publishObsBranches5(list){
   try{
     localStorage.setItem("ss_obs_branches_5", JSON.stringify((list || []).slice(0,5)));
@@ -5957,12 +5986,16 @@ function publishObsBranches5(list){
 }
 
 function renderHome(){
-  treeTrunk.textContent=state.tree.trunk;
-  const branchesText=String(state.tree.branch||"").split(/\n+/).map(x=>x.replace(/^・/,"").trim()).filter(Boolean);
-  treeBranch.innerHTML=branchesText.length
-    ? `<ul class="branch-list">${branchesText.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>`
-    : "話が止まった時の逃げ道";
-  treeLeaf.textContent=state.tree.leaf;
+  const tree = state.tree || {};
+  const homeTrunks = Array.isArray(tree.obsTrunks) && tree.obsTrunks.length ? tree.obsTrunks : makeObsTrunks5(tree.trunk);
+  const homeBranches = Array.isArray(tree.obsBranches) && tree.obsBranches.length ? tree.obsBranches : makeObsBranches5(tree.branch);
+  const homeLeaves = Array.isArray(tree.obsLeaves) && tree.obsLeaves.length ? tree.obsLeaves : makeObsLeaves5(tree.leaf);
+
+  // v235.52: ホームの「メインテーマ/サブテーマ/脱線候補」も、OBS/Projectorと同じく5件リストで表示する。
+  renderTreeList(treeTrunk, homeTrunks, "今日のメインテーマを決める");
+  renderTreeList(treeBranch, homeBranches, "話が止まった時の逃げ道");
+  renderTreeList(treeLeaf, homeLeaves, "コメントが増えたポイント");
+
   if(window.quickMemo && document.activeElement !== quickMemo) quickMemo.value = state.quickMemo || "";
   homeLogs.innerHTML=state.logs.slice(0,8).map(l=>`<div><b>${escapeHtml(l.title||"ログ")}</b><br><span class="muted">${escapeHtml(l.date)}</span><br>${escapeHtml(l.text)}</div>`).join("")||`<div>まだログなし</div>`;
   renderHomeNotice();
@@ -5985,14 +6018,17 @@ if(window.openCalendarFromNotice) openCalendarFromNotice.onclick=()=>showScreen(
 autoTree.onclick=()=>{
   const mainTrunk = pick(trunks);
   const mainBranch = makeBranchPack();
+  const mainLeaf = pick(leaves);
   const obsTrunks = makeObsTrunks5(mainTrunk);
   const obsBranches = makeObsBranches5(mainBranch);
+  const obsLeaves = makeObsLeaves5(mainLeaf);
   state.tree = {
     trunk: mainTrunk,
     obsTrunks: obsTrunks,
     branch: mainBranch,
     obsBranches: obsBranches,
-    leaf: pick(leaves)
+    leaf: mainLeaf,
+    obsLeaves: obsLeaves
   };
   save();
   publishObsTrunks5(obsTrunks);
@@ -6006,7 +6042,12 @@ nextBranch.onclick=()=>{
   publishObsBranches5(state.tree.obsBranches);
   renderHome();
 }
-branchToLeaf.onclick=()=>{state.tree.leaf=pick(leaves);save();renderHome()}
+branchToLeaf.onclick=()=>{
+  state.tree.leaf=pick(leaves);
+  state.tree.obsLeaves=makeObsLeaves5(state.tree.leaf);
+  save();
+  renderHome();
+}
 if(window.quickMemo){
   quickMemo.value = state.quickMemo || "";
   quickMemo.addEventListener("input",()=>{
